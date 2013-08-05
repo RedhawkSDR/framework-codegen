@@ -1,0 +1,114 @@
+#!/usr/bin/python
+import os
+import sys
+from xml.dom import minidom
+import re
+from redhawk.codegen.settings import _templateMapping
+from getopt import getopt
+
+_generatorIdMapping = {
+    'gov.redhawk.ide.codegen.jet.cplusplus.CplusplusGenerator': 'gov.redhawk.ide.codegen.jinja.cplusplus.CplusplusGenerator',
+    'gov.redhawk.ide.codegen.jet.python.PythonGenerator': 'gov.redhawk.ide.codegen.jinja.python.PythonGenerator',
+    'gov.redhawk.ide.codegen.jet.java.JavaGenerator': 'gov.redhawk.ide.codegen.jinja.java.JavaGenerator',
+}
+
+usage = """%s <wavedev file>
+
+Arguments:
+    <wavedev file>          Path to component .wavedev
+
+Options:
+    -d                      Display original and modified versions of files 
+
+""" % os.path.basename(sys.argv[0])
+
+if __name__ == '__main__':
+    DEBUG = False
+    opts, args = getopt(sys.argv[1:], 'd', [])
+    for key, value in opts:
+        if key == '-d':
+            DEBUG = True
+    try:
+        wavedevFile = args[0]
+    except:
+        raise SystemExit(usage)
+
+    # Update existing WaveDev settings file
+    if os.path.exists(wavedevFile):
+        dom = minidom.parse(wavedevFile)
+        if DEBUG:
+            print "ORIGINAL wavedev file================================================"
+            os.system("cat " + str(wavedevFile)) 
+            print "============================================================"
+        settings = {}
+        for node in dom.getElementsByTagName('implSettings'):
+            valueNode = node.getElementsByTagName('value')[0]
+            # update template and generatorId attributes for value tags 
+            for attr in valueNode.attributes.items():
+                if attr[0] == "template":
+                    if attr[1] in _templateMapping:
+                        valueNode.setAttribute(attr[0],_templateMapping[attr[1]])
+                elif attr[0] == "generatorId":
+                    if attr[1] in _generatorIdMapping:
+                        valueNode.setAttribute(attr[0],_generatorIdMapping[attr[1]])
+
+        # Strip out blank lines created by removeChild
+        sp = dom.toxml(encoding="ASCII").split('\n')
+        f = open(wavedevFile, 'w')
+        for val in sp:
+            if len(val.strip()) > 0:
+                f.write(val)
+                f.write('\n')
+        f.close() 
+        if DEBUG:
+            print "MODIFIED wavedev file ================================================"
+            os.system("cat " + str(wavedevFile)) 
+            print "============================================================"
+
+        # Update .project file
+        dirname = os.path.dirname(wavedevFile)
+        projectFile = dirname + "/.project"
+
+        empty = re.compile('^$')
+        if os.path.exists(projectFile):
+            dom = minidom.parse(projectFile)
+            if DEBUG:
+                print "ORIGINAL .project file================================================"
+                os.system("cat " + str(projectFile))
+                print "============================================================"
+
+            # Preserve open and closing tag for empty nodes 
+            # minidom converts them automatically to a self-closing tag
+            # keep <comment></comment> instead of <comment/>
+            for node in dom.childNodes:
+                if node.hasChildNodes:
+                    for subnode in node.childNodes:
+                        if subnode.nodeType == node.ELEMENT_NODE:
+                            if not subnode.hasChildNodes():
+                                subnode.appendChild(dom.createTextNode(''))
+
+            # Remove buildCommand element that contains jet
+            for node in dom.getElementsByTagName('buildSpec'):
+                for child in node.childNodes:
+                    if child.nodeType == node.ELEMENT_NODE and child.tagName == "buildCommand":
+                        if child.toxml().find(".jet.") != -1:
+                            node.removeChild(child)
+
+
+            # Strip out blank lines created by removeChild
+            sp = dom.toxml(encoding="UTF-8").split('\n')
+            f = open(projectFile, 'w')
+            for val in sp:
+                if len(val.strip()) > 0:
+                    f.write(val)
+                    f.write('\n')
+            f.close() 
+            if DEBUG:
+                print "MODIFIED project file ================================================"
+                os.system("cat " + str(projectFile))
+                print "============================================================"
+
+        else:
+            raise SystemExit, '.project file does not exist'
+    else:
+        raise SystemExit, 'wavedev file ' + str(wavedevFile) + ' does not exist'

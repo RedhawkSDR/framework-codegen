@@ -1,0 +1,146 @@
+from redhawk.codegen.model.properties import Kinds
+from redhawk.codegen.lang.idl import IDLInterface
+
+class PropertyMapper(object):
+    def _mapProperty(self, prop, propclass):
+        propdict = {}
+        propdict['class'] = propclass
+        propdict['identifier'] = prop.identifier()
+        if prop.hasName():
+            propdict['name'] = prop.name()
+        propdict['mode'] = prop.mode()
+        propdict['units'] = prop.units()
+        propdict['action'] = prop.action()
+        propdict['kinds'] = prop.kinds()
+        propdict['hasDescription'] = prop.hasDescription()
+        propdict['description'] = prop.description()
+        return propdict
+
+    def _mapSimple(self, prop):
+        propdict = self._mapProperty(prop, 'simple')
+        propdict['type'] = prop.type()
+        propdict.update(self.mapSimpleProperty(prop))
+        return propdict
+
+    def mapSimpleProperty(self, prop):
+        return {}
+
+    def _mapSimpleSequence(self, prop):
+        propdict = self._mapProperty(prop, 'simplesequence')
+        propdict['type'] = prop.type()
+        propdict.update(self.mapSimpleSequenceProperty(prop))
+        return propdict        
+
+    def mapSimpleSequenceProperty(self, prop):
+        return {}
+
+    def _mapStruct(self, prop):
+        propdict = self._mapProperty(prop, 'struct')
+        fields = [self._mapSimple(s) for s in prop.fields()]
+        propdict['fields'] = fields
+        propdict.update(self.mapStructProperty(prop, fields))
+        return propdict
+
+    def mapStructProperty(self, prop, fields):
+        return {}
+
+    def _mapStructSequence(self, prop):
+        propdict = self._mapProperty(prop, 'structsequence')
+        structdef = self._mapStruct(prop.struct())
+        propdict['structdef'] = structdef
+        propdict.update(self.mapStructSequenceProperty(prop, structdef))
+        return propdict
+
+    def mapStructSequenceProperty(self, prop, structdef):
+        return {}
+
+    def mapProperties(self, softpkg):
+        simple = [self._mapSimple(s) for s in softpkg.getSimpleProperties()]
+        simplesequence = [self._mapSimpleSequence(s) for s in softpkg.getSimpleSequenceProperties()]
+        structs = [self._mapStruct(s) for s in softpkg.getStructProperties()]
+        structsequence = [self._mapStructSequence(s) for s in softpkg.getStructSequenceProperties()]
+
+        properties = simple+simplesequence+structs+structsequence
+        structdefs = structs + [p['structdef'] for p in structsequence]
+        events = [prop for prop in properties if Kinds.EVENT in prop['kinds']]
+        messages = [prop for prop in properties if Kinds.MESSAGE in prop['kinds']]
+
+        return {'properties': properties,
+                'structdefs': structdefs,
+                'events':     events,
+                'messages':   messages}
+
+
+class PortMapper(object):
+    def mapPort(self, port, generator):
+        portdict = {}
+        portdict['name'] = port.name()
+        portdict['repid'] = port.repid()
+        portdict['types'] = port.types()
+        if port.isProvides():
+            direction = "provides"
+        else:
+            direction = "uses"
+        portdict['direction'] = direction
+        portdict['generator'] = generator
+        portdict.update(self._mapPort(port, generator))
+        return portdict
+
+    def _mapPort(self, port):
+        return {}
+
+    def mapPorts(self, softpkg, portfactory):
+        ports = [self.mapPort(p, portfactory.generator(p)) for p in softpkg.ports()]
+        classnames = []
+        generators = []
+        for p in ports:
+            if 'generator' in p:
+               if p['generator'].className() not in classnames:
+                   classnames.append(p['generator'].className())
+                   generators.append(p['generator']) 
+        return {'ports':          ports,
+                'portgenerators': generators}
+
+
+class ComponentMapper(object):
+    def mapImplementation(self, impl):
+        impldict = {}
+        impldict['id'] = impl.identifier()
+        impldict['entrypoint'] = impl.entrypoint()
+        if impl.prfFile():
+            impldict['prf'] = impl.prfFile()
+        impldict.update(self._mapImplementation(impl))
+        return impldict
+
+    def _mapImplementation(self, implementation):
+        return {}
+    
+    def mapComponent(self, softpkg):
+        component = {}
+        component['name'] = softpkg.name()
+        component['version'] = softpkg.version()
+        component['type'] = softpkg.type()
+        component['sdrpath'] = softpkg.getSdrPath()
+
+        # XML profile
+        component['profile'] = { 'spd': softpkg.spdFile(),
+                                 'scd': softpkg.scdFile() }
+        if softpkg.prfFile():
+            component['profile']['prf'] = softpkg.prfFile()
+
+        component.update(self._mapComponent(softpkg))
+        return component
+
+    def _mapComponent(self, softpkg):
+        return {}
+
+    def getInterfaceNamespaces(self, softpkg):
+        # The CF interfaces are already assumed as part of REDHAWK
+        seen = set(['CF', 'ExtendedCF', 'ExtendedEvent'])
+        for interface in softpkg.descriptor().interfaces():
+            namespace = IDLInterface(interface.repid).namespace()
+            # Assume that omg.org interfaces are available as part of the ORB.
+            if namespace in seen or namespace.startswith('omg.org/Cos'):
+                continue
+            seen.add(namespace)
+            yield namespace

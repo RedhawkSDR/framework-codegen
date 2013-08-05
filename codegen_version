@@ -1,0 +1,41 @@
+#!/usr/bin/python
+import os
+import sys
+from xml.dom import minidom
+
+def codegenVersion(filename):
+    dom = minidom.parse(filename)
+    settings = {}
+    codegenVersion = "1.9 jinja"
+    for node in dom.getElementsByTagName('implSettings'):
+        implId = node.getAttribute('key')
+        implSettingsNode = node.getElementsByTagName('value')[0]
+        generatorId = implSettingsNode.getAttribute('generatorId')
+        template = implSettingsNode.getAttribute('template')
+        if template.find(".jet.") != -1 and generatorId.find(".jet.") != -1:
+            codegenVersion = "1.8 jet"
+            break
+    dom.unlink()
+    return codegenVersion
+
+usage = """%s <SPD file>
+
+Arguments:
+    <SPD file>          Path to component .spd.xml
+
+""" % os.path.basename(sys.argv[0])
+
+if __name__ == '__main__':
+    try:
+        spdFile = sys.argv[1]
+    except:
+        raise SystemExit(usage)
+
+    # Read existing WaveDev settings file
+    wavedev = '.' + os.path.basename(spdFile).replace('.spd.xml', '.wavedev')
+    wavedev = os.path.join(os.path.dirname(spdFile), wavedev)
+    if os.path.exists(wavedev):
+        version = codegenVersion(wavedev)
+        print "version ****** " + str(version)
+    else:
+        raise SystemExit, 'Cannot determine codegen version because wavedev file does not exist'
