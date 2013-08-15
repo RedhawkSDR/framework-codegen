@@ -7,6 +7,10 @@ from redhawk.codegen.jinja.cpp.ports import CppPortMapper, CppPortFactory
 
 from mapping import PullComponentMapper
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 loader = CodegenLoader(__package__,
                        {'common'     : 'redhawk.codegen.jinja.common',
                         'base'       : 'redhawk.codegen.jinja.cpp.component.base',

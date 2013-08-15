@@ -31,11 +31,10 @@ class JavaPortGenerator(PortGenerator):
     def constructor(self, name):
         return '%s(%s)' % (self.className(), ', '.join(self._ctorArgs(name)))
 
-class builtinport(object):
-    def __init__(self, javaclass):
-        self.package, self.name = javaclass.rsplit('.', 1)
+class BuiltinJavaPort(JavaPortGenerator):
+    def __init__(self, javaclass, port):
+        JavaPortGenerator.__init__(self, port)
+        self.package, self.__name = javaclass.rsplit('.', 1)
 
-    def __call__(self, generator):
-        generator.package = property(lambda x: self.package)
-        generator.className = lambda x: self.name
-        return generator
+    def className(self):
+        return self.__name

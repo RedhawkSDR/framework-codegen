@@ -7,6 +7,10 @@ from redhawk.codegen.jinja.cpp import CppTemplate
 
 from generator import CppPortGenerator
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 _baseMap = {
     CORBA.tk_short:     'CORBA::Short',
     CORBA.tk_long:      'CORBA::Long',

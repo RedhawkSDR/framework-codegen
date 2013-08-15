@@ -133,12 +133,25 @@ if __name__ == '__main__':
     if outputdir:
         os.chdir(outputdir)
 
+    # Pull out CRCs for top-level files.
+    toplevelCRCs = {}
+    for implSettings in settings.itervalues():
+        # Iterate through all items using a copy, because the source dictionary
+        # will be modified.
+        for filename, checksum in implSettings.generatedFileCRCs.items():
+            if not filename.startswith('../'):
+                continue
+            # Remove from implementation CRC list and put into top-level list.
+            del implSettings.generatedFileCRCs[filename]
+            filename = filename[3:]
+            toplevelCRCs[filename] = checksum
+
     generators = []
 
     # Top-level code generation
     # TODO: Allow disabling, explicit file list, template selection
     from redhawk.codegen.jinja.project import component
-    generator = component.factory(outputdir='.', overwrite=overwrite)
+    generator = component.factory(outputdir='.', overwrite=overwrite, crcs=toplevelCRCs)
     generators.append(('Component '+softpkg.name(), '', generator))
 
     # Set up generation for each requested implementation.

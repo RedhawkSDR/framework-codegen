@@ -3,6 +3,8 @@ import os
 import sys
 from xml.dom import minidom
 import re
+import tempfile
+import shutil
 from redhawk.codegen.settings import _templateMapping
 from getopt import getopt
 
@@ -22,6 +24,96 @@ Options:
 
 """ % os.path.basename(sys.argv[0])
 
+_bulkio_re = re.compile('BULKIO_data[A-Za-z]+_In_i')
+
+def safe_next(item):
+    """
+    Returns the next value of the iterator, or an empty string if the end of
+    iteration has been reached. Allows string processing to gracefully handle
+    the end of a line without explicit catch statements.
+    """
+    try:
+        return next(item)
+    except StopIteration:
+        return ''
+
+def strip_comments(source):
+    """
+    Returns the lines of 'source' with C++-style comments filtered out.
+    """
+    inComment = False
+    for line in source:
+        # Scan through the characters in each line for comment tokens. If we
+        # are not in a comment, the characters pass through to the output line,
+        # otherwise they are dropped. In order to handle lookahead (e.g., the
+        # current character is a '/', is the next one a '*' or '/'?), we wrap
+        # the line with an iterator.
+        current = ''
+        chars = iter(line)
+        for ch in chars:
+            if inComment:
+                # Look for end comment token; if the end of the line is reached
+                # ch will be an empty string
+                while ch == '*':
+                    ch = safe_next(chars)
+                    if ch == '/':
+                        inComment = False
+                        break
+                continue
+            if ch == '/':
+                # Read the next character to see if it matches a comment token
+                # (if it does not, both characters will be added to the output)
+                ch += safe_next(chars)
+                if ch == '/*':
+                    # Comment, start discarding
+                    inComment = True
+                    continue
+                elif ch == '//':
+                    # Line comment, discard remainder
+                    break
+            # Not in a comment, add to line
+            current += ch
+        yield current
+
+def check_bulkio_input(filename):
+    """
+    Returns True if filename exists and contains references to legacy BULKIO
+    code generator classes.
+    """
+    if not os.path.exists(filename):
+        return False
+    for line in strip_comments(open(filename, 'r')):
+        if _bulkio_re.search(line):
+            return True
+    return False
+
+def add_bulkio_compat_header(filename):
+    """
+    Inserts include of BULKIO compatibility header into the given source
+    file.
+    """
+    infile = open(filename, 'r')
+    outfile = tempfile.NamedTemporaryFile(delete=False)
+
+    # Find the first include statement (assume there's at least one) and insert
+    # our own before it.
+    for line in infile:
+        if line.startswith('#include'):
+            outfile.write("""// Inserted by update_project
+#include <bulkio/bulkio_compat.h>
+""")
+            outfile.write(line)
+            break
+        outfile.write(line)
+    # Copy the remainder of the file
+    outfile.writelines(infile)
+    infile.close()
+    outfile.close()
+
+    # Move the original out of the way and move the new one in
+    os.rename(filename, filename+'.orig')
+    shutil.move(outfile.name, filename)
+
 if __name__ == '__main__':
     DEBUG = False
     opts, args = getopt(sys.argv[1:], 'd', [])
@@ -35,6 +127,7 @@ if __name__ == '__main__':
 
     # Update existing WaveDev settings file
     if os.path.exists(wavedevFile):
+        dirname = os.path.dirname(wavedevFile)
         dom = minidom.parse(wavedevFile)
         if DEBUG:
             print "ORIGINAL wavedev file================================================"
@@ -44,13 +137,27 @@ if __name__ == '__main__':
         for node in dom.getElementsByTagName('implSettings'):
             valueNode = node.getElementsByTagName('value')[0]
             # update template and generatorId attributes for value tags 
-            for attr in valueNode.attributes.items():
-                if attr[0] == "template":
-                    if attr[1] in _templateMapping:
-                        valueNode.setAttribute(attr[0],_templateMapping[attr[1]])
-                elif attr[0] == "generatorId":
-                    if attr[1] in _generatorIdMapping:
-                        valueNode.setAttribute(attr[0],_generatorIdMapping[attr[1]])
+            isCpp = False
+            implId = node.attributes.get('key').value
+            outputDir = implId
+            for name, value in valueNode.attributes.items():
+                if name == "template":
+                    if value in _templateMapping:
+                        valueNode.setAttribute(name,_templateMapping[value])
+                    if value == 'gov.redhawk.ide.codegen.jet.cplusplus.PullPortDataTemplate':
+                        isCpp = True
+                elif name == "generatorId":
+                    if value in _generatorIdMapping:
+                        valueNode.setAttribute(name,_generatorIdMapping[value])
+                elif name == 'outputDir':
+                    outputDir = value
+            if isCpp:
+                # Determine component name by removing leading '.' and trailing
+                # '.wavedev'
+                compName = os.path.basename(wavedevFile)[1:-8]
+                compCpp = os.path.join(dirname, outputDir, compName+'.cpp')
+                if check_bulkio_input(compCpp):
+                    add_bulkio_compat_header(compCpp)
 
         # Strip out blank lines created by removeChild
         sp = dom.toxml(encoding="ASCII").split('\n')
@@ -66,7 +173,6 @@ if __name__ == '__main__':
             print "============================================================"
 
         # Update .project file
-        dirname = os.path.dirname(wavedevFile)
         projectFile = dirname + "/.project"
 
         empty = re.compile('^$')

@@ -1,11 +1,13 @@
 from redhawk.codegen.lang import python
 
-from generator import PythonPortGenerator, builtinport
+from generator import BuiltinPythonPort
 
-@builtinport('ossie.events.PropertyEventSupplier')
-class PropertyEventPortGenerator(PythonPortGenerator):
+class PropertyEventPortGenerator(BuiltinPythonPort):
     REPID = 'IDL:omg.org/CosEventChannelAdmin/EventChannel:1.0'
     NAME = 'propEvent'
+
+    def __init__(self, port):
+        BuiltinPythonPort.__init__(self, 'ossie.events.PropertyEventSupplier', port)
 
     @classmethod
     def match(cls, port):

@@ -5,6 +5,10 @@ from redhawk.codegen.jinja.cpp import CppTemplate
 
 from generator import CppPortGenerator
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 class MessagePortGenerator(CppPortGenerator):
     REPID = 'IDL:ExtendedEvent/MessageEvent:1.0'
 

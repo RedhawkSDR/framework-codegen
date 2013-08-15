@@ -84,7 +84,7 @@ class ${className}(${component.poaclass}, ${superclass}):
 #{% endif %}
             self.threadControlLock = threading.RLock()
             self.process_thread = None
-            # self.auto_start is deprecated and is only kept for API compatability
+            # self.auto_start is deprecated and is only kept for API compatibility
             # with 1.7.X and 1.8.0 ${artifactType}s.  This variable may be removed
             # in future releases
             self.auto_start = False

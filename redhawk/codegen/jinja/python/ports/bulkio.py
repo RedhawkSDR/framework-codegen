@@ -7,6 +7,10 @@ from redhawk.codegen.jinja.python import PythonTemplate
 
 from generator import PythonPortGenerator
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 _elementTypes = {
     'dataFile':      'c', # NB: dataFile tracks statistics by character
     'dataXML':       'c', # NB: dataXML tracks statistics by character

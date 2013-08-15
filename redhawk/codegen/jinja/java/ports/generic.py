@@ -7,6 +7,10 @@ from redhawk.codegen.jinja.java import JavaTemplate
 
 from generator import JavaPortGenerator
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 _baseMap = {
     CORBA.tk_short:     java.Types.SHORT,
     CORBA.tk_long:      java.Types.INT,

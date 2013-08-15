@@ -6,6 +6,10 @@ from redhawk.codegen.jinja.common import ShellTemplate, SpecfileTemplate
 
 from mapping import ProjectMapper
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 loader = jinja2.PackageLoader(__package__)
 
 class ComponentProjectGenerator(TopLevelGenerator):

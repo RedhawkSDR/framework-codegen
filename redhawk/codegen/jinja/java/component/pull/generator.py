@@ -11,6 +11,10 @@ from redhawk.codegen.jinja.java.ports import JavaPortMapper
 from mapping import PullComponentMapper
 from portfactory import PullPortFactory
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 loader = CodegenLoader(__package__,
                        {'base': 'redhawk.codegen.jinja.java.component.base',
                         'common': 'redhawk.codegen.jinja.common'})

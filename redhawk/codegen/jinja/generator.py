@@ -115,7 +115,7 @@ class Generator(object):
                 if template.executable:
                     fd = outfile.fileno()
                     st = os.fstat(fd)
-                    os.fchmod(fd, st.st_mode|stat.S_IEXEC)
+                    os.chmod(filename, st.st_mode|stat.S_IEXEC)
             finally:
                 outfile.close()
 
@@ -123,6 +123,15 @@ class Generator(object):
 
             # Update the MD5 digest
             self.md5sums[template.filename] = utils.fileMD5(filename)
+
+        # Remove old files that were not generated on this pass and are unchanged
+        for existing in self.md5sums.keys():
+            if existing in generated or existing in skipped:
+                continue
+            filename = os.path.join(self.outputdir, existing)
+            if os.path.exists(filename) and not self.fileChanged(filename):
+                os.unlink(filename)
+                del self.md5sums[existing]
 
         # Save updated MD5 digests
         md5out = open(self.md5file, 'w')

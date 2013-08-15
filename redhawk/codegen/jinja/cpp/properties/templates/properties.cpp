@@ -39,7 +39,7 @@ struct ${struct.cpptype} {
 /*{% endfor %}*/
     };
 
-    std::string getId() {
+    static std::string getId() {
         return std::string("${struct.identifier}");
     };
 

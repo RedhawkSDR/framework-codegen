@@ -9,7 +9,7 @@ _templateMapping = {
 }
 
 def _xmlElementsToDict(node, tagname, key, value):
-    return dict((n.getAttribute(key), n.getAttribute(value)) for n in node.getElementsByTagName(tagname))
+    return dict((str(n.getAttribute(key)), n.getAttribute(value)) for n in node.getElementsByTagName(tagname))
 
 class ImplementationSettings(object):
     def __init__(self, name=None, outputDir=None, template=None, properties={}, crcs={}):

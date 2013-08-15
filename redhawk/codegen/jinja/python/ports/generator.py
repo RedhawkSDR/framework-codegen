@@ -38,12 +38,14 @@ class PythonPortGenerator(PortGenerator):
     def constructor(self, port):
         return '%s(%s)' % (self.className(), ', '.join(self._ctorArgs(port)))
 
-class builtinport(object):
-    def __init__(self, pyclass):
-        self.package, self.name = pyclass.rsplit('.', 1)
+class BuiltinPythonPort(PythonPortGenerator):
+    def __init__(self, pyclass, port):
+        PythonPortGenerator.__init__(self, port)
+        package, self.__name = pyclass.rsplit('.', 1)
+        self.__imports = ('from %s import %s' % (package, self.__name),)
 
-    def __call__(self, generator):
-        imports = 'from %s import %s' % (self.package, self.name)
-        generator.imports = lambda x: (imports,)
-        generator.className = lambda x: self.name
-        return generator
+    def imports(self):
+        return self.__imports
+
+    def className(self):
+        return self.__name

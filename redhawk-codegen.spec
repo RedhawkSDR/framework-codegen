@@ -24,13 +24,14 @@ Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
 Version:        1.9.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Redhawk Code Generators
 
 Group:          Applications/Engineering
 License:        LGPLv3+
 URL:            http://redhawksdr.org/
 Source:         %{name}-%{version}.tar.gz
+Vendor:         REDHAWK
 
 # BuildRoot required for el5
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot

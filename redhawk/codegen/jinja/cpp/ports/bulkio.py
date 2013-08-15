@@ -7,6 +7,10 @@ from redhawk.codegen.jinja.cpp import CppTemplate
 
 from generator import CppPortGenerator
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 _elementTypes = {
     'dataFile':      'char',
     'dataXML':       'char',
@@ -41,6 +45,17 @@ class BulkioPortFactory(PortFactory):
         return BulkioPortGenerator(port)
 
 class BulkioPortGenerator(CppPortGenerator):
+    def start(self):
+        if self.direction == 'provides' and self.templateClass() !="InSDDSPort":
+            return 'unblock()'
+        else:
+            return None
+
+    def stop(self):
+        if self.direction == 'provides' and self.templateClass() !="InSDDSPort":
+            return 'block()'
+        else:
+            return None
 
     def className(self):
         return "bulkio::" + self.templateClass()

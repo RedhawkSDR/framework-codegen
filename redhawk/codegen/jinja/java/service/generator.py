@@ -10,9 +10,13 @@ import os
 
 from mapping import ServiceMapper
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 loader = CodegenLoader(__package__,
                        {'common': 'redhawk.codegen.jinja.common',
-                       'pull': 'redhawk.codegen.jinja.java.component.pull'})
+                        'base': 'redhawk.codegen.jinja.java.component.base'})
 
 class ServiceGenerator(JavaCodeGenerator):
     def parseopts (self, java_package='', use_jni=True):
@@ -41,9 +45,9 @@ class ServiceGenerator(JavaCodeGenerator):
         mainfile = service['userclass']['file']
         templates = [
             JavaTemplate('service.java', os.path.join(pkgpath, mainfile)),
-            AutomakeTemplate('pull/Makefile.am'),
-            AutoconfTemplate('pull/configure.ac'),
-            ShellTemplate('pull/startJava.sh'),
+            AutomakeTemplate('base/Makefile.am'),
+            AutoconfTemplate('base/configure.ac'),
+            ShellTemplate('base/startJava.sh'),
             ShellTemplate('common/reconf')
         ]
 

@@ -21,7 +21,7 @@ public class ${classname} extends ${baseclass} {
      *
      * A ${artifactType} may listen for external changes to properties (i.e., by a
      * call to configure) using the PropertyListener interface. Listeners are
-     * registered by calling addPropertyListener() on the property instance
+     * registered by calling addChangeListener() on the property instance
      * with an object that implements the PropertyListener interface for that
      * data type (e.g., "PropertyListener<Float>" for a float property). More
      * than one listener can be connected to a property.
@@ -30,12 +30,21 @@ public class ${classname} extends ${baseclass} {
      *       // This example makes use of the following properties:
      *       //  - A float value called scaleValue
      *       // The file must import "org.ossie.properties.PropertyListener"
+     *       // Add the following import to the top of the file:
+     *       import org.ossie.properties.PropertyListener;
      *
-     *       this.scaleValue.addPropertyListener(new PropertyListener<Float>() {
+     *       //Add the following to the class constructor:
+     *       this.scaleValue.addChangeListener(new PropertyListener<Float>() {
      *           public void valueChanged(Float oldValue, Float newValue) {
-     *               logger.debug("Changed scaleValue " + oldValue + " to " + newValue);
+     *               scaleValueChanged(oldValue, newValue);
      *           }
      *       });
+     *
+     *       //Add the following method to the class:
+     *       private void scaleValueChanged(Float oldValue, Float newValue)
+     *       {
+     *          logger.debug("Changed scaleValue " + oldValue + " to " + newValue);
+     *       }
      *
      * The recommended practice is for the implementation of valueChanged() to
      * contain only glue code to dispatch the call to a private method on the

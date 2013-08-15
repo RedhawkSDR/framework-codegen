@@ -1,3 +1,12 @@
+try:
+    from os.path import relpath
+except ImportError:
+    # The relpath() function was added in Python 2.6. If it is not available,
+    # define a substitute that is sufficient for our usage.
+    def relpath(path, start):
+        newpath = ['..'] * len(start.split('/')) + [path]
+        return '/'.join(newpath)
+
 from jinja2.filters import environmentfilter
 
 from testparser import TestParser
@@ -42,7 +51,6 @@ def do_relpath(path, base):
     Otherwise, 'path' is assumed to be a list, and the relative path
     operation is applied to each element.
     """
-    from os.path import relpath
     if isinstance(path, basestring):
         return relpath(path, base)
     else:
