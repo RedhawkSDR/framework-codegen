@@ -17,8 +17,8 @@ loader = CodegenLoader(__package__,
                         'properties' : 'redhawk.codegen.jinja.cpp.properties'})
 
 class PullComponentGenerator(CppCodeGenerator):
-    # Need to keep auto_start to handle legacy options 
-    def parseopts (self, use_vector_impl=True,auto_start=True):
+    # Need to keep use_vector_impl, auto_start and queued_ports to handle legacy options 
+    def parseopts (self, use_vector_impl=True,auto_start=True,queued_ports=False):
         pass
 
     def loader(self, component):

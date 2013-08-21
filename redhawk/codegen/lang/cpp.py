@@ -55,6 +55,9 @@ _complexTypeMap = {
 def stringLiteral(string):
     return '"' + string + '"'
 
+def charLiteral(string):
+    return "'" + string + "'"
+
 def cppType(typename, complex=False):
     """
     Returns the C++ type for the given CORBA type.
@@ -97,6 +100,8 @@ def literal(value, typename, complex=False):
             return TRUE
         else:
             return FALSE  
+    elif typename == CorbaTypes.CHAR:
+        return charLiteral(value)
     else:
         return value
 

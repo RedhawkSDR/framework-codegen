@@ -20,8 +20,8 @@ loader = CodegenLoader(__package__,
                         'common': 'redhawk.codegen.jinja.common'})
 
 class PullComponentGenerator(JavaCodeGenerator):
-    # Need to keep use_jni and auto_start to handle legacy options
-    def parseopts (self, java_package='',use_jni=True, auto_start=True):
+    # Need to keep use_jni, auto_start and queued_ports to handle legacy options
+    def parseopts (self, java_package='',use_jni=True, auto_start=True,queued_ports=False):
         self.package = java_package
 
     def loader(self, component):

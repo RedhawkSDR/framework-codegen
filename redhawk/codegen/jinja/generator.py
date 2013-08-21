@@ -76,7 +76,16 @@ class Generator(object):
 
         generated = []
         skipped = []
+
+        # Note all MD5 tracked files, for cleaning up stale files
+        stale = set(self.md5sums.keys())
+
         for template in self.templates(component):
+            # Mark the current template as seen so it will not be deleted,
+            # regardless of whether it gets generated
+            if template.filename in stale:
+                stale.remove(template.filename)
+
             # If a file list was given, skip files not explicitly listed.
             if filenames and template.filename not in filenames:
                 continue
@@ -124,10 +133,9 @@ class Generator(object):
             # Update the MD5 digest
             self.md5sums[template.filename] = utils.fileMD5(filename)
 
-        # Remove old files that were not generated on this pass and are unchanged
-        for existing in self.md5sums.keys():
-            if existing in generated or existing in skipped:
-                continue
+        # Remove old files that were not (and would not have been) generated on
+        # this pass, and are unchanged
+        for existing in stale:
             filename = os.path.join(self.outputdir, existing)
             if os.path.exists(filename) and not self.fileChanged(filename):
                 os.unlink(filename)

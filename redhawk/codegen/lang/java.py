@@ -116,7 +116,7 @@ def literal(value, typename, complex=False):
             return value
     elif typename in (Types.LONG, BoxTypes.LONG):
         return value+'L'
-    elif typename == (Types.BOOLEAN, BoxTypes.BOOLEAN):
+    elif typename in (Types.BOOLEAN, BoxTypes.BOOLEAN):
         return translateBoolean(value)
     elif typename in (Types.BYTE, BoxTypes.BYTE):
         return '(byte)%d' % int(value)

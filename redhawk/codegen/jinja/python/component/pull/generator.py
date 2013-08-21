@@ -15,8 +15,8 @@ loader = CodegenLoader(__package__,
                         'base':   'redhawk.codegen.jinja.python.component.base'})
 
 class PullComponentGenerator(PythonCodeGenerator):
-    # Need to keep auto_start to handle legacy options
-    def parseopts (self, auto_start=True):
+    # Need to keep auto_start and queued_ports to handle legacy options
+    def parseopts (self, auto_start=True,queued_ports=False):
         pass
 
     def loader(self, component):
