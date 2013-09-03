@@ -61,7 +61,7 @@ inline bool operator>>= (const CORBA::Any& a, ${struct.cpptype}& s) {
 /*{% else %}*/
 /*{%   set extractName = 's.'+field.cppname %}*/
 /*{% endif %}*/
-            if (!(props[idx].value >>= ${cpp.extract(extractName, field.type)})) return false;
+            if (!(props[idx].value >>= ${cpp.extract(extractName, field.type, field.iscomplex)})) return false;
 /*{% if field.type == 'char' %}*/
             s.${field.cppname} = temp_char;
 /*{% endif %}*/
@@ -76,7 +76,7 @@ inline void operator<<= (CORBA::Any& a, const ${struct.cpptype}& s) {
     props.length(${struct.fields|length});
 /*{% for field in struct.fields %}*/
     props[${loop.index0}].id = CORBA::string_dup("${field.identifier}");
-    props[${loop.index0}].value <<= ${cpp.insert('s.'+field.cppname, field.type)};
+    props[${loop.index0}].value <<= ${cpp.insert('s.'+field.cppname, field.type, field.iscomplex)};
 /*{% endfor %}*/
     a <<= props;
 };

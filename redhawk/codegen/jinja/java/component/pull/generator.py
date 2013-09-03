@@ -46,7 +46,7 @@ class PullComponentGenerator(JavaCodeGenerator):
         userfile = component['userclass']['file']
         basefile = component['baseclass']['file']
         templates = [
-            JavaTemplate('resource.java', os.path.join(pkgpath, userfile)),
+            JavaTemplate('resource.java', os.path.join(pkgpath, userfile), userfile=True),
             JavaTemplate('resource_base.java', os.path.join(pkgpath, basefile)),
             AutomakeTemplate('base/Makefile.am'),
             AutoconfTemplate('base/configure.ac'),

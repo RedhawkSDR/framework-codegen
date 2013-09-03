@@ -38,8 +38,8 @@ class PullComponentGenerator(CppCodeGenerator):
 
     def templates(self, component):
         templates = [
-            CppTemplate('resource.cpp', component['userclass']['file']),
-            CppTemplate('resource.h', component['userclass']['header']),
+            CppTemplate('resource.cpp', component['userclass']['file'], userfile=True),
+            CppTemplate('resource.h', component['userclass']['header'], userfile=True),
             CppTemplate('resource_base.cpp', component['baseclass']['file']),
             CppTemplate('resource_base.h', component['baseclass']['header']),
             CppTemplate('base/main.cpp'),

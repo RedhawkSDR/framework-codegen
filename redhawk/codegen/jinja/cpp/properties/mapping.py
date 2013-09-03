@@ -15,6 +15,7 @@ class CppPropertyMapper(PropertyMapper):
 
     def mapSimpleProperty(self, prop):
         cppprop = self.mapProperty(prop)
+        cppprop['iscomplex'] = prop.isComplex()
         cppprop['cpptype'] = cpp.cppType(prop.type(), prop.isComplex())
         if prop.hasValue():
             cppprop['cppvalue'] = cpp.literal(prop.value(), 

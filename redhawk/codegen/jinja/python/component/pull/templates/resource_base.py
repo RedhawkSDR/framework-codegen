@@ -63,9 +63,11 @@ class ProcessThread(threading.Thread):
         state = NORMAL
         while (state != FINISH) and (not self.stop_signal.isSet()):
             state = self.target()
+            delay = 1e-6
             if (state == NOOP):
                 # If there was no data to process sleep to avoid spinning
-                time.sleep(self.pause)
+                delay = self.pause
+            time.sleep(delay)
 
 class ${className}(${component.poaclass}, ${superclass}):
         # These values can be altered in the __init__ of your derived class

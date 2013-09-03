@@ -87,24 +87,27 @@ def check_bulkio_input(filename):
             return True
     return False
 
-def add_bulkio_compat_header(filename):
-    """
-    Inserts include of BULKIO compatibility header into the given source
-    file.
-    """
+def check_bulkio_ports(filename):
+    if not os.path.exists(filename):
+        return False
+    for line in open(filename, 'r'):
+        if line.find('BULKIO') >= 0:
+            return True
+    return False
+
+def modify_file(filename, predicate, text):
+    if not os.path.exists(filename):
+        return
     infile = open(filename, 'r')
     outfile = tempfile.NamedTemporaryFile(delete=False)
 
-    # Find the first include statement (assume there's at least one) and insert
-    # our own before it.
     for line in infile:
-        if line.startswith('#include'):
-            outfile.write("""// Inserted by update_project
-#include <bulkio/bulkio_compat.h>
-""")
+        if predicate(line):
+            outfile.write(text)
             outfile.write(line)
             break
         outfile.write(line)
+
     # Copy the remainder of the file
     outfile.writelines(infile)
     infile.close()
@@ -113,6 +116,39 @@ def add_bulkio_compat_header(filename):
     # Move the original out of the way and move the new one in
     os.rename(filename, filename+'.orig')
     shutil.move(outfile.name, filename)
+    
+def add_bulkio_compat_header(filename):
+    """
+    Inserts include of BULKIO compatibility header into the given source
+    file.
+    """
+    def is_include(line):
+        return line.startswith('#include')
+
+    text = """// Inserted by update_project
+#include <bulkio/bulkio_compat.h>
+// End of update_project insertions
+
+"""
+    modify_file(filename, is_include, text)
+
+def add_python_compat_imports(filename):
+    """
+    Inserts imports that are no longer part of the base class into the given
+    source file.
+    """
+    def is_import(line):
+        return line.startswith('import') or line.startswith('from ')
+    text = """
+# Inserted by update_project
+from ossie.cf import ExtendedCF
+from omniORB import CORBA
+import struct #@UnresolvedImport
+from bulkio.bulkioInterfaces import BULKIO, BULKIO__POA #@UnusedImport
+# End of update_project insertions
+
+"""
+    modify_file(filename, is_import, text)
 
 if __name__ == '__main__':
     DEBUG = False
@@ -127,6 +163,9 @@ if __name__ == '__main__':
 
     # Update existing WaveDev settings file
     if os.path.exists(wavedevFile):
+        # Determine component name by removing leading '.' and trailing
+        # '.wavedev'
+        compName = os.path.basename(wavedevFile)[1:-8]
         dirname = os.path.dirname(wavedevFile)
         dom = minidom.parse(wavedevFile)
         if DEBUG:
@@ -138,6 +177,7 @@ if __name__ == '__main__':
             valueNode = node.getElementsByTagName('value')[0]
             # update template and generatorId attributes for value tags 
             isCpp = False
+            isPython = False
             implId = node.attributes.get('key').value
             outputDir = implId
             for name, value in valueNode.attributes.items():
@@ -146,18 +186,23 @@ if __name__ == '__main__':
                         valueNode.setAttribute(name,_templateMapping[value])
                     if value == 'gov.redhawk.ide.codegen.jet.cplusplus.PullPortDataTemplate':
                         isCpp = True
+                    elif value == 'gov.redhawk.ide.codegen.jet.python.pattern.PullPortDataTemplate':
+                        isPython = True
                 elif name == "generatorId":
                     if value in _generatorIdMapping:
                         valueNode.setAttribute(name,_generatorIdMapping[value])
                 elif name == 'outputDir':
                     outputDir = value
             if isCpp:
-                # Determine component name by removing leading '.' and trailing
-                # '.wavedev'
-                compName = os.path.basename(wavedevFile)[1:-8]
                 compCpp = os.path.join(dirname, outputDir, compName+'.cpp')
                 if check_bulkio_input(compCpp):
                     add_bulkio_compat_header(compCpp)
+            elif isPython:
+                # Check the SCD for BULKIO ports
+                scdFile = os.path.join(dirname, compName+'.scd.xml')
+                if check_bulkio_ports(scdFile):
+                    compPy = os.path.join(dirname, outputDir, compName+'.py')
+                    add_python_compat_imports(compPy)
 
         # Strip out blank lines created by removeChild
         sp = dom.toxml(encoding="ASCII").split('\n')
@@ -173,7 +218,7 @@ if __name__ == '__main__':
             print "============================================================"
 
         # Update .project file
-        projectFile = dirname + "/.project"
+        projectFile = os.path.join(dirname, ".project")
 
         empty = re.compile('^$')
         if os.path.exists(projectFile):

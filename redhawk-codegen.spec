@@ -24,7 +24,7 @@ Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
 Version:        1.9.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Redhawk Code Generators
 
 Group:          Applications/Engineering
@@ -44,6 +44,8 @@ BuildRequires:  python-devel >= 2.4
 
 %description
 REDHAWK Code Generators
+ * Commit: __REVISION__
+ * Source Date/Time: __DATETIME__
 
 
 %prep

@@ -25,8 +25,8 @@ class Generator(object):
                     pass
 
         # Migrate legacy CRCs to MD5 sums. If the file is unchanged, calculate
-        # the MD5; otherwise, leave it out of the table--it will be treated as
-        # modified.
+        # the MD5; otherwise, continue to check the old CRC32.
+        self.crcs = {}
         for filename in crcs:
             if filename in self.md5sums:
                 # Assume MD5 sum is more recent
@@ -39,6 +39,8 @@ class Generator(object):
             if crcs[filename] == str(utils.fileCRC(pathname, stripnewlines=True)):
                 # File is unchanged, calculate MD5 sum.
                 self.md5sums[filename] = utils.fileMD5(pathname)
+            else:
+                self.crcs[filename] = crcs[filename]
 
     def parseopts(self):
         """
@@ -57,14 +59,59 @@ class Generator(object):
         component = self.map(softpkg)
         return [t.filename for t in self.templates(component)]
 
+    def trackedFiles(self):
+        """
+        Returns the list of files tracked by MD5 sums or CRC32s (for legacy
+        projects).
+        """
+        return self.md5sums.keys() + self.crcs.keys()
+
     def fileChanged(self, filename):
         pathname = os.path.join(self.outputdir, filename)
         if not os.path.exists(pathname):
             return False
         lastHash = self.md5sums.get(filename, None)
-        currentHash = utils.fileMD5(pathname)
+        if lastHash is None and filename in self.crcs:
+            lastHash = self.crcs[filename]
+            currentHash = str(utils.fileCRC(pathname, stripnewlines=True))
+        else:
+            currentHash = utils.fileMD5(pathname)
         return lastHash != currentHash
 
+    def fileExists(self, filename):
+        pathname = os.path.join(self.outputdir, filename)
+        return os.path.exists(pathname)
+
+    def fileinfo(self, softpkg):
+        """
+        Return information about what files would be affected by generation.
+        """
+        component = self.map(softpkg)
+        stale = set(self.trackedFiles())
+        files = []
+        # Check state of files that would be generated
+        for template in self.templates(component):
+            if template.filename in stale:
+                stale.remove(template.filename)
+            info = { 'filename': template.filename,
+                     'user':     template.userfile,
+                     'modified': self.fileChanged(template.filename),
+                     'new':      not self.fileExists(template.filename),
+                     'remove':   False }
+            files.append(info)
+
+        # Check for files that can be deleted
+        for filename in stale:
+            if self.fileExists(filename):
+                info = { 'filename': filename,
+                         'user':     False,
+                         'modified': self.fileChanged(filename),
+                         'new':      False,
+                         'remove':   True}
+                files.append(info)
+        
+        return files
+            
     def generate(self, softpkg, *filenames):
         if not os.path.exists(self.outputdir):
             os.mkdir(self.outputdir)
@@ -77,8 +124,11 @@ class Generator(object):
         generated = []
         skipped = []
 
-        # Note all MD5 tracked files, for cleaning up stale files
-        stale = set(self.md5sums.keys())
+        # Note all tracked files, for cleaning up stale files; if a file list
+        # was given, only consider those files for deletion.
+        stale = set(self.trackedFiles())
+        if filenames:
+            stale.intersection_update(filenames)
 
         for template in self.templates(component):
             # Mark the current template as seen so it will not be deleted,
@@ -95,8 +145,11 @@ class Generator(object):
             if os.path.exists(filename):
                 # Check if the file has been modified since last generation.
                 if self.fileChanged(template.filename) and not self.overwrite:
-                    skipped.append(template.filename)
+                    skipped.append((template.filename, 'overwrite'))
                     continue
+                action = ''
+            else:
+                action = '(added)'
 
             # Attempt to ensure that the full required path exists for files
             # that are more deeply nested.
@@ -128,17 +181,27 @@ class Generator(object):
             finally:
                 outfile.close()
 
-            generated.append(template.filename)
+            generated.append((template.filename, action))
 
             # Update the MD5 digest
             self.md5sums[template.filename] = utils.fileMD5(filename)
 
         # Remove old files that were not (and would not have been) generated on
-        # this pass, and are unchanged
+        # this pass, and are unchanged.
         for existing in stale:
             filename = os.path.join(self.outputdir, existing)
-            if os.path.exists(filename) and not self.fileChanged(filename):
-                os.unlink(filename)
+            if not os.path.exists(filename):
+                continue
+
+            # Check for changes, and require explicit action to remove.
+            if self.fileChanged(existing) and not self.overwrite:
+                skipped.append((existing, 'delete'))
+                continue
+
+            # Delete the file, and remove its MD5 sum (if it has one).
+            os.unlink(filename)
+            generated.append((existing, '(deleted)'))
+            if existing in self.md5sums:
                 del self.md5sums[existing]
 
         # Save updated MD5 digests

@@ -29,8 +29,8 @@ class ServiceGenerator(CppCodeGenerator):
     def templates(self, component):
         templates = [
             CppTemplate('main.cpp'),
-            CppTemplate('service.cpp', component['userclass']['file']),
-            CppTemplate('service.h', component['userclass']['header']),
+            CppTemplate('service.cpp', component['userclass']['file'], userfile=True),
+            CppTemplate('service.h', component['userclass']['header'], userfile=True),
             CppTemplate('service_base.cpp', component['baseclass']['file']),
             CppTemplate('service_base.h', component['baseclass']['header']),
             AutomakeTemplate('Makefile.am'),

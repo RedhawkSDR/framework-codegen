@@ -108,14 +108,14 @@ def literal(value, typename, complex=False):
 def sequenceType(typename, complex=False):
     return 'std::vector<%s>' % (cppType(typename, complex),)
 
-def insert(name, typename):
-    if typename in (CorbaTypes.CHAR, CorbaTypes.OCTET):
+def insert(name, typename, complex=False):
+    if typename in (CorbaTypes.CHAR, CorbaTypes.OCTET) and not complex:
         return 'CORBA::Any::from_%s(%s)' % (typename, name)
     else:
         return name
 
-def extract(name, typename):
-    if typename in (CorbaTypes.CHAR, CorbaTypes.OCTET):
+def extract(name, typename, complex=False):
+    if typename in (CorbaTypes.CHAR, CorbaTypes.OCTET) and not complex:
         return 'CORBA::Any::to_%s(%s)' % (typename, name)
     else:
         return name

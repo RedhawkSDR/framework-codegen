@@ -207,12 +207,22 @@ if __name__ == '__main__':
                 implFiles = []
             print header
             generated, skipped = generator.generate(softpkg, *implFiles)
-            for filename in skipped:
-                print >>sys.stderr, 'WARNING:', os.path.join(path, filename), 'has been modified, use -f to overwrite'
-            for filename in generated:
-                print ' ', os.path.join(path, filename)
+            for filename, verb in skipped:
+                print >>sys.stderr, 'WARNING:', os.path.join(path, filename), 'has been modified, use -f to', verb
+            for filename, verb in generated:
+                print ' ', os.path.join(path, filename), verb
         elif action == Function.LIST:
-            for filename in generator.filenames(softpkg):
-                if generator.fileChanged(filename):
-                    filename += '*'
-                print os.path.join(path, filename)
+            for fileinfo in generator.fileinfo(softpkg):
+                # Convert file attributes to annotations; if the attribute is
+                # true, add the corresponding character to the string
+                attrmap = (('user',     'U'),
+                           ('modified', 'M'),
+                           ('new',      'A'),
+                           ('remove',   'D'))
+                attrs = ''
+                for key, mark in attrmap:
+                    if fileinfo[key]:
+                        attrs += mark
+                    else:
+                        attrs += ' '
+                print attrs, os.path.join(path, fileinfo['filename'])

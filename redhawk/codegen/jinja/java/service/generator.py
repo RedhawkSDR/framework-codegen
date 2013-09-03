@@ -44,7 +44,7 @@ class ServiceGenerator(JavaCodeGenerator):
         pkgpath = os.path.join('src', *service['package'].split('.'))
         mainfile = service['userclass']['file']
         templates = [
-            JavaTemplate('service.java', os.path.join(pkgpath, mainfile)),
+            JavaTemplate('service.java', os.path.join(pkgpath, mainfile), userfile=True),
             AutomakeTemplate('base/Makefile.am'),
             AutoconfTemplate('base/configure.ac'),
             ShellTemplate('base/startJava.sh'),

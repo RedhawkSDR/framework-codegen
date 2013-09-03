@@ -33,7 +33,7 @@ class ServiceGenerator(PythonCodeGenerator):
 
     def templates(self, service):
         templates = [
-            PythonTemplate('service.py', service['userclass']['file'], executable=True),
+            PythonTemplate('service.py', service['userclass']['file'], executable=True, userfile=True),
             AutoconfTemplate('pull/configure.ac'),
             AutomakeTemplate('base/Makefile.am'),
             AutomakeTemplate('base/Makefile.am.ide'),
