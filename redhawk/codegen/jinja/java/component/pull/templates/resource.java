@@ -1,6 +1,6 @@
 //% set classname = component.userclass.name
 //% set baseclass = component.baseclass.name
-//% set artifactType = component.superclass.artifactType
+//% set artifactType = component.artifacttype
 package ${component.package};
 
 import java.util.Properties;

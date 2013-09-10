@@ -1,6 +1,6 @@
 //% set className = component.userclass.name
 //% set baseClass = component.baseclass.name
-//% set artifactType = component.superclass.artifactType
+//% set artifactType = component.artifacttype
 /**************************************************************************
 
     This is the ${artifactType} code. This file contains the child class where

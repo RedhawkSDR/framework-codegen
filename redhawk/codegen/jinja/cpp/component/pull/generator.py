@@ -44,7 +44,7 @@ class PullComponentGenerator(CppCodeGenerator):
             CppTemplate('resource_base.h', component['baseclass']['header']),
             CppTemplate('base/main.cpp'),
             AutomakeTemplate('base/Makefile.am'),
-            AutomakeTemplate('base/Makefile.am.ide'),
+            AutomakeTemplate('base/Makefile.am.ide', userfile=True),
             AutoconfTemplate('base/configure.ac'),
             ShellTemplate('base/build.sh'),
             ShellTemplate('common/reconf')

@@ -1,11 +1,12 @@
 //% set includeGuard = component.name.upper() + '_IMPL_BASE_H'
 //% set className = component.baseclass.name
-//% set superclass = component.superclass.name
 #ifndef ${includeGuard}
 #define ${includeGuard}
 
 #include <boost/thread.hpp>
-#include ${component.superclass.header}
+/*{% for superclass in component.superclasses %}*/
+#include ${superclass.header}
+/*{% endfor %}*/
 
 /*{% if component.hasbulkio %}*/
 #include "bulkio/bulkio.h"
@@ -89,7 +90,7 @@ class ProcessThread
         boost::mutex _eor_mutex;
 };
 
-class ${className} : public ${superclass}
+class ${className} : public ${component.superclasses|join(', public ', attribute='name')}
 {
 /*{% for portgen in component.portgenerators if portgen.hasDeclaration() %}*/
     friend class ${portgen.className()};

@@ -1,7 +1,7 @@
 //% set userclass = component.userclass.name
 //% set classname = component.baseclass.name
 //% set superClass = component.superclass.name
-//% set artifactType = component.superclass.artifactType
+//% set artifactType = component.artifacttype
 package ${component.package};
 
 /*{% if component is device %}*/

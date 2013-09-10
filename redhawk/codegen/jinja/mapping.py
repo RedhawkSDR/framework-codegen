@@ -1,4 +1,5 @@
 from redhawk.codegen.model.properties import Kinds
+from redhawk.codegen.model.softwarecomponent import ComponentTypes
 from redhawk.codegen.lang.idl import IDLInterface
 
 class PropertyMapper(object):
@@ -117,9 +118,12 @@ class ComponentMapper(object):
     
     def mapComponent(self, softpkg):
         component = {}
+        component['artifacttype'] = self.artifactType(softpkg)
         component['name'] = softpkg.name()
         component['version'] = softpkg.version()
         component['type'] = softpkg.type()
+        if softpkg.descriptor().supports('IDL:CF/AggregateDevice:1.0'):
+            component['aggregate'] = True
         component['sdrpath'] = softpkg.getSdrPath()
 
         # XML profile
@@ -133,6 +137,16 @@ class ComponentMapper(object):
 
     def _mapComponent(self, softpkg):
         return {}
+
+    def artifactType(self, softpkg):
+        if softpkg.type() == ComponentTypes.RESOURCE:
+            return 'component'
+        elif softpkg.type() in (ComponentTypes.DEVICE, ComponentTypes.LOADABLEDEVICE, ComponentTypes.EXECUTABLEDEVICE):
+            return 'device'
+        elif softpkg.type() == ComponentTypes.SERVICE:
+            return 'service'
+        else:
+            raise ValueError, 'Unsupported software component type', softpkg.type()
 
     def getInterfaceNamespaces(self, softpkg):
         # The CF interfaces are already assumed as part of REDHAWK

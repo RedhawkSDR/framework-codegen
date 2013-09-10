@@ -1,6 +1,6 @@
 //% set className = component.baseclass.name
 //% set baseClass = component.superclass.name
-//% set artifactType = component.superclass.artifactType
+//% set artifactType = component.artifacttype
 #include "${component.baseclass.header}"
 
 /*******************************************************************************************

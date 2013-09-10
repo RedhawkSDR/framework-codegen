@@ -21,6 +21,7 @@ class CodegenEnvironment(jinja2.Environment):
         self.tests['never'] = tests.is_never
         self.tests['resource'] = tests.is_resource
         self.tests['device'] = tests.is_device
+        self.tests['aggregatedevice'] = tests.is_aggregatedevice
         self.tests['service'] = tests.is_service
         self.tests['simple'] = tests.is_simple
         self.tests['simplesequence'] = tests.is_simplesequence

@@ -36,6 +36,12 @@ class SoftwareComponent(object):
     def repid(self):
         return self.__scd.componentrepid
 
+    def supports(self, interface):
+        for support in self.__scd.componentfeatures.supportsinterface:
+            if support.repid == interface:
+                return True
+        return False
+
     def interfaces(self):
         return self.__scd.interfaces.interface
 

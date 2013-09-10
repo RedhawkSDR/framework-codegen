@@ -42,7 +42,14 @@ class PythonPropertyMapper(PropertyMapper):
         return pyprop
 
     def _mapStructValue(self, value, structdef):
-        args = (value[f['identifier']] for f in structdef['fields'])
+        args= []
+        for f in structdef['fields']:
+            if f['type'] == 'string' or f['type'] == 'char':
+                args.append('\''+value[f['identifier']]+'\'')
+            elif f['type'] == 'boolean':
+                args.append(value[f['identifier']].capitalize())
+            else:
+                args.append(value[f['identifier']])
         return '%s(%s)' % (structdef['pyclass'], ','.join(args))
 
     def _structName(self, name):

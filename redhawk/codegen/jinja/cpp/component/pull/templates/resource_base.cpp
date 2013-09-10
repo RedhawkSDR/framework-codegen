@@ -1,6 +1,6 @@
 //% set className = component.baseclass.name
-//% set baseClass = component.superclass.name
-//% set artifactType = component.superclass.artifactType
+//% set baseClass = component.superclasses[0].name
+//% set artifactType = component.artifacttype
 #include "${component.baseclass.header}"
 
 /*******************************************************************************************
@@ -15,25 +15,41 @@
 
 /*{% if component is device %}*/
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl) :
-    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl) , serviceThread(0)
+    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl),
+/*{% if component is aggregatedevice %}*/
+    AggregateDevice_impl(),
+/*{% endif %}*/
+    serviceThread(0)
 {
     construct();
 }
 
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, char *compDev) :
-    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, compDev) , serviceThread(0)
+    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, compDev),
+/*{% if component is aggregatedevice %}*/
+    AggregateDevice_impl(),
+/*{% endif %}*/
+    serviceThread(0)
 {
     construct();
 }
 
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, CF::Properties capacities) :
-    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, capacities) , serviceThread(0)
+    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, capacities),
+/*{% if component is aggregatedevice %}*/
+    AggregateDevice_impl(),
+/*{% endif %}*/
+    serviceThread(0)
 {
     construct();
 }
 
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, CF::Properties capacities, char *compDev) :
-    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, capacities, compDev) , serviceThread(0)
+    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, capacities, compDev),
+/*{% if component is aggregatedevice %}*/
+    AggregateDevice_impl(),
+/*{% endif %}*/
+    serviceThread(0)
 {
     construct();
 }

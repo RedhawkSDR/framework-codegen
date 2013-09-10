@@ -19,19 +19,25 @@ def is_device(component):
     """
     Returns True if the component is a REDHAWK device.
     """
-    return component['type'] == ComponentTypes.DEVICE or component['type'] == ComponentTypes.LOADABLEDEVICE or component['type'] == ComponentTypes.EXECUTABLEDEVICE
+    return component['type'] in (ComponentTypes.DEVICE, ComponentTypes.LOADABLEDEVICE, ComponentTypes.EXECUTABLEDEVICE)
 
 def is_loadabledevice(component):
     """
     Returns True if the component is a REDHAWK loadable device.
     """
-    return component['type'] == ComponentTypes.LOADABLEDEVICE
+    return component['type'] in (ComponentTypes.LOADABLEDEVICE, ComponentTypes.EXECUTABLEDEVICE)
 
 def is_executabledevice(component):
     """
     Returns True if the component is a REDHAWK executable device.
     """
     return component['type'] == ComponentTypes.EXECUTABLEDEVICE
+
+def is_aggregatedevice(component):
+    """
+    Returns True if the component is a REDHAWK aggregate device.
+    """
+    return component.get('aggregate', False)
 
 def is_service(component):
     """

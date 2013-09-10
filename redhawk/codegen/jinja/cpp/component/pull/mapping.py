@@ -8,7 +8,7 @@ class PullComponentMapper(BaseComponentMapper):
         cppcomp = {}
         cppcomp['baseclass'] = self.baseClass(softpkg)
         cppcomp['userclass'] = self.userClass(softpkg)
-        cppcomp['superclass'] = self.superclass(softpkg)
+        cppcomp['superclasses'] = self.superClasses(softpkg)
         cppcomp['interfacedeps'] = tuple(self.getInterfaceDependencies(softpkg))
         cppcomp['hasbulkio'] = self.hasBulkioPorts(softpkg)
         return cppcomp
@@ -27,24 +27,25 @@ class PullComponentMapper(BaseComponentMapper):
                 'file'  : baseclass+'.cpp'}
 
     @staticmethod
-    def superclass(softpkg):
+    def superClasses(softpkg):
         if softpkg.type() == ComponentTypes.RESOURCE:
             name = 'Resource_impl'
-            artifactType = 'component'
         elif softpkg.type() == ComponentTypes.DEVICE:
             name = 'Device_impl'
-            artifactType = 'device'
+            aggregate = 'virtual POA_CF::AggregatePlainDevice'
         elif softpkg.type() == ComponentTypes.LOADABLEDEVICE:
             name = 'LoadableDevice_impl'
-            artifactType = 'device'
+            aggregate = 'virtual POA_CF::AggregateLoadableDevice'
         elif softpkg.type() == ComponentTypes.EXECUTABLEDEVICE:
             name = 'ExecutableDevice_impl'
-            artifactType = 'device'
+            aggregate = 'virtual POA_CF::AggregateExecutableDevice'
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
-        return {'name': name,
-                'header': '<ossie/'+name+'.h>',
-                'artifactType': artifactType}
+        classes = [{'name': name, 'header': '<ossie/'+name+'.h>'}]
+        if softpkg.descriptor().supports('IDL:CF/AggregateDevice:1.0'):
+            classes.append({'name': aggregate, 'header': '<CF/AggregateDevices.h>'})
+            classes.append({'name': 'AggregateDevice_impl', 'header': '<ossie/AggregateDevice_impl.h>'})
+        return classes
 
     def hasBulkioPorts(self, softpkg):
         for port in softpkg.ports():

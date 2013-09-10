@@ -9,8 +9,8 @@ class PullComponentMapper(ComponentMapper):
         pycomp = {}
         pycomp['baseclass'] = self.baseClass(softpkg)
         pycomp['userclass'] = self.userClass(softpkg)
-        pycomp['superclass'] = self.superclass(softpkg)
-        pycomp['poaclass'] = self.poaclass(softpkg)
+        pycomp['superclasses'] = self.superClasses(softpkg)
+        pycomp['poaclass'] = self.poaClass(softpkg)
         pycomp['interfacedeps'] = self.getInterfaceDependencies(softpkg)
         pycomp['hasbulkio'] = self.hasBulkioPorts(softpkg)
         return pycomp
@@ -27,34 +27,46 @@ class PullComponentMapper(ComponentMapper):
                 'file'  : baseclass+'.py'}
 
     @staticmethod
-    def superclass(softpkg):
+    def superClasses(softpkg):
         if softpkg.type() == ComponentTypes.RESOURCE:
             name = 'Resource'
-            artifactType = 'component'
+            package = 'ossie.resource'
         elif softpkg.type() == ComponentTypes.DEVICE:
             name = 'Device'
-            artifactType = 'device'
+            package = 'ossie.device'
         elif softpkg.type() == ComponentTypes.LOADABLEDEVICE:
             name = 'LoadableDevice'
-            artifactType = 'device'
+            package = 'ossie.device'
         elif softpkg.type() == ComponentTypes.EXECUTABLEDEVICE:
             name = 'ExecutableDevice'
-            artifactType = 'device'
+            package = 'ossie.device'
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
-        return {'name': name,
-                'artifactType': artifactType }
+        classes = [{'name': name, 'package': package}]
+        if softpkg.descriptor().supports('IDL:CF/AggregateDevice:1.0'):
+            classes.append({'name': 'AggregateDevice', 'package': 'ossie.device'})
+        return classes
 
     @staticmethod
-    def poaclass(softpkg):
+    def poaClass(softpkg):
+        aggregate = softpkg.descriptor().supports('IDL:CF/AggregateDevice:1.0')
         if softpkg.type() == ComponentTypes.RESOURCE:
             return 'CF__POA.Resource'
         elif softpkg.type() == ComponentTypes.DEVICE:
-            return 'CF__POA.Device'
+            if aggregate:
+                return 'CF__POA.AggregatePlainDevice'
+            else:
+                return 'CF__POA.Device'
         elif softpkg.type() == ComponentTypes.LOADABLEDEVICE:
-            return 'CF__POA.LoadableDevice'
+            if aggregate:
+                return 'CF__POA.AggregateLoadableDevice'
+            else:
+                return 'CF__POA.LoadableDevice'
         elif softpkg.type() == ComponentTypes.EXECUTABLEDEVICE:
-            return 'CF__POA.ExecutableDevice'
+            if aggregate:
+                return 'CF__POA.AggregateExecutableDevice'
+            else:
+                return 'CF__POA.ExecutableDevice'
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
 

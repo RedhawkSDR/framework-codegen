@@ -30,7 +30,7 @@ class BaseComponentGenerator(CppCodeGenerator):
         templates = [
             CppTemplate('main.cpp'),
             AutomakeTemplate('Makefile.am'),
-            AutomakeTemplate('Makefile.am.ide'),
+            AutomakeTemplate('Makefile.am.ide', userfile=True),
             AutoconfTemplate('configure.ac'),
             ShellTemplate('build.sh'),
             ShellTemplate('common/reconf')

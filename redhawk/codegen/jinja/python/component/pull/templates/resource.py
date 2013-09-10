@@ -1,6 +1,6 @@
 #% set className = component.userclass.name
 #% set baseClass = component.baseclass.name
-#% set artifactType = component.superclass.artifactType
+#% set artifactType = component.artifacttype
 #!/usr/bin/env python
 #
 # AUTO-GENERATED

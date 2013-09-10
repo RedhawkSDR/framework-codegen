@@ -70,7 +70,7 @@ def paramType(param):
         return name
     else:
         name = 'const '+name
-    if kind == CORBA.tk_string:
+    if kind == CORBA.tk_string or kind == CORBA.tk_objref:
         return name
     return name + '&'
 

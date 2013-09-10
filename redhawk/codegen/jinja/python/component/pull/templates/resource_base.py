@@ -1,6 +1,6 @@
 #% set className = component.baseclass.name
-#% set superclass = component.superclass.name
-#% set artifactType = component.superclass.artifactType
+#% set superclass = component.superclasses[0].name
+#% set artifactType = component.artifacttype
 #!/usr/bin/env python
 #
 # AUTO-GENERATED CODE.  DO NOT MODIFY!
@@ -9,11 +9,9 @@
 from ossie.cf import CF, CF__POA
 from ossie.utils import uuid
 
-#{% if component is device %}
-from ossie.device import ${superclass}
-#{% else %}
-from ossie.resource import Resource
-#{% endif %}
+#{% for parent in component.superclasses %}
+from ${parent.package} import ${parent.name}
+#{% endfor %}
 #{% if component.properties|test('simple') is sometimes(true) or component.structdefs %}
 from ossie.properties import simple_property
 #{% endif %}
@@ -69,7 +67,7 @@ class ProcessThread(threading.Thread):
                 delay = self.pause
             time.sleep(delay)
 
-class ${className}(${component.poaclass}, ${superclass}):
+class ${className}(${component.poaclass}, ${component.superclasses|join(', ', attribute='name')}):
         # These values can be altered in the __init__ of your derived class
 
         PAUSE = 0.0125 # The amount of time to sleep if process return NOOP
@@ -79,6 +77,9 @@ class ${className}(${component.poaclass}, ${superclass}):
 #{% if component is device %}
         def __init__(self, devmgr, uuid, label, softwareProfile, compositeDevice, execparams):
             ${superclass}.__init__(self, devmgr, uuid, label, softwareProfile, compositeDevice, execparams)
+#{%   if component is aggregatedevice %}
+            AggregateDevice.__init__(self)
+#{%   endif %}
 #{% else %}
         def __init__(self, identifier, execparams):
             loggerName = (execparams['NAME_BINDING'].replace('/', '.')).rsplit("_", 1)[0]

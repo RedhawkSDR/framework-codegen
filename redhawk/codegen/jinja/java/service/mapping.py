@@ -47,11 +47,9 @@ class ServiceMapper(ComponentMapper):
     def superclass(self, softpkg):
         if softpkg.type() == ComponentTypes.SERVICE:
             name = 'Service'
-            artifactType = 'service'
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
-        return {'name': name,
-                'artifactType': artifactType}
+        return {'name': name}
 
     def getNamespace(self, idl):
         if idl.namespace().startswith('omg.org'):

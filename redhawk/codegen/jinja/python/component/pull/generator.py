@@ -40,7 +40,7 @@ class PullComponentGenerator(PythonCodeGenerator):
             PythonTemplate('resource.py', component['userclass']['file'], executable=True, userfile=True),
             AutoconfTemplate('configure.ac'),
             AutomakeTemplate('base/Makefile.am'),
-            AutomakeTemplate('base/Makefile.am.ide'),
+            AutomakeTemplate('base/Makefile.am.ide', userfile=True),
             ShellTemplate('common/reconf')
         ]
         return templates

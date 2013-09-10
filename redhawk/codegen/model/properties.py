@@ -175,7 +175,7 @@ class StructSequenceProperty(Property, _Struct, _Sequence):
 
     def mapvalue_(self, base, mapping, structval):
         value = base.copy()
-        value.update((mapping[v.refid], v.value) for v in structval.simpleref)
+        value.update((v.refid, v.value) for v in structval.simpleref)
         return value
 
 def parse(prfFile):

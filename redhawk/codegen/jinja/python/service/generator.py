@@ -36,7 +36,7 @@ class ServiceGenerator(PythonCodeGenerator):
             PythonTemplate('service.py', service['userclass']['file'], executable=True, userfile=True),
             AutoconfTemplate('pull/configure.ac'),
             AutomakeTemplate('base/Makefile.am'),
-            AutomakeTemplate('base/Makefile.am.ide'),
+            AutomakeTemplate('base/Makefile.am.ide', userfile=True),
             ShellTemplate('common/reconf')
         ]
         return templates

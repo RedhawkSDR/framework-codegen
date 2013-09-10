@@ -34,7 +34,7 @@ class ServiceGenerator(CppCodeGenerator):
             CppTemplate('service_base.cpp', component['baseclass']['file']),
             CppTemplate('service_base.h', component['baseclass']['header']),
             AutomakeTemplate('Makefile.am'),
-            AutomakeTemplate('Makefile.am.ide'),
+            AutomakeTemplate('Makefile.am.ide', userfile=True),
             AutoconfTemplate('configure.ac'),
             ShellTemplate('build.sh'),
             ShellTemplate('common/reconf')

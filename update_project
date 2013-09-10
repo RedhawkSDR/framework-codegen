@@ -116,6 +116,9 @@ def modify_file(filename, predicate, text):
     # Move the original out of the way and move the new one in
     os.rename(filename, filename+'.orig')
     shutil.move(outfile.name, filename)
+
+    perm = os.stat(filename+'.orig')
+    os.chmod(filename,perm.st_mode)
     
 def add_bulkio_compat_header(filename):
     """
@@ -145,6 +148,7 @@ from ossie.cf import ExtendedCF
 from omniORB import CORBA
 import struct #@UnresolvedImport
 from bulkio.bulkioInterfaces import BULKIO, BULKIO__POA #@UnusedImport
+from bulkio.bulkio_compat import *
 # End of update_project insertions
 
 """
@@ -238,11 +242,11 @@ if __name__ == '__main__':
                             if not subnode.hasChildNodes():
                                 subnode.appendChild(dom.createTextNode(''))
 
-            # Remove buildCommand element that contains jet
+            # Remove builder for the top-level build.sh generator
             for node in dom.getElementsByTagName('buildSpec'):
                 for child in node.childNodes:
                     if child.nodeType == node.ELEMENT_NODE and child.tagName == "buildCommand":
-                        if child.toxml().find(".jet.") != -1:
+                        if child.toxml().find("gov.redhawk.ide.codegen.builders.TopLevelBuildScript") != -1:
                             node.removeChild(child)
 
 

@@ -52,6 +52,11 @@ def findInterface(repid):
         includePaths.append('/usr/local/share/idl/omniORB/COS')
         includePaths.append('/usr/share/idl/omniORB/COS')
         idlRepo.update((interface.repoId, interface) for interface in findInterfacesByPath(namespace, '/usr/share/idl/omniORB/COS', includePaths))
+        if idlRepo == {}:
+            includePaths = []
+            includePaths.append('/usr/local/share/idl/omniORB')
+            includePaths.append('/usr/share/idl/omniORB')
+            idlRepo.update((interface.repoId, interface) for interface in findInterfacesByPath(namespace, '/usr/share/idl/omniORB/', includePaths, includeAll=True, includeCOS=False))
     elif 'IDL:CF/Resource:1.0' not in idlRepo:
         idlRepo.update((interface.repoId, interface) for interface in importIDL.importStandardIdl())
 
@@ -62,11 +67,13 @@ def findInterface(repid):
     else:
         raise KeyError, 'Unsupported IDL interface', repid
 
-def findInterfacesByPath(namespace, path, includes):
+def findInterfacesByPath(namespace, path, includes, includeAll=False, includeCOS=True):
     namespace = namespace.split('/')[1] + '.idl'
     ints = []
     for root, dirs, files in os.walk(path):
         for name in files:
-            if name == namespace:
+            if (name == namespace) or includeAll:
+                if not includeCOS and "COS" in root:
+                    continue
                 ints.extend(importIDL.getInterfacesFromFile(os.path.join(root, name), includes))
     return ints

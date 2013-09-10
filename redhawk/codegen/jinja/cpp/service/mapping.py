@@ -33,10 +33,8 @@ class ServiceMapper(ComponentMapper):
     @staticmethod
     def superClass(softpkg):
         name = 'Service_impl'
-        artifactType = 'component'
         return {'name': name,
-                'header': '<ossie/'+name+'.h>',
-                'artifactType': artifactType}
+                'header': '<ossie/'+name+'.h>'}
 
     def getInterfaceDependencies(self, softpkg):
         for namespace in self.getInterfaceNamespaces(softpkg):

@@ -42,22 +42,17 @@ class PullComponentMapper(ComponentMapper):
     def superclass(self, softpkg):
         if softpkg.type() == ComponentTypes.RESOURCE:
             name = 'Resource'
-            artifactType = 'component'
         elif softpkg.type() == ComponentTypes.DEVICE:
             name = 'Device'
-            artifactType = 'device'
         elif softpkg.type() == ComponentTypes.LOADABLEDEVICE:
             # NOTE: If java gets support for Loadable Devices, this needs to change
             name = 'Device'
-            artifactType = 'device'
         elif softpkg.type() == ComponentTypes.EXECUTABLEDEVICE:
             # NOTE: If java gets support for Executable Devices, this needs to change
             name = 'Device'
-            artifactType = 'device'
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
-        return {'name': name,
-                'artifactType': artifactType}
+        return {'name': name}
 
     def hasBulkioPorts(self, softpkg):
         for port in softpkg.ports():
