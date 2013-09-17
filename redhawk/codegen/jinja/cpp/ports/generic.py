@@ -1,3 +1,23 @@
+#
+# This file is protected by Copyright. Please refer to the COPYRIGHT file
+# distributed with this source distribution.
+#
+# This file is part of REDHAWK core.
+#
+# REDHAWK core is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# REDHAWK core is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/.
+#
+
 import jinja2
 from omniORB import CORBA
 
@@ -6,6 +26,8 @@ from redhawk.codegen.jinja.ports import PortFactory
 from redhawk.codegen.jinja.cpp import CppTemplate
 
 from generator import CppPortGenerator
+
+from ossie.utils.sca.importIDL import SequenceType, BaseType
 
 if not '__package__' in locals():
     # Python 2.4 compatibility
@@ -56,7 +78,8 @@ def baseReturnType(typeobj):
     name = '::'.join(typeobj.scopedName())
     if kind == CORBA.tk_objref:
         return name + '_ptr'
-    elif kind == CORBA.tk_alias or kind == CORBA.tk_struct:
+    elif (kind == CORBA.tk_alias and isinstance(typeobj.aliasType(), SequenceType)) or \
+            kind == CORBA.tk_struct:
         return name + '*'
     else:
         return name
@@ -64,13 +87,18 @@ def baseReturnType(typeobj):
 def paramType(param):
     name = baseType(param.paramType)
     if not param.direction == 'in':
-        return name + '&'
+        # OctetSequence is special case becuase arg is different in C++ than the IDL
+        if name == 'CF::OctetSequence':
+            return name + '_out'
+        else:
+            return name + '&'
     kind = param.paramType.kind()
     if kind in _baseMap:
         return name
     else:
         name = 'const '+name
-    if kind == CORBA.tk_string or kind == CORBA.tk_objref:
+    if kind == CORBA.tk_string or kind == CORBA.tk_objref or kind == CORBA.tk_enum or \
+            (kind == CORBA.tk_alias and isinstance(param.paramType.aliasType(), BaseType)):
         return name
     return name + '&'
 
@@ -87,6 +115,9 @@ class GenericPortFactory(PortFactory):
 class GenericPortGenerator(CppPortGenerator):
     def _ctorArgs(self, name):
         return (cpp.stringLiteral(name), 'this')
+
+    def headers(self):
+        return ['<%s/%s.h>' % (self.idl.namespace(), self.idl.filename())]
 
     def loader(self):
         return jinja2.PackageLoader(__package__)
@@ -110,7 +141,7 @@ class GenericPortGenerator(CppPortGenerator):
 
 class GenericUsesPortGenerator(GenericPortGenerator):
     def headers(self):
-        return ('<ossie/CF/QueryablePort.h>',)
+        return super(GenericUsesPortGenerator, self).headers() + ['<ossie/CF/QueryablePort.h>']
 
     def _declaration(self):
         return CppTemplate('generic.uses.h')

@@ -1,3 +1,23 @@
+#
+# This file is protected by Copyright. Please refer to the COPYRIGHT file
+# distributed with this source distribution.
+#
+# This file is part of REDHAWK core.
+#
+# REDHAWK core is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# REDHAWK core is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/.
+#
+
 from idl import CorbaTypes
 from ossie.utils.prop_helpers import parseComplexString
 from ossie import properties
@@ -81,3 +101,22 @@ def literal(value, typename, complex=False):
 
 def sequenceValue(values, typename, complex=False):
     return tuple(literal(v, typename, complex) for v in values)
+
+def idlModule(namespace):
+    if namespace.startswith('omg.org/'):
+        return namespace[8:]
+    else:
+        if namespace in ('CF', 'ExtendedCF'):
+            package = 'ossie.cf'
+        elif namespace == 'BULKIO':
+            package = 'bulkio.bulkioInterfaces'
+        else:
+            package = 'redhawk.' + namespace.lower() + 'Interfaces'
+        return '%s.%s' % (package, namespace)
+
+def importModule(module):
+    if not '.' in module:
+        return 'import ' + module
+    else:
+        package, module = module.rsplit('.', 1)
+        return 'from %s import %s' % (package, module)
