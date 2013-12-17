@@ -111,24 +111,4 @@ inline bool operator== (const ${struct.cpptype}& s1, const ${struct.cpptype}& s2
 inline bool operator!= (const ${struct.cpptype}& s1, const ${struct.cpptype}& s2) {
     return !(s1==s2);
 };
-
-template<> inline short StructProperty<${struct.cpptype}>::compare (const CORBA::Any& a) {
-    if (super::isNil_) {
-        if (a.type()->kind() == (CORBA::tk_null)) {
-            return 0;
-        }
-        return 1;
-    }
-
-    ${struct.cpptype} tmp;
-    if (fromAny(a, tmp)) {
-        if (tmp != this->value_) {
-            return 1;
-        }
-
-        return 0;
-    } else {
-        return 1;
-    }
-}
 /*{%- endmacro %}*/

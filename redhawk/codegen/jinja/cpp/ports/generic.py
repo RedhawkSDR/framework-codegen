@@ -47,7 +47,7 @@ _baseMap = {
     CORBA.tk_ulonglong: 'CORBA::ULongLong'
 }
 
-def baseType(typeobj):
+def baseType(typeobj, direction=None):
     kind = typeobj.kind()
     if kind in _baseMap:
         return _baseMap[kind]
@@ -61,8 +61,10 @@ def baseType(typeobj):
     name = '::'.join(typeobj.scopedName())
     if kind == CORBA.tk_objref:
         return name + '_ptr'
+    elif direction:
+        return name + '&'
     else:
-        return name
+        return name 
 
 def baseReturnType(typeobj):
     kind = typeobj.kind()
@@ -128,6 +130,9 @@ class GenericPortGenerator(CppPortGenerator):
                    'arglist': ', '.join('%s %s' % (paramType(p), p.name) for p in op.params),
                    'argnames': ', '.join(p.name for p in op.params),
                    'returns': baseReturnType(op.returnType)}
+        #
+        # for attributes of an interface...provide manipulator methods
+        # 
         for attr in self.idl.attributes():
             yield {'name': attr.name,
                    'arglist': '',
@@ -135,7 +140,7 @@ class GenericPortGenerator(CppPortGenerator):
                    'returns': baseReturnType(attr.attrType)}
             if not attr.readonly:
                 yield {'name': attr.name,
-                       'arglist': baseType(attr.attrType) + ' data',
+                       'arglist':   ' const ' + baseType(attr.attrType,'in') + ' data',
                        'argnames': 'data',
                        'returns': 'void'}
 

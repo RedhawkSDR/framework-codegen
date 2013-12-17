@@ -24,23 +24,20 @@ from redhawk.codegen import utils
 
 from redhawk.codegen.jinja.loader import CodegenLoader
 from redhawk.codegen.jinja.common import ShellTemplate, AutomakeTemplate, AutoconfTemplate
-from redhawk.codegen.jinja.java import JavaCodeGenerator, JavaTemplate
-from redhawk.codegen.jinja.java.properties import JavaPropertyMapper
-from redhawk.codegen.jinja.java.ports import JavaPortMapper
-from redhawk.codegen.jinja.java.component.base import BaseComponentGenerator
 
-from mapping import PullComponentMapper
-from portfactory import PullPortFactory
+from mapping import BaseComponentMapper
+from redhawk.codegen.jinja.java import JavaCodeGenerator, JavaTemplate
+from redhawk.codegen.jinja.java.ports import JavaPortMapper, JavaPortFactory
+from redhawk.codegen.jinja.java.properties import JavaPropertyMapper
 
 if not '__package__' in locals():
     # Python 2.4 compatibility
     __package__ = __name__.rsplit('.', 1)[0]
 
 loader = CodegenLoader(__package__,
-                       {'base': 'redhawk.codegen.jinja.java.component.base',
-                        'common': 'redhawk.codegen.jinja.common'})
+                       {'common': 'redhawk.codegen.jinja.common'})
 
-class PullComponentGenerator(BaseComponentGenerator):
+class BaseComponentGenerator(JavaCodeGenerator):
     # Need to keep use_jni, auto_start and queued_ports to handle legacy options
     def parseopts (self, java_package='',use_jni=True, auto_start=True,queued_ports=False):
         self.package = java_package
@@ -49,7 +46,7 @@ class PullComponentGenerator(BaseComponentGenerator):
         return loader
 
     def componentMapper(self):
-        return PullComponentMapper(self.package)
+        return BaseComponentMapper(self.package)
 
     def propertyMapper(self):
         return JavaPropertyMapper()
@@ -58,32 +55,14 @@ class PullComponentGenerator(BaseComponentGenerator):
         return JavaPortMapper()
 
     def portFactory(self):
-        return PullPortFactory()
+        return JavaPortFactory()
 
     def templates(self, component):
         # Put generated Java files in "src" subdirectory, followed by their
         # package path.
-        pkgpath = os.path.join('src', *component['package'].split('.'))
-        userfile = component['userclass']['file']
-        basefile = component['baseclass']['file']
         templates = [
-            JavaTemplate('resource.java', os.path.join(pkgpath, userfile), userfile=True),
-            JavaTemplate('resource_base.java', os.path.join(pkgpath, basefile)),
-            AutomakeTemplate('base/Makefile.am'),
-            AutoconfTemplate('base/configure.ac'),
-            ShellTemplate('base/startJava.sh'),
-            ShellTemplate('common/reconf')
+            AutomakeTemplate('Makefile.am'),
+            AutoconfTemplate('configure.ac'),
         ]
-
-        portpkg = component['package'] + '.' + 'ports'
-        portpkgpath = os.path.join(pkgpath, 'ports')
-        for generator in component['portgenerators']:
-            if not generator.hasImplementation():
-                continue
-            generator.package = portpkg
-            template = generator.implementation()
-            filename = os.path.join(portpkgpath, generator.className()+'.java')
-            context = {'portgenerator': generator}
-            templates.append(JavaTemplate(template, filename, package=portpkg, context=context))
 
         return templates

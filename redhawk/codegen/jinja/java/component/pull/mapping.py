@@ -22,9 +22,9 @@ from redhawk.codegen.lang import java
 from redhawk.codegen.model.softwarecomponent import ComponentTypes
 from redhawk.codegen.lang.idl import IDLInterface
 
-from redhawk.codegen.jinja.mapping import ComponentMapper
+from redhawk.codegen.jinja.java.component.base import BaseComponentMapper
 
-class PullComponentMapper(ComponentMapper):
+class PullComponentMapper(BaseComponentMapper):
     def __init__(self, package):
         self.package = package
 
@@ -43,6 +43,7 @@ class PullComponentMapper(ComponentMapper):
         javacomp['interfacedeps'] = list(self.getInterfaceDependencies(softpkg))
         javacomp['interfacejars'] = self.getInterfaceJars(softpkg)
         javacomp['hasbulkio'] = self.hasBulkioPorts(softpkg)
+        javacomp['softpkgcp'] = self.softPkgDeps(softpkg, format='cp')
         return javacomp
 
     def getInterfaceDependencies(self, softpkg):

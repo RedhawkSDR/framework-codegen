@@ -17,12 +17,19 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  #*/
+/*{% block license %}*/
+/*# Allow child templates to include license #*/
+/*{% endblock %}*/
+
+/*{% block includes %}*/
 #include <iostream>
 #include "ossie/ossieSupport.h"
 
 #include "${component.userclass.header}"
-
+/*{% endblock %}*/
+/*{% block main %}*/
 /*{% if component is device %}*/
+
 ${component.userclass.name} *devicePtr;
 
 void signal_catcher(int sig)
@@ -34,7 +41,6 @@ void signal_catcher(int sig)
     }
 }
 /*{% endif %}*/
-
 int main(int argc, char* argv[])
 {
 /*{% if component is device %}*/
@@ -50,3 +56,4 @@ int main(int argc, char* argv[])
 /*{% endif %}*/
     return 0;
 }
+/*{% endblock %}*/

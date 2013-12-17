@@ -19,6 +19,7 @@
 #
 
 from redhawk.codegen.jinja.mapping import ComponentMapper
+import commands, os
 
 class BaseComponentMapper(ComponentMapper):
     def _mapComponent(self, softpkg):
@@ -26,6 +27,8 @@ class BaseComponentMapper(ComponentMapper):
         cppcomp['userclass'] = { 'name'  : softpkg.name()+'_i',
                                  'header': softpkg.name()+'.h' }
         cppcomp['interfacedeps'] = tuple(self.getInterfaceDependencies(softpkg))
+        cppcomp['softpkgdeps'] = self.softPkgDeps(softpkg, format='deps')
+        cppcomp['pkgconfigsoftpkgdeps'] = self.softPkgDeps(softpkg, format='pkgconfig')
         return cppcomp
 
     def getInterfaceDependencies(self, softpkg):
@@ -36,3 +39,18 @@ class BaseComponentMapper(ComponentMapper):
                 yield 'redhawkInterfaces >= 1.2.0'
             else:
                 yield namespace.lower()+'Interfaces'
+
+    def softPkgDeps(self, softpkg, format='deps'):
+        deps = ''
+        for dep in softpkg.getSoftPkgDeps():
+            pc_filename = dep['localfile'][:dep['localfile'].rfind('/')]+'/lib/pkgconfig'
+            status,output = commands.getstatusoutput('pkg-config '+os.getenv('SDRROOT')+'/dom'+pc_filename+'/'+dep['name']+'.pc'' --modversion')
+            if status != 0:
+                pc_filename = dep['localfile'][:dep['localfile'].rfind('/')]+'/lib64/pkgconfig'
+                status,output = commands.getstatusoutput('pkg-config '+os.getenv('SDRROOT')+'/dom'+pc_filename+'/'+dep['name']+'.pc'' --modversion')
+            if status == 0:
+                if format == 'deps':
+                    deps += dep['name']+' >= '+output+' '
+                elif format == 'pkgconfig':
+                    deps += '$SDRROOT/dom'+pc_filename+':'
+        return deps

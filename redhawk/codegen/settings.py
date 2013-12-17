@@ -50,10 +50,10 @@ class ImplementationSettings(object):
         self.generatedFileCRCs.update(other.generatedFileCRCs)
 
 def _importWavedevImplSettings(node):
-    if node.getAttribute('generatorId').startswith('gov.redhawk.ide.codegen.jinja'):
-        template = node.getAttribute('template')
-    else:
+    if _templateMapping.has_key(node.getAttribute('generatorId')):
         template = _templateMapping[node.getAttribute('template')]
+    else:
+        template = node.getAttribute('template')
     return ImplementationSettings(name=node.getAttribute('name'),
                                   outputDir=node.getAttribute('outputDir'),
                                   template=template,

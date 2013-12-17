@@ -45,10 +45,98 @@ class Implementation(object):
     def programminglanguage(self):
         return self.__impl.programminglanguage.name
 
+def softPkgRef(name, localfile):
+    try:
+        spd = ossie.parsers.spd.parse(os.getenv('SDRROOT')+'/dom/'+localfile)
+    except:
+        spd = None
+    return {'name':name, 'localfile':localfile, 'spd':spd}
+
+def resolveSoftPkgDeps(spd=None):
+    softpkgdeps = []
+    if spd == None:
+        return softpkgdeps
+    for impl in spd.get_implementation():
+        for dep in impl.get_dependency():
+            if dep.get_softpkgref() != None:
+                localfile = dep.get_softpkgref().get_localfile().name
+                pkg_name = localfile.split('/')[-1].split('.')[0]
+                softpkgdeps.append(softPkgRef(pkg_name, localfile))
+                softpkgdeps += resolveSoftPkgDeps(softpkgdeps[-1]['spd'])
+    return softpkgdeps
+
+class mFunctionParameters:
+    """
+    A simple struct for storing off inputs, output, and function mame
+    of an m function.
+
+    """
+    def __init__(self, outputs, inputs, functionName):
+        self.outputs      = outputs
+        self.inputs       = inputs
+        self.functionName = functionName
+
+def getArguments(inputString, openDelimiter, closeDelimiter):
+    """
+    Get arguments within a string.  For example, if openDelimiter="(", 
+    closeDelimiter=")", and inputString = "function [a] = foo(b, c, d)",
+    this function will return ["b","c","d"].
+
+    """
+    args = inputString[inputString.find(openDelimiter)+1: 
+                       inputString.find(closeDelimiter)]
+    if args.find(",") != -1:
+        delimiter = ","
+    else:
+        delimiter = " "
+    args = args.split(delimiter)
+    args = [x.strip() for x in args] # get rid of extra whitespace
+    # TODO: remove comments from strings
+    return args
+
+def parseMFile(filename):
+    """
+    Parse file specified by filename to get inputs, outputs, and function
+    name of the first function defined in the m file.
+
+    """
+    # Get the contents of the file as a single string
+    file  = open(filename)
+    fileString = file.read()
+    file.close()
+
+    # the declaration consists of all content up to the first ")"
+    declaration  = fileString[0:fileString.find(")")+1]
+
+    # get output arguments
+    bracket1 = declaration.find("[")
+    if declaration.find("=") == -1:
+        # no output arguments
+        outputs = []
+    elif bracket1 != -1 and declaration.find("=") > bracket1:
+        # if a bracket is found before the first equals sign, parse
+        # the output argument that are between the first set of brackets
+        outputs = getArguments(declaration, "[", "]")
+    else:
+        # single (or no) output argument
+        outputs = getArguments(declaration, " ", "=")
+
+    # get input arguments
+    inputs = getArguments(declaration, "(", ")")
+
+    # get function name
+    functionName = getArguments(declaration, "=", "(")[0]
+
+    # store off outputs, inputs and function name in a struct
+    return mFunctionParameters(outputs      = outputs, 
+                               inputs       = inputs, 
+                               functionName = functionName)
+
 class SoftPkg(object):
     def __init__(self, spdFile):
         self.__spdFile = os.path.basename(spdFile)
         self.__spd = ossie.parsers.spd.parse(spdFile)
+        self.__softpkgdeps = resolveSoftPkgDeps(self.__spd)
         self.__impls = dict((impl.id_, Implementation(impl)) for impl in self.__spd.implementation)
 
         self.__path = os.path.dirname(spdFile)
@@ -66,6 +154,25 @@ class SoftPkg(object):
             self.__props = []
             self.__prfFile = None
 
+        self.__mFunctionParameters = mFunctionParameters(outputs      = [],
+                                                         inputs       = [],
+                                                         functionName = "")
+        for prop in self.__props:
+            if str(prop.identifier()) == "__mFunction":
+                # m function support only enabled for cpp
+                # point towards the m file that has been copied
+                # to the cpp directory
+                self.__mFunctionParameters = parseMFile(os.path.join(self.__path, "cpp/"+prop.value()+".m"))
+
+    def mFileFunctionName(self):
+        return self.__mFunctionParameters.functionName
+
+    def mFileOutputs(self):
+        return self.__mFunctionParameters.outputs
+
+    def mFileInputs(self):
+        return self.__mFunctionParameters.inputs
+ 
     def spdFile(self):
         return self.__spdFile
 
@@ -128,6 +235,9 @@ class SoftPkg(object):
             if prop.isStruct():
                 return True
         return False
+
+    def getSoftPkgDeps(self):
+        return self.__softpkgdeps
 
     def getStructDefinitions(self):
         structdefs = [s for s in self.getStructProperties()]

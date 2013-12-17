@@ -25,6 +25,8 @@ OSSIE_CHECK_OSSIE
 OSSIE_SDRROOT_AS_PREFIX
 
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
+CLASSPATH_SOFTPKG_DEP="{{component.softpkgcp}}"
+AC_SUBST(CLASSPATH_SOFTPKG_DEP)
 PKG_CHECK_MODULES([OSSIE], [ossie >= 1.9])
 
 AC_CHECK_PROG([JAVAC], [javac], [javac], [AC_MSG_ERROR([cannot find Java compiler])])

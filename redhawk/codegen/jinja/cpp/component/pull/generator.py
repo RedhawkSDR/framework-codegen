@@ -24,6 +24,7 @@ from redhawk.codegen.jinja.common import ShellTemplate, AutomakeTemplate, Autoco
 from redhawk.codegen.jinja.cpp import CppCodeGenerator, CppTemplate
 from redhawk.codegen.jinja.cpp.properties import CppPropertyMapper
 from redhawk.codegen.jinja.cpp.ports import CppPortMapper, CppPortFactory
+from redhawk.codegen.jinja.template import TemplateFile
 
 from mapping import PullComponentMapper
 
@@ -32,9 +33,9 @@ if not '__package__' in locals():
     __package__ = __name__.rsplit('.', 1)[0]
 
 loader = CodegenLoader(__package__,
-                       {'common'     : 'redhawk.codegen.jinja.common',
-                        'base'       : 'redhawk.codegen.jinja.cpp.component.base',
-                        'properties' : 'redhawk.codegen.jinja.cpp.properties'})
+                       {'common'         : 'redhawk.codegen.jinja.common',
+                        'base'           : 'redhawk.codegen.jinja.cpp.component.base',
+                        'properties'     : 'redhawk.codegen.jinja.cpp.properties'})
 
 class PullComponentGenerator(CppCodeGenerator):
     # Need to keep use_vector_impl, auto_start and queued_ports to handle legacy options 
@@ -58,16 +59,16 @@ class PullComponentGenerator(CppCodeGenerator):
 
     def templates(self, component):
         templates = [
-            CppTemplate('resource.cpp', component['userclass']['file'], userfile=True),
-            CppTemplate('resource.h', component['userclass']['header'], userfile=True),
-            CppTemplate('resource_base.cpp', component['baseclass']['file']),
-            CppTemplate('resource_base.h', component['baseclass']['header']),
             CppTemplate('base/main.cpp'),
             AutomakeTemplate('base/Makefile.am'),
             AutomakeTemplate('base/Makefile.am.ide', userfile=True),
             AutoconfTemplate('base/configure.ac'),
             ShellTemplate('base/build.sh'),
-            ShellTemplate('common/reconf')
+            ShellTemplate('common/reconf'),
+            CppTemplate('resource.cpp', component['userclass']['file'], userfile=True),
+            CppTemplate('resource.h', component['userclass']['header'], userfile=True),
+            CppTemplate('resource_base.cpp', component['baseclass']['file']),
+            CppTemplate('resource_base.h', component['baseclass']['header'])
         ]
 
         for gen in component['portgenerators']:

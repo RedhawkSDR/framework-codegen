@@ -28,6 +28,8 @@ AC_CORBA_ORB
 OSSIE_CHECK_OSSIE
 OSSIE_SDRROOT_AS_PREFIX
 
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 # Dependencies
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
 PKG_CHECK_MODULES([PROJECTDEPS], [ossie >= 1.9 omniORB4 >= 4.1.0])

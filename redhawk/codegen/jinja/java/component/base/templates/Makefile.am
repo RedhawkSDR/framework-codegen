@@ -21,7 +21,7 @@
 #% set classpath = ['CFInterfaces.jar', 'log4j-1.2.15.jar', 'ossie.jar'] + component.interfacejars
 {{component.jarfile}}: $({{target}}_SOURCES)
 	mkdir -p bin
-	$(JAVAC) -cp {{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}} -d bin $({{target}}_SOURCES)
+	$(JAVAC) -cp $(CLASSPATH_SOFTPKG_DEP){{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}} -d bin $({{target}}_SOURCES)
 	$(JAR) cf ./{{component.jarfile}} -C bin .
 
 clean-local:

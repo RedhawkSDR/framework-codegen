@@ -18,8 +18,14 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
-from mapping import *
-from portfactory import *
+from redhawk.codegen.jinja.ports import PortFactoryList
 
-__all__ = ('JavaPortMapper', 'JavaPortFactory')
+from generic import GenericPortFactory
+from bulkio import BulkioPortFactory
+from event import PropertyEventPortGenerator
+from message import MessagePortFactory
 
+class JavaPortFactory(PortFactoryList):
+    def __init__(self):
+        factories = (BulkioPortFactory(), PropertyEventPortGenerator, MessagePortFactory, GenericPortFactory())
+        super(JavaPortFactory,self).__init__(*factories)

@@ -1,0 +1,51 @@
+#!/usr/bin/python
+"""
+Given a library, create a soft-package dependency.
+
+The soft-package dependency consists of:
+    - an spd.xml file
+    - a directory containing the library (this program will create a symbolic
+      link to the library)
+    - autoconf files
+
+Example usage:
+
+    $ ./createPackageDependency /home/user/theLibrary/
+
+"""
+
+from redhawk.packagegen import createPackageDependency
+from getopt import getopt
+import sys
+import os
+
+usage = """%s [options] <package path>
+
+Arguments:
+    <library path>
+
+Options:
+    --outputDir    Location of all output files.  Default is ".".
+
+""" % os.path.basename(sys.argv[0])
+
+
+if __name__ == "__main__":
+    """
+    Parse command line arguments and use them to call create.
+
+    """
+
+    opts, args = getopt(sys.argv[1:], '', ['outputDir=', 'help'])
+    outputDir = "."
+    for key, value in opts:
+        if key == '--outputDir':
+            outputDir = value
+        elif key == '--help':
+            raise SystemExit(usage)
+    try:
+        libraryLocation = args[0]
+    except:
+        raise SystemExit(usage)
+
+    createPackageDependency.create(libraryLocation, outputDir)

@@ -31,6 +31,8 @@ class PullComponentMapper(BaseComponentMapper):
         cppcomp['superclasses'] = self.superClasses(softpkg)
         cppcomp['interfacedeps'] = tuple(self.getInterfaceDependencies(softpkg))
         cppcomp['hasbulkio'] = self.hasBulkioPorts(softpkg)
+        cppcomp['softpkgdeps'] = self.softPkgDeps(softpkg, format='deps')
+        cppcomp['pkgconfigsoftpkgdeps'] = self.softPkgDeps(softpkg, format='pkgconfig')
         return cppcomp
 
     @staticmethod

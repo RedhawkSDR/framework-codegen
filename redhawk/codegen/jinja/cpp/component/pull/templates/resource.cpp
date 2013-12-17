@@ -64,6 +64,22 @@ ${className}::~${className}()
 {
 }
 
+/*{% if component is device %}*/
+/**************************************************************************
+
+    This is called automatically after allocateCapacity or deallocateCapacity are called.
+    Your implementation should determine the current state of the device:
+
+       setUsageState(CF::Device::IDLE);   // not in use
+       setUsageState(CF::Device::ACTIVE); // in use, with capacity remaining for allocation
+       setUsageState(CF::Device::BUSY);   // in use, with no capacity remaining for allocation
+
+**************************************************************************/
+void ${className}::updateUsageState()
+{
+}
+
+/*{% endif %}*/
 /***********************************************************************************************
 
     Basic functionality:
@@ -170,11 +186,14 @@ ${className}::~${className}()
                 dataOut[i] = dataIn[i];
             }
             
-        A callback method can be associated with a property so that the method is
+        Callback methods can be associated with a property so that the methods are
         called each time the property value changes.  This is done by calling 
-        setPropertyChangeListener(<property name>, this, &${className}::<callback method>)
+        addPropertyChangeListener(<property name>, this, &${className}::<callback method>)
         in the constructor.
-            
+
+        Callback methods should take two arguments, both const pointers to the value
+        type (e.g., "const float *"), and return void.
+
         Example:
             // This example makes use of the following Properties:
             //  - A float value called scaleValue
@@ -183,15 +202,17 @@ ${className}::~${className}()
         ${className}::${className}(const char *uuid, const char *label) :
             ${baseClass}(uuid, label)
         {
-            setPropertyChangeListener("scaleValue", this, &${className}::scaleChanged);
+            addPropertyChangeListener("scaleValue", this, &${className}::scaleChanged);
         }
 
-        void ${className}::scaleChanged(const std::string& id){
-            std::cout << "scaleChanged scaleValue " << scaleValue << std::endl;
+        void ${className}::scaleChanged(const float *oldValue, const float *newValue)
+        {
+            std::cout << "scaleValue changed from" << *oldValue << " to " << *newValue
+                      << std::endl;
         }
             
         //Add to ${component.userclass.header}
-        void scaleChanged(const std::string&);
+        void scaleChanged(const float* oldValue, const float* newValue);
         
         
 ************************************************************************************************/

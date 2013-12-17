@@ -17,20 +17,8 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  #*/
-/*******************************************************************************************
-
-    AUTO-GENERATED CODE. DO NOT MODIFY
-
-    Source: ${component.profile.spd}
-
-*******************************************************************************************/
-
-#include "${component.userclass.header}"
-
-/*{% for portgen in component.portgenerators if portgen.hasImplementation() %}*/
-// ----------------------------------------------------------------------------------------
-// ${portgen.className()} definition
-// ----------------------------------------------------------------------------------------
-/*{% include portgen.implementation() %}*/
-
-/*{% endfor %}*/
+/*{%extends "base/main.cpp"%}*/
+/*{%block license%}*/
+/*{% from "gpl.cpp" import gplHeader%}*/
+${gplHeader(component)}
+/*{%endblock%}*/

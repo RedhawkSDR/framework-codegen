@@ -19,13 +19,23 @@
  #*/
 //% set includeGuard = component.name.upper() + '_IMPL_BASE_H'
 //% set className = component.baseclass.name
+/*{% block license %}*/
+/*# Allow child templates to include license #*/
+/*{% endblock %}*/
+
+/*{% block includeGuard %}*/
 #ifndef ${includeGuard}
 #define ${includeGuard}
+/*{% endblock %}*/
 
+/*{% block includes %}*/
 #include <boost/thread.hpp>
 /*{% for superclass in component.superclasses %}*/
 #include ${superclass.header}
 /*{% endfor %}*/
+/*{% block includeExtentions %}*/
+/*# Allow for child template extensions #*/
+/*{% endblock %}*/
 
 /*{% if component.hasbulkio %}*/
 #include "bulkio/bulkio.h"
@@ -36,17 +46,22 @@
 /*{% if "struct_props.h" in generator.sourceFiles(component) %}*/
 #include "struct_props.h"
 /*{% endif %}*/
+/*{% endblock %}*/
 
+/*{% block defines %}*/
 #define NOOP 0
 #define FINISH -1
 #define NORMAL 1
+/*{% endblock %}*/
 
 class ${className};
 
+/*{% block processThread %}*/
 template < typename TargetClass >
 class ProcessThread
 {
     public:
+/*{% block processThreadConstructor %}*/
         ProcessThread(TargetClass *_target, float _delay) :
             target(_target)
         {
@@ -54,7 +69,9 @@ class ProcessThread
             _thread_running = false;
             _udelay = (__useconds_t)(_delay * 1000000);
         };
+/*{% endblock %}*/
 
+/*{% block processThreadStart %}*/
         // kick off the thread
         void start() {
             if (_mythread == 0) {
@@ -62,7 +79,9 @@ class ProcessThread
                 _mythread = new boost::thread(&ProcessThread::run, this);
             }
         };
+/*{% endblock %}*/
 
+/*{% block processThreadRun %}*/
         // manage calls to target's service function
         void run() {
             int state = NORMAL;
@@ -71,7 +90,9 @@ class ProcessThread
                 if (state == NOOP) usleep(_udelay);
             }
         };
+/*{% endblock %}*/
 
+/*{% block processThreadRelease %}*/
         // stop thread and wait for termination
         bool release(unsigned long secs = 0, unsigned long usecs = 0) {
             _thread_running = false;
@@ -90,26 +111,40 @@ class ProcessThread
     
             return 1;
         };
+/*{% endblock %}*/
 
+/*{% block processThreadDestructor %}*/
         virtual ~ProcessThread(){
             if (_mythread != 0) {
                 release(0);
                 _mythread = 0;
             }
         };
+/*{% endblock %}*/
 
+/*{% block processThreadUpdateDelay %}*/
         void updateDelay(float _delay) { _udelay = (__useconds_t)(_delay * 1000000); };
+/*{% endblock %}*/
+
+/*{% block publicProcessThreadExtensions %}*/
+/*# Allow for child templates to extend this class #*/
+/*{% endblock %}*/
 
     private:
+/*{% block processThreadPrivateVars %}*/
         boost::thread *_mythread;
         bool _thread_running;
         TargetClass *target;
         __useconds_t _udelay;
         boost::condition_variable _end_of_run;
         boost::mutex _eor_mutex;
+/*{% endblock %}*/
 };
+/*{% endblock %}*/
 
+/*{% block classPrototype %}*/
 class ${className} : public ${component.superclasses|join(', public ', attribute='name')}
+/*{% endblock %}*/
 {
 /*{% for portgen in component.portgenerators if portgen.hasDeclaration() %}*/
     friend class ${portgen.className()};
@@ -118,6 +153,7 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{%   endif %}*/
 /*{% endfor %}*/
     public:
+/*{% block baseConstructor %}*/
 /*{% if component is device %}*/
         ${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl);
         ${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, char *compDev);
@@ -126,7 +162,9 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{% else %}*/
         ${className}(const char *uuid, const char *label);
 /*{% endif %}*/
+/*{% endblock %}*/
 
+/*{% block cfResource %}*/
         void start() throw (CF::Resource::StartError, CORBA::SystemException);
 
         void stop() throw (CF::Resource::StopError, CORBA::SystemException);
@@ -138,12 +176,16 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
         void releaseObject() throw (CF::LifeCycle::ReleaseError, CORBA::SystemException);
 
         void initialize() throw (CF::LifeCycle::InitializeError, CORBA::SystemException);
+/*{% endblock %}*/
 
+/*{% block basePublicFunctions %}*/
         void loadProperties();
 
         virtual int serviceFunction() = 0;
+/*{% endblock %}*/
 
     protected:
+/*{% block baseProtectedMembers %}*/
         ProcessThread<${className}> *serviceThread; 
         boost::mutex serviceThreadLock;
 /*{% for prop in component.properties %}*/
@@ -160,9 +202,16 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{%   endif %}*/
         ${port.cpptype} *${port.cppname};
 /*{% endfor %}*/
+/*{% endblock %}*/
+
+/*{% block extendedProtected%}*/
+/*{% endblock %}*/
 
     private:
         void construct();
 
+/*{% block extensions %}*/
+/*# Allow for child template extensions #*/
+/*{% endblock %}*/
 };
 #endif

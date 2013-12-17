@@ -22,7 +22,7 @@
 # You can override this at install time using --prefix /new/sdr/root when invoking rpm (preferred method, if you must)
 %{!?_sdrroot: %define _sdrroot /var/redhawk/sdr}
 %define _prefix %{_sdrroot}
-Prefix: %{_prefix}
+Prefix:         %{_prefix}
 
 # Point install paths to locations within our target SDR root
 %define _sysconfdir    %{_prefix}/etc
@@ -30,23 +30,27 @@ Prefix: %{_prefix}
 %define _mandir        %{_prefix}/man
 %define _infodir       %{_prefix}/info
 
-Name: {{name}}
-Summary: {{component.type}} %{name}{{' '+component.title if component.title}}
-Version: {{component.version}}
-Release: 1
-License: None
-Group: REDHAWK/{{component.type}}s
-Source: %{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-root
+#{$ block variableExtensions $}
+#{$ endblock $}
+Name:           {{name}}
+Version:        {{component.version}}
+Release:        1%{?dist}
+Summary:        {{component.type}} %{name}{{' '+component.title if component.title}}
 
-Requires: redhawk >= 1.9
-BuildRequires: redhawk-devel >= 1.9
-BuildRequires: autoconf automake libtool
+Group:          REDHAWK/{{component.type}}s
+License:        None
+Source0:        %{name}-%{version}.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+BuildRequires:  redhawk-devel >= 1.9
+Requires:       redhawk >= 1.9
+#{$ block requireExtensions $}
+#{$ endblock $}
 
 #{$ if component.interfaces $}
 # Interface requirements
-Requires: {{component.interfaces|join(' ')}}
-BuildRequires: {{component.interfaces|join(' ')}}
+BuildRequires:  {{component.interfaces|join(' ')}}
+Requires:       {{component.interfaces|join(' ')}}
 
 #{$ endif $}
 #{$ if 'C++' not in component.languages and component.languages $}
@@ -62,10 +66,11 @@ BuildArch: noarch
 
 
 %prep
-%setup
+%setup -q
 
 
 %build
+#{$ block build $}
 #{$ for impl in component.implementations $}
 # Implementation {{impl.id}}
 pushd {{impl.outputdir}}
@@ -75,9 +80,11 @@ pushd {{impl.outputdir}}
 make %{?_smp_mflags}
 popd
 #{$ endfor $}
+#{$ endblock  $}
 
 
 %install
+#{$ block install $}
 rm -rf $RPM_BUILD_ROOT
 #{$ for impl in component.implementations $}
 # Implementation {{impl.id}}
@@ -86,6 +93,7 @@ pushd {{impl.outputdir}}
 make install DESTDIR=$RPM_BUILD_ROOT
 popd
 #{$ endfor $}
+#{$ endblock $}
 
 
 %clean
@@ -93,7 +101,8 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files
-%defattr(-,redhawk,redhawk)
+#{$ block files $}
+%defattr(-,redhawk,redhawk,-)
 %dir %{_prefix}/{{component.sdrpath}}/%{name}
 #{$ for xmlfile in component.profile.values() $}
 %{_prefix}/{{component.sdrpath}}/%{name}/{{xmlfile}}
@@ -101,3 +110,4 @@ rm -rf $RPM_BUILD_ROOT
 #{$ for impl in component.implementations $}
 %{_prefix}/{{component.sdrpath}}/%{name}/{{impl.outputdir}}
 #{$ endfor $}
+#{$ endblock $}

@@ -1,0 +1,45 @@
+#!/usr/bin/python
+
+from redhawk.packagegen import createPackage
+from getopt import getopt
+import sys
+import os
+
+usage = """%s [options] <config file>
+
+Arguments:
+    <library path>
+
+Required Flags:
+    -m              M file to include.  Can use multiple -m tags for multiple
+                    files.
+
+Options:
+    --outputDir     Location of all output files.  Default is ".".
+    -f              Forward force flag to redhawk-codegen.
+
+""" % os.path.basename(sys.argv[0])
+
+if __name__ == "__main__":
+    opts, args = getopt(sys.argv[1:], 'fm:', ['outputDir=', 'help'])
+    outputDir = "."
+    mFiles = []
+    force = False
+    for key, value in opts:
+        if key == '--help':
+            raise SystemExit(usage)
+        elif key == '--outputDir':
+            outputDir = value
+        elif key == '-m':
+            mFiles.append(value)
+        elif key == '-f':
+            force = True
+    try:
+        configFile = args[0]
+    except:
+        raise SystemExit(usage)
+
+    if len(mFiles) == 0:
+        raise SystemExit(usage)
+
+    createPackage.create(configFile, outputDir, mFiles, force)

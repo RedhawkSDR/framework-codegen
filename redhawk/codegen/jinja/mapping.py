@@ -138,6 +138,8 @@ class ComponentMapper(object):
     
     def mapComponent(self, softpkg):
         component = {}
+        component['license'] = None
+        component['mFunction'] = None
         component['artifacttype'] = self.artifactType(softpkg)
         component['name'] = softpkg.name()
         component['version'] = softpkg.version()

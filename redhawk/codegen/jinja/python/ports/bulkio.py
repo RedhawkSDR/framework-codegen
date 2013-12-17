@@ -94,10 +94,10 @@ class BulkioPortGenerator(PythonPortGenerator):
 class BulkioProvidesGenerator(BulkioPortGenerator):
 
     def _ctorArgs(self, port):
-        if port.name().lower().find('sdds') == -1 :
-            return (python.stringLiteral(port.name()), 'maxsize=self.DEFAULT_QUEUE_SIZE')
+        if port.repid().lower().find('sdds') == -1 :
+            return ( [ str(python.stringLiteral(port.name())), 'maxsize=self.DEFAULT_QUEUE_SIZE'])
         else:
-            return (python.stringLiteral(port.name()) )
+            return ([ str(python.stringLiteral(port.name())) ] )
 
 class BulkioUsesGenerator(BulkioPortGenerator):
 

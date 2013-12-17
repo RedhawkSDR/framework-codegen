@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  #*/
+/*{% from "mFunction/gpl.cpp" import gplHeader%}*/
+${gplHeader(component)}
+
 //% set className = component.userclass.name
 //% set baseClass = component.baseclass.name
 //% set includeGuard = component.name.upper() + '_IMPL_H'
@@ -24,6 +27,8 @@
 #define ${includeGuard}
 
 #include "${component.baseclass.header}"
+
+class ${className};
 
 class ${className} : public ${baseClass}
 {
@@ -38,12 +43,10 @@ class ${className} : public ${baseClass}
         ${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, CF::Properties capacities, char *compDev);
 //% endif
         ~${className}();
-        int serviceFunction();
-/*{% if component is device %}*/
-
     protected:
-        void updateUsageState();
-/*{% endif %}*/
+        int preProcess();
+        int postProcess();
 };
+
 
 #endif
