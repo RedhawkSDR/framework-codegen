@@ -17,6 +17,10 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  #*/
+/*{% block license %}*/
+/*# Allow child templates to include license #*/
+/*{% endblock %}*/
+/*{% block header %}*/
 #ifndef STRUCTPROPS_H
 #define STRUCTPROPS_H
 
@@ -25,15 +29,22 @@
     AUTO-GENERATED CODE. DO NOT MODIFY
 
 *******************************************************************************************/
+/*{% endblock %}*/
 
+/*{% block includes %}*/
 #include <ossie/CorbaUtils.h>
 #include <ossie/PropertyInterface.h>
+/*{% endblock %}*/
 
+/*{% block struct %}*/
 /*{% from "properties/properties.cpp" import structdef with context %}*/
 /*{% for struct in component.structdefs %}*/
 ${structdef(struct)}
 
 /*{% endfor %}*/
+/*{% endblock %}*/
+
+/*{% block structSequence %}*/
 /*{% for prop in component.properties if prop is structsequence %}*/
 inline bool operator== (const ${prop.cpptype}& s1, const ${prop.cpptype}& s2) {
     if (s1.size() != s2.size()) {
@@ -71,5 +82,6 @@ template<> inline short StructSequenceProperty<${prop.structdef.cpptype}>::compa
     }
 }
 /*{% endfor %}*/
+/*{% endblock %}*/
 
 #endif

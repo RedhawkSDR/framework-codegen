@@ -225,9 +225,11 @@ class Generator(object):
                 del self.md5sums[existing]
 
         # Save updated MD5 digests
+        # NB: To work with "md5sum -c", there must be two spaces between the
+        #     MD5 digest and the filename.
         md5out = open(self.md5file, 'w')
         for name, digest in self.md5sums.items():
-            print >>md5out, "%s %s" % (digest, name)
+            print >>md5out, "%s  %s" % (digest, name)
         md5out.close()
 
         return generated, skipped

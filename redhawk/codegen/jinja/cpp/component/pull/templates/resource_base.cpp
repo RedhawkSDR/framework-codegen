@@ -20,8 +20,14 @@
 //% set className = component.baseclass.name
 //% set baseClass = component.superclasses[0].name
 //% set artifactType = component.artifacttype
+/*{% block license %}*/
+/*# Allow child templates to include license #*/
+/*{% endblock %}*/
+/*{% block includes %}*/
 #include "${component.baseclass.header}"
+/*{% endblock %}*/
 
+/*{% block headerComment %}*/
 /*******************************************************************************************
 
     AUTO-GENERATED CODE. DO NOT MODIFY
@@ -31,6 +37,7 @@
     on the child class
 
 ******************************************************************************************/
+/*{% endblock %}*/
 
 /*{% if component is device %}*/
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl) :
@@ -73,14 +80,17 @@ ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrf
     construct();
 }
 /*{% else %}*/
+/*{% block componentConstructor %}*/
 ${className}::${className}(const char *uuid, const char *label) :
     ${baseClass}(uuid, label),
     serviceThread(0)
 {
     construct();
 }
+/*{% endblock %}*/
 /*{% endif %}*/
 
+/*{% block construct %}*/
 void ${className}::construct()
 {
     Resource_impl::_started = false;
@@ -108,15 +118,19 @@ void ${className}::construct()
     registerOutPort(${port.cppname}, ${port.cppname}->_this());
 /*{% endfor %}*/
 }
+/*{% endblock %}*/
 
 /*******************************************************************************************
     Framework-level functions
     These functions are generally called by the framework to perform housekeeping.
 *******************************************************************************************/
+/*{% block initialize %}*/
 void ${className}::initialize() throw (CF::LifeCycle::InitializeError, CORBA::SystemException)
 {
 }
+/*{% endblock %}*/
 
+/*{% block start %}*/
 void ${className}::start() throw (CORBA::SystemException, CF::Resource::StartError)
 {
     boost::mutex::scoped_lock lock(serviceThreadLock);
@@ -132,7 +146,9 @@ void ${className}::start() throw (CORBA::SystemException, CF::Resource::StartErr
     	Resource_impl::start();
     }
 }
+/*{% endblock %}*/
 
+/*{% block stop %}*/
 void ${className}::stop() throw (CORBA::SystemException, CF::Resource::StopError)
 {
     boost::mutex::scoped_lock lock(serviceThreadLock);
@@ -151,7 +167,9 @@ void ${className}::stop() throw (CORBA::SystemException, CF::Resource::StopError
     	Resource_impl::stop();
     }
 }
+/*{% endblock %}*/
 
+/*{% block getPort %}*/
 /*{% if component.ports %}*/
 CORBA::Object_ptr ${className}::getPort(const char* _id) throw (CORBA::SystemException, CF::PortSupplier::UnknownPort)
 {
@@ -177,6 +195,8 @@ CORBA::Object_ptr ${className}::getPort(const char* _id) throw (CORBA::SystemExc
 }
 
 /*{% endif %}*/
+/*{% endblock %}*/
+/*{% block releaseObject %}*/
 void ${className}::releaseObject() throw (CORBA::SystemException, CF::LifeCycle::ReleaseError)
 {
     // This function clears the ${artifactType} running condition so main shuts down everything
@@ -196,7 +216,9 @@ void ${className}::releaseObject() throw (CORBA::SystemException, CF::LifeCycle:
 
     ${baseClass}::releaseObject();
 }
+/*{% endblock %}*/
 
+/*{% block loadProperties %}*/
 /*{% from "properties/properties.cpp" import addproperty, initsequence %}*/
 void ${className}::loadProperties()
 {
@@ -208,3 +230,8 @@ void ${className}::loadProperties()
 
 /*{% endfor %}*/
 }
+/*{% endblock %}*/
+
+/*{% block extensions %}*/
+/*# Allow for child class extensions #*/
+/*{% endblock %}*/

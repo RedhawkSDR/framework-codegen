@@ -1,4 +1,4 @@
-#{#
+#
 # This file is protected by Copyright. Please refer to the COPYRIGHT file
 # distributed with this source distribution.
 #
@@ -16,37 +16,29 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
-#}
-AC_INIT({{component.name}}, {{component.version}})
-AM_INIT_AUTOMAKE(nostdinc)
+#
 
-AC_PROG_CC
-AC_PROG_CXX
-AC_PROG_INSTALL
+import jinja2
 
-AC_CORBA_ORB
-OSSIE_CHECK_OSSIE
-OSSIE_SDRROOT_AS_PREFIX
+from redhawk.codegen.jinja.generator import TopLevelGenerator
+from redhawk.codegen.jinja.python import PythonTemplate
 
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+from mapping import ProjectMapper
 
-# Dependencies
-export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
-PKG_CHECK_MODULES([PROJECTDEPS], [ossie >= 1.9 omniORB4 >= 4.1.0])
-#{% if component.interfacedeps %}
-PKG_CHECK_MODULES([INTERFACEDEPS], [{{component.interfacedeps|join(', ')}}])
-#{% endif %}
-OSSIE_ENABLE_LOG4CXX
-AX_BOOST_BASE([1.41])
-AX_BOOST_THREAD
-#{% block dependencies %}
-#{% endblock %}
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
 
-AC_CONFIG_FILES([
-#%- filter trim|lines|join(' \\\n')|indent(17)
-Makefile
-#%- block files
-#% endblock
-#% endfilter
-])
-AC_OUTPUT
+loader = jinja2.PackageLoader(__package__)
+
+class TestGenerator(TopLevelGenerator):
+    def projectMapper(self):
+        return ProjectMapper()
+
+    def loader(self, project):
+        return loader
+
+    def templates(self, project):
+        return [
+            PythonTemplate('test.py', 'test_' + project['name'] + '.py')
+            ]

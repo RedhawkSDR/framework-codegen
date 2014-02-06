@@ -178,3 +178,7 @@ class ComponentMapper(object):
                 continue
             seen.add(namespace)
             yield namespace
+            if namespace == 'FRONTEND':
+                if 'BULKIO' not in seen:
+                    seen.add('BULKIO')
+                    yield 'BULKIO'

@@ -18,7 +18,11 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #!/bin/sh
+#{% block license %}
+#{# Allow child templates to include license #}
+#{% endblock %}
 
+#{% block reconf %}
 rm -f config.cache
 
 # Setup the libtool stuff
@@ -44,3 +48,4 @@ fi
 
 autoconf
 automake --foreign --add-missing
+#{% endblock %}

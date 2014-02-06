@@ -23,8 +23,8 @@
 Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
-Version:        1.9.0
-Release:        6%{?dist}
+Version:        1.9.1
+Release:        0.1%{?dist}
 Summary:        Redhawk Code Generators
 
 Group:          Applications/Engineering
@@ -42,6 +42,10 @@ Requires:       python-jinja2-26
 
 BuildRequires:  python-devel >= 2.4
 
+# Turn off the brp-python-bytecompile script; our setup.py does byte compilation
+# (From https://fedoraproject.org/wiki/Packaging:Python#Bytecompiling_with_the_correct_python_version)
+%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
+
 %description
 REDHAWK Code Generators
  * Commit: __REVISION__
@@ -58,7 +62,7 @@ REDHAWK Code Generators
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%{__python} setup.py install -O1 --skip-build --home=$RPM_BUILD_ROOT%{_prefix}
+%{__python} setup.py install --skip-build -O1 --home=%{_prefix} --root=%{buildroot}
 rm $RPM_BUILD_ROOT%{_prefix}/lib/python/redhawk/__init__.py*
 
 

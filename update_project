@@ -46,16 +46,16 @@ Options:
 
 _bulkio_re = re.compile('BULKIO_data[A-Za-z]+_In_i')
 
-def safe_next(item):
-    """
-    Returns the next value of the iterator, or an empty string if the end of
-    iteration has been reached. Allows string processing to gracefully handle
-    the end of a line without explicit catch statements.
-    """
-    try:
-        return next(item)
-    except StopIteration:
-        return ''
+if not hasattr(__builtins__, 'next'):
+    # Python 2.4 does not have a free-standing next() function
+    def next(iterator, default):
+        """
+        Backwards compatibility next() equivalent for Python 2.4.
+        """
+        try:
+            return iterator.next()
+        except StopIteration:
+            return default
 
 def strip_comments(source):
     """
@@ -75,7 +75,7 @@ def strip_comments(source):
                 # Look for end comment token; if the end of the line is reached
                 # ch will be an empty string
                 while ch == '*':
-                    ch = safe_next(chars)
+                    ch = next(chars, '')
                     if ch == '/':
                         inComment = False
                         break
@@ -83,7 +83,7 @@ def strip_comments(source):
             if ch == '/':
                 # Read the next character to see if it matches a comment token
                 # (if it does not, both characters will be added to the output)
-                ch += safe_next(chars)
+                ch += next(chars, '')
                 if ch == '/*':
                     # Comment, start discarding
                     inComment = True
@@ -119,7 +119,8 @@ def modify_file(filename, predicate, text):
     if not os.path.exists(filename):
         return
     infile = open(filename, 'r')
-    outfile = tempfile.NamedTemporaryFile(delete=False)
+    fd, tempname = tempfile.mkstemp()
+    outfile = os.fdopen(fd, 'w')
 
     for line in infile:
         if predicate(line):
@@ -135,7 +136,7 @@ def modify_file(filename, predicate, text):
 
     # Move the original out of the way and move the new one in
     os.rename(filename, filename+'.orig')
-    shutil.move(outfile.name, filename)
+    shutil.move(tempname, filename)
 
     perm = os.stat(filename+'.orig')
     os.chmod(filename,perm.st_mode)
@@ -191,11 +192,31 @@ if __name__ == '__main__':
         # '.wavedev'
         compName = os.path.basename(wavedevFile)[1:-8]
         dirname = os.path.dirname(wavedevFile)
+
+        # If project has already been updated to 1.9 then do nothing 
+        version = os.popen("codegen_version " + os.path.join(dirname,compName) + ".spd.xml").read()
+        if version.find("1.9 jinja") != -1:
+            sys.exit() 
+
         dom = minidom.parse(wavedevFile)
         if DEBUG:
             print "ORIGINAL wavedev file================================================"
             os.system("cat " + str(wavedevFile)) 
             print "============================================================"
+        # Back up project before modifying
+        backupFilename = compName + "_1.8.tar.gz"
+        if not dirname or dirname == ".":
+            fullPathBackupFilename = backupFilename
+        else:
+            fullPathBackupFilename = os.path.join(dirname,backupFilename)
+        if os.path.exists(fullPathBackupFilename):
+            os.rename(fullPathBackupFilename ,fullPathBackupFilename + ".orig") 
+
+        if not dirname or dirname == ".":
+            cmd = "cd ..;tar czf " + os.path.join(compName,fullPathBackupFilename) + " " + compName + " --exclude=" + os.path.join(compName,fullPathBackupFilename)
+        else:
+            cmd = "cd " + dirname + "/..;tar czf " + fullPathBackupFilename + " " + compName + " --exclude=" + os.path.join(compName,backupFilename) 
+        os.system(cmd)
         settings = {}
         for node in dom.getElementsByTagName('implSettings'):
             valueNode = node.getElementsByTagName('value')[0]
