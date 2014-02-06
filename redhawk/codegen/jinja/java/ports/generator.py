@@ -48,6 +48,12 @@ class JavaPortGenerator(PortGenerator):
     def _ctorArgs(self, name):
         return tuple()
 
+    def start(self):
+        return None
+
+    def stop(self):
+        return None
+
     def constructor(self, name):
         return '%s(%s)' % (self.className(), ', '.join(self._ctorArgs(name)))
 

@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  #*/
+/*{% block license %}*/
+/*# Allow child templates to include license #*/
+/*{% endblock %}*/
 //% set userclass = component.userclass.name
 //% set classname = component.baseclass.name
 //% set superClass = component.superclass.name
@@ -61,10 +64,6 @@ import CF.${prop.CFType};
 import org.ossie.component.*;
 /*{% if component.properties %}*/
 import org.ossie.properties.*;
-/*{% endif %}*/
-/*{% if component.hasbulkio %}*/
-
-import bulkio.*;
 /*{% endif %}*/
 /*{% filter lines|unique|join('\n') %}*/
 /*{%   for portgen in component.portgenerators %}*/
@@ -179,6 +178,22 @@ public abstract class ${classname} extends ${superClass} implements Runnable {
     }
 
 /*{% endif %}*/
+    public void start() throws CF.ResourcePackage.StartError
+    {
+/*{% for port in component.ports if port.start %}*/
+        this.${port.javaname}.${port.start};
+/*{% endfor %}*/
+        super.start();
+    }
+
+    public void stop() throws CF.ResourcePackage.StopError
+    {
+/*{% for port in component.ports if port.stop %}*/
+        this.${port.javaname}.${port.stop};
+/*{% endfor %}*/
+        super.stop();
+    }
+
     public void run() 
     {
         while(this.started())

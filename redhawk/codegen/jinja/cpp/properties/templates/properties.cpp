@@ -72,8 +72,9 @@ inline bool operator>>= (const CORBA::Any& a, ${struct.cpptype}& s) {
     if (!(a >>= temp)) return false;
     CF::Properties& props = *temp;
     for (unsigned int idx = 0; idx < props.length(); idx++) {
+/*{% set ifelse = joiner('else ') %}*/
 /*{% for field in struct.fields %}*/
-        if (!strcmp("${field.identifier}", props[idx].id)) {
+        ${ifelse()}if (!strcmp("${field.identifier}", props[idx].id)) {
 /*{% if field.type == 'char' %}*/
 /*{%   set extractName = 'temp_char' %}*/
             CORBA::Char temp_char;

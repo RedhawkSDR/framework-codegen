@@ -37,12 +37,11 @@
 /*# Allow for child template extensions #*/
 /*{% endblock %}*/
 
-/*{% if component.hasbulkio %}*/
-#include "bulkio/bulkio.h"
-/*{% endif %}*/
-/*{% if "port_impl.h" in generator.sourceFiles(component) %}*/
-#include "port_impl.h"
-/*{% endif %}*/
+/*{% filter lines|unique|join('\n') %}*/
+/*{%   for portgen in component.portgenerators if portgen.header() %}*/
+#include ${portgen.header()}
+/*{%   endfor %}*/
+/*{% endfilter %}*/
 /*{% if "struct_props.h" in generator.sourceFiles(component) %}*/
 #include "struct_props.h"
 /*{% endif %}*/
@@ -209,6 +208,9 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 
     private:
         void construct();
+
+/*{% block extendedPrivate%}*/
+/*{% endblock %}*/
 
 /*{% block extensions %}*/
 /*# Allow for child template extensions #*/

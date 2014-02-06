@@ -1,34 +1,287 @@
-from packageTemplates import xmlTemplate as XML_TEMPLATE_STRING
 import subprocess
 import os
+import ossie.parsers
+from ossie.parsers import spd, scd, prf
+from ossie.parsers.scd import softwarecomponent
 
-def create(configFile, outputDir, mFiles, force=False):
+def runCompileRpm(outputDir, componentName):
+    process = subprocess.Popen(
+        './build.sh rpm',
+        shell=True,
+        cwd=outputDir+'/'+componentName)
+    process.wait()
+
+def runInstall(outputDir, componentName):
+    process = subprocess.Popen(
+        './reconf',
+        shell=True,
+        cwd=outputDir+'/'+componentName+'/cpp')
+    process.wait()
+    process = subprocess.Popen(
+        './configure',
+        shell=True,
+        cwd=outputDir+'/'+componentName+'/cpp')
+    process.wait()
+    process = subprocess.Popen(
+        'make install',
+        shell=True,
+        cwd=outputDir+'/'+componentName+'/cpp')
+    process.wait()
+
+def _createImplementation(component):
+    '''
+    Create implementation element to be inserted into a softpkg element within
+    the SPD file.
+    '''
+
+    localfile = spd.localFile(name="cpp")
+
+    code = spd.code("Executable",
+             localfile = localfile,
+             entrypoint = "cpp/" + component.name)
+    implementation = spd.implementation(id_="cpp")
+    implementation.description = "The implementation contains descriptive information about the template for a software component."
+    implementation.code = code
+    implementation.compiler = spd.compiler()
+    implementation.compiler.name = "/usr/bin/gcc"
+    implementation.compiler.version = "4.1.2"
+
+    implementation.programminglanguage = spd.programmingLanguage(name = "C++")
+    implementation.humanlanguage = spd.humanLanguage(name = "EN")
+    implementation.add_os(spd.os(name = "Linux"))
+    implementation.add_processor(spd.processor(name="x86"))
+    implementation.add_processor(spd.processor(name="x86_64"))
+    return implementation
+
+def _createDescriptor(component):
+    descriptor = spd.descriptor()
+    descriptor.localfile=spd.localFile(component.name+".scd.xml")
+    return descriptor
+
+def _createPropertyFile(component):
+    propertyfile = spd.propertyFile()
+    propertyfile.localfile=spd.localFile(name=component.name+".prf.xml")
+    return propertyfile
+
+def writeSPD(component, outputDir):
+    implementation = _createImplementation(component)
+    descriptor = _createDescriptor(component)
+    propertyfile = _createPropertyFile(component)
+
+    softpkg = spd.softPkg(type_="sca_compliant",
+                          id_=component.name,
+                          name=component.name,
+                          propertyfile=propertyfile,
+                          title="",
+                          descriptor=descriptor)
+    author = spd.author()
+    author.add_name(value="null")
+    softpkg.add_author(author)
+    softpkg.add_implementation(implementation)
+
+    outfile = open(outputDir+'/'+component.name+"/"+component.name+".spd.xml", 'w')
+    boilerplateLines = []
+    boilerplateLines.append('<?xml version="1.0" encoding="UTF-8"?>\n')
+    boilerplateLines.append('<!DOCTYPE softpkg PUBLIC "-//JTRS//DTD SCA V2.2.2 SPD//EN" "softpkg.dtd">\n')
+    outfile.writelines(boilerplateLines)
+    softpkg.export(outfile = outfile, level = 0, pretty_print=True)
+    outfile.close()
+
+def _createComponentFeature(component):
+    componentfeatures=scd.componentFeatures()
+    componentfeatures.add_supportsinterface(
+        scd.supportsInterface(
+            supportsname="Resource",
+            repid="IDL:CF/Resource:1.0"))
+    componentfeatures.add_supportsinterface(
+        scd.supportsInterface(
+            supportsname="LifeCycle", 
+            repid="IDL:CF/LifeCycle:1.0"))
+    componentfeatures.add_supportsinterface(
+        scd.supportsInterface(
+            supportsname="PortSupplier",
+            repid="IDL:CF/PortSupplier:1.0"))
+    componentfeatures.add_supportsinterface(
+        scd.supportsInterface(
+            supportsname="PropertySet",
+            repid="IDL:CF/PropertySet:1.0"))
+    componentfeatures.add_supportsinterface(
+        scd.supportsInterface(
+            supportsname="IDL:CF/TestableObject:1.0",
+            repid="TestableObject"))
+
+    ports = scd.ports()
+    for port in component.ports:
+        if port.direction == "output":
+            ports.add_uses(scd.uses(usesname=port.name,
+                                    repid=port.bulkIOType))
+        if port.direction == "input":
+            ports.add_provides(scd.provides(providesname=port.name,
+                                            repid=port.bulkIOType))
+    componentfeatures.ports=ports
+
+    return componentfeatures
+
+def _createInterfaces(component):
+    interfaces = scd.interfaces()
+
+    resourceInterface = scd.interface(name="Resource", 
+                                      repid="IDL:CF/Resource:1.0")
+    resourceInterface.add_inheritsinterface(
+        scd.inheritsInterface(repid="IDL:CF/LifeCycle:1.0"))
+    resourceInterface.add_inheritsinterface(
+        scd.inheritsInterface(repid="IDL:CF/PortSupplier:1.0"))
+    resourceInterface.add_inheritsinterface(
+        scd.inheritsInterface(repid="IDL:CF/PropertySet:1.0"))
+    resourceInterface.add_inheritsinterface(
+        scd.inheritsInterface(repid="IDL:CF/TestableObject:1.0"))
+    interfaces.add_interface(resourceInterface)
+
+    interfaces.add_interface(
+        scd.interface(
+            name="LifeCycle",
+            repid="IDL:CF/LifeCycle:1.0"))
+    interfaces.add_interface(
+        scd.interface(
+            name="PortSupplier",
+            repid="IDL:CF/PortSupplier:1.0"))
+    interfaces.add_interface(
+        scd.interface(
+            name="PropertySet",
+            repid="IDL:CF/PropertySet:1.0"))
+    interfaces.add_interface(
+        scd.interface(
+            name="TestableObject",
+            repid="IDL:CF/TestableObject:1.0"))
+    interfaces.add_interface(
+        scd.interface(
+            name="ProvidesPortStatisticsProvider",
+            repid="IDL:BULKIO/ProvidesPortStatisticsProvider:1.0"))
+    interfaces.add_interface(
+        scd.interface(
+            name="updateSRI",
+            repid="IDL:BULKIO/updateSRI:1.0"))
+
+    return interfaces
+
+def writeSCD(component, outputDir):
+    componentrepid=scd.componentRepId(repid="IDL:CF/Resource:1.0")
+    softwarecomponent = scd.softwarecomponent(corbaversion="2.2",
+                                              componentrepid=componentrepid,
+                                              componenttype="resource")
+
+    softwarecomponent.componentfeatures=_createComponentFeature(component)
+    softwarecomponent.interfaces=_createInterfaces(component)
+
+    outfile = open(outputDir+"/"+component.name+"/"+component.name+".scd.xml", 'w')
+    boilerplateLines = []
+    boilerplateLines.append('<?xml version="1.0" encoding="UTF-8"?>\n')
+    boilerplateLines.append('<!DOCTYPE softwarecomponent PUBLIC "-//JTRS//DTD SCA V2.2.2 SCD//EN" "softwarecomponent.dtd">\n')
+    outfile.writelines(boilerplateLines)
+    softwarecomponent.export(outfile = outfile, level = 0, pretty_print=True)
+    outfile.close()
+
+def _createProperties(component):
+    properties = prf.properties()
+
+    for prop in component.props:
+        if prop.propType == "simple":
+            simple = prf.simple(
+                complex=prop.complexFlag,
+                type_=prop.dataType,
+                id_=prop.name,
+                mode="readwrite",
+                value=prop.default,
+                action=prf.action(type_="external"))
+
+            simple.add_kind(value=prf.kind(kindtype="configure"))
+            if prop.kindType != "configure":
+                simple.add_kind(value=prf.kind(kindtype=prop.kindType))
+            properties.add_simple(simple)
+
+        elif prop.propType == "simpleSequence":
+            simplesequence = prf.simpleSequence(
+                complex=prop.complexFlag,
+                type_=prop.dataType,
+                id_=prop.name,
+                mode="readwrite",
+                action=prf.action(type_="external"))
+
+            values = prf.values()
+            for value in prop.default:
+                values.add_value(value=value)
+            simplesequence.values=values
+
+            simplesequence.add_kind(value=prf.kind(kindtype="configure"))
+            if prop.kindType != "configure":
+                simplesequence.add_kind(value=prf.kind(kindtype=prop.kindType))
+            properties.add_simplesequence(simplesequence)
+
+    return properties
+
+def writePRF(component, outputDir):
+    properties = _createProperties(component)
+
+    outfile = open(outputDir+"/"+component.name+"/"+component.name+".prf.xml", 'w')
+    boilerplateLines = []
+    boilerplateLines.append('<?xml version="1.0" encoding="UTF-8"?>\n')
+    boilerplateLines.append('<!DOCTYPE properties PUBLIC "-//JTRS//DTD SCA V2.2.2 PRF//EN" "properties.dtd">\n')
+    outfile.writelines(boilerplateLines)
+    properties.export(outfile = outfile, level = 0, pretty_print=True)
+    outfile.close()
+
+    return
+
+def writeWavedev(component, outputDir):
+    content='<?xml version="1.0" encoding="ASCII"?>\n'
+    content+='<codegen:WaveDevSettings xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:codegen="http://www.redhawk.gov/model/codegen">\n'
+    content+='<implSettings key="cpp">\n'
+    content+='<value outputDir="cpp" template="redhawk.codegen.jinja.cpp.component.__GENERATOR" generatorId="redhawk.codegen.jinja.cpp.component.__GENERATOR" primary="true"/>\n'
+    content+='</implSettings>\n'
+    content+='</codegen:WaveDevSettings>\n'
+
+    content = content.replace("__GENERATOR", component.generator)
+    outfile=open(outputDir+"/"+component.name+"/."+component.name+".wavedev", 'w')
+    outfile.write(content)
+    outfile.close()
+
+def writeXMLUsingXMLGen(component, outputDir):
+    writeSPD(component, outputDir)
+    writeSCD(component, outputDir)
+    writePRF(component, outputDir)
+    writeWavedev(component, outputDir)
+
+def create(config,
+           outputDir,
+           mFiles,
+           force       = False,
+           buildRpm    = False,
+           install     = False):
     """
-    Use configFile to create the package XML files (SPD, PRF, SCD) and call
+    Use config to create the package XML files (SPD, PRF, SCD) and call
     the code generator to create component code.
 
     """
 
+    if type(config) == type(''): 
+        component = _processConfigFile(config)
+    elif type(config) == type([]):
+        component = _processConfigLines(config) 
+    else:
+        raise SystemExit("Invalid data type sent to create method")
 
-    component = _processConfigFile(configFile)
-
-    # Do simple find/replace operations
-    newLines = _findAndReplaceTags(XML_TEMPLATE_STRING, component)
-
-    # Create XML entries for specified ports/properties
-    newLines = _addPorts(newLines, component)
-    newLines = _addPortTypes(newLines, component)
-    newLines = _addProperties(newLines, component)
-    newLines = _addDependencies(newLines, component)
-
-    # Single XML file -> XML Files (SPD, PRF, SCD, .wavedev)
-    myXmlGenerator = _XmlSplitter(component.name, newLines, outputDir)
-    myXmlGenerator.generate()
+    writeXMLUsingXMLGen(component, outputDir)
 
     # XML files -> code
     _callCodegen(outputDir + "/" + component.name + "/" + component.name + ".spd.xml",
                  mFiles,
                  force)
+
+    if buildRpm:
+        runCompileRpm(outputDir, component.name)
+
+    if install:
+        runInstall(outputDir, component.name)
 
 def _callCodegen(spdLocation, mFiles = [], force = False):
     """
@@ -74,7 +327,7 @@ class _Port:
         else:
             self.bulkIOType = None
     def __str__(self):
-        ret = ""
+        ret = "\n"
         ret += "name = " + self.name + "\n"
         ret += "direction = " + self.direction + "\n"
         ret += "bulkIO type = " + self.bulkIOType + "\n"
@@ -86,11 +339,15 @@ class _Property:
 
     """
 
-    def __init__(self, name, dataType, default, kindType):
-        self.name = name
-        self.kindType = kindType
-        self.dataType = dataType
-        self.default = default
+    def __init__(self, name, dataType, default, kindType, complexFlag = "false"):
+        self.name        = name
+        self.kindType    = kindType
+        self.dataType    = dataType
+        self.default     = default
+        if self.dataType == 'double':
+            if self.default == ['']:
+                self.default = ['0']
+        self.complexFlag = complexFlag
 
         # If the default value is a list, the propType is simpleSequence.
         # Otherwise, the type is simple.
@@ -99,6 +356,16 @@ class _Property:
         else:
             self.propType = "simple"
 
+    def __str__(self):
+        ret = "\n"
+        ret += 'name ' + self.name + '\n' 
+        ret += 'kindType ' + self.kindType+ '\n' 
+        ret += 'dataType ' + self.dataType+ '\n' 
+        ret += 'default ' + self.default+ '\n' 
+        ret += 'complexFlag ' + self.complexFlag+ '\n' 
+        ret += 'propType ' + self.propType+ '\n' 
+        return ret
+
 class Component:
     def __init__(self, name, generator, ports, props, deps):
         self.props = props
@@ -106,36 +373,6 @@ class Component:
         self.name = name
         self.generator = generator
         self.dependencies = deps
-        self._setUniqueTypes()
-
-    def _setUniqueTypes(self):
-        """
-        For every unique port type, corresponding XML must be added. For
-        example, if a component has 3 double ports and 1 short, port,
-        there should be 1 double declaration in XML and 1 short declaration
-        in XML.  Note that there will still be 4 entries when defining
-        the ports themselves.
-
-        This method will garauntee that the component only has one entry
-        in self.uniqueTypes per type.
-
-        """
-
-        self.uniqueTypes = []
-        for port in self.ports:
-            if not _inList(self.uniqueTypes, port.bulkIOType):
-                self.uniqueTypes.append(port.bulkIOType)
-
-def _inList(list, itemInQuestion):
-    """
-    Return True if itemInQeustion is already in the list.
-
-    """
-
-    for item in list:
-        if item == itemInQuestion:
-            return True
-    return False
 
 def _getComponentName(lines):
     """
@@ -190,6 +427,31 @@ def _getPorts(lines):
             ports.append(_Port(splits[1], splits[2], splits[3]))
     return ports
 
+def standardizeComplexFormat(input):
+    """
+    Takes complex numbers of the form:
+
+        A+Bj
+
+    And converts to:
+
+        A+jB
+
+    """
+
+    input.replace("i", "j")
+
+    try:
+        complexVal = complex(input)
+        if complexVal.imag >= 0:
+            sign = "+"
+        else:
+            sign = "-"
+        return str(complexVal.real) + sign + "j" + str(complexVal.imag) 
+    except:
+        # Assume input is already in A+jB form
+        return input
+
 def _getProps(lines):
     """
     Loop through config file lines and look for property entries.
@@ -199,41 +461,46 @@ def _getProps(lines):
     props = []
     for line in lines:
         if line.lower().find("prop") == 0:
+            splits   = line.split()
+            name     = splits[1]
+            dataType = splits[2]
+            default  = splits[3]
+
+            complexFlag = "false"
+            if dataType.lower().find("complex") == 0:
+                complexFlag = "true"
+                dataType = dataType[len("complex"):].lower()
+
             # look for sequences
-            openBracket = line.find("[")
-            closeBracket = line.find("]")
-            if openBracket != -1 and closeBracket != -1:
-                # SimpleSequence, need to parse out the default argument
-                defaultStr = line[openBracket+1:closeBracket]
-                if closeBracket == len(line)-1:
-                    # close bracket is the last character
-                    line = line[:openBracket]
-                else:
-                    # close bracket is not the last character
-                    line = line[:openBracket] + line[closeBracket+1:]
-                default = []
-                for val in defaultStr.split(","):
-                    default.append(val)
+            openBracket = default.find("[")
+            if default.find("[") != -1: # sequence
+                # Take out the brackets
+                default = default[1:len(default)-1]
 
-            else:
-                # Simple
+                # split by commans and break into a list
+                default = default.split(",")
 
-                # pull out the default value from the line and reconstruct
-                # the line without the default value
-                splits = line.split()
-                default = splits[3]
+                if complexFlag == "true":
+                    for val in default:
+                        val = standardizeComplexFormat(val)
 
-                line = ""
-                for substr in splits:
-                    if substr != default:
-                        line += substr + " "
+            else:  # Simple
+                if complexFlag == "true":
+                    default = standardizeComplexFormat(default)
 
-            splits = line.split()
-            if len(splits) == 3:
-                props.append(_Property(splits[1], splits[2], default, "configure"))
-            else:
+            if len(splits) == 4:
+                props.append(_Property(name     = name,
+                                       dataType = dataType,
+                                       default  = default,
+                                       kindType = "configure",
+                                       complexFlag = complexFlag))
+            elif len(splits) == 5:
                 # a kindtype was specified
-                props.append(_Property(splits[1], splits[2], default, splits[3]))
+                props.append(_Property(name        = name,
+                                       dataType    = dataType,
+                                       default     = default,
+                                       kindType    = splits[4],
+                                       complexFlag = complexFlag))
 
     return props
 
@@ -245,11 +512,14 @@ def _processConfigFile(configFileName):
 
     lines = _myReadlines(configFileName)
     lines = _removeComments(lines, "#")
-    name = _getComponentName(lines)
-    generator = _getGenerator(lines)
-    ports = _getPorts(lines)
-    props = _getProps(lines)
-    deps = _getDeps(lines)
+    return _processConfigLines(lines)
+
+def _processConfigLines(configLines):
+    name      = _getComponentName(configLines)
+    generator = _getGenerator(configLines)
+    ports     = _getPorts(configLines)
+    props     = _getProps(configLines)
+    deps      = _getDeps(configLines)
     component = Component(name, generator, ports, props, deps)
     return component
 
@@ -265,124 +535,6 @@ def _myReadlines(filename):
     fp.close()
     return lines
 
-def _addPorts(newLines, component):
-    """
-    Add lines of XML for each port of the component.
-
-    """
-
-    newLinesWithPorts = []
-    for line in newLines:
-        if line.find("__PORTS") != -1:
-            for port in component.ports:
-                if port.direction == "input":
-                    portLine = ' '*6 + '<provides repid="{0}" providesname="{1}"/>\n'
-                    portLine = portLine.format(port.bulkIOType, port.name)
-                    newLinesWithPorts.append(portLine)
-
-                if port.direction == "output":
-                    portLine = ' '*6 + '<uses repid="{0}" usesname="{1}"/>\n'
-                    portLine = portLine.format(port.bulkIOType, port.name)
-                    newLinesWithPorts.append(portLine)
-
-        else:
-            newLinesWithPorts.append(line)
-
-    return newLinesWithPorts
-
-def _addPortTypes(newLines, component):
-    """
-    Add liens of XML to define each unique port type of the component.
-
-    """
-
-    # TODO: support interface descriptions
-    # note that this is only for standards compliance and adds no real function value
-    #<!-- __PORT_TYPES-->\n\
-    #  <inheritsinterface repid="IDL:BULKIO/ProvidesPortStatisticsProvider:1.0"/>\n\
-    #  <inheritsinterface repid="IDL:BULKIO/updateSRI:1.0"/>\n\
-    #</interface>\n\
-    newLinesWithTypes = []
-    for line in newLines:
-        if line.find("__PORT_TYPES") != -1:
-            for type in component.uniqueTypes:
-                typeLine = ' '*4 + '<interface name="{0}" repid="IDL:BULKIO/{0}:1.0">\n'
-                typeLine = typeLine.format(type)
-                newLinesWithTypes.append(typeLine)
-        else:
-            newLinesWithTypes.append(line)
-    return newLinesWithTypes
-
-def _addProperties(newLines, component):
-    newLinesWithProps = []
-    for line in newLines:
-        if line.find("__PROPERTIES") != -1:
-            # found the tag
-            for prop in component.props:
-                if prop.propType == "simple":
-                    propLines  = ' ' *4 + '<simple id="{0}" mode="readwrite" type="{1}">\n'
-                    propLines += ' ' *6 + '<description></description>\n'
-                    propLines += ' ' *6 + '<value>{2}</value>\n'
-                    propLines += ' ' *6 + '<kind kindtype="configure"/>\n'
-                    propLines += ' ' *6 + '<kind kindtype="{3}"/>\n'
-                    propLines += ' ' *6 + '<action type="external"/>\n'
-                    propLines += ' ' *4 + '</simple>\n'
-                    propLines = propLines.format(prop.name, prop.dataType, prop.default, prop.kindType)
-                    newLinesWithProps.append(propLines)
-                else:
-                    propLines  = ' ' *4 + '<simplesequence id="{0}" mode="readwrite" type="{1}">\n'.format(prop.name, prop.dataType)
-                    if prop.default:
-                        propLines  += ' ' *6 + '<values>\n'
-                        for val in prop.default:
-                            propLines  += ' ' *8 + '<value>{0}</value>\n'.format(val)
-                        propLines  += ' ' *6 + '</values>\n'
-                    propLines += ' ' *6 + '<kind kindtype="configure"/>\n'
-                    propLines += ' ' *6 + '<kind kindtype="{0}"/>\n'.format(prop.kindType)
-                    propLines += ' ' *6 + '<action type="external"/>\n'
-                    propLines += ' ' *4 + '</simplesequence>\n'
-                    newLinesWithProps.append(propLines)
-        else:
-            # regular line (no tag)
-            newLinesWithProps.append(line)
-    return newLinesWithProps
-
-def _addDependencies(newLines, component):
-    newLinesWithDependency = []
-    for line in newLines:
-        if line.find("__DEPENDENCY") != -1:
-            for dependency in component.dependencies:
-                propLines = ' '*4 + '<dependency type="runtime_requirements">\n'
-                propLines += ' '*6 + '<softpkgref>\n'
-                propLines += ' '*8 + '<localfile name="{0}"/>\n'.format(dependency)
-                propLines += ' '*8 + '<implref refid="default_impl"/>\n'
-                propLines += ' '*6 + '</softpkgref>\n'
-                propLines += ' '*4 + '</dependency>\n'
-                newLinesWithDependency.append(propLines)
-        else:
-            # regular line (no tag)
-            newLinesWithDependency.append(line)
-
-    return newLinesWithDependency
-
-
-
-def _findAndReplaceTags(inputLines, component):
-    """
-    Perform simple find and replace operations for know tags.
-
-    """
-    outputLines = []
-    inputLinesAsList = inputLines.split("\n")
-    for line in inputLinesAsList:
-        line += "\n"
-        if line.find("__COMPONENT_NAME") != -1:
-            outputLines.append(line.replace("__COMPONENT_NAME", component.name))
-        elif line.find("__GENERATOR") != -1:
-            outputLines.append(line.replace("__GENERATOR", component.generator))
-        else:
-            outputLines.append(line)
-    return outputLines
-
 def _removeComments(inputLines, commentFlag):
     """
     Loop through inputLines. If a commentFlag is the character in a line, 
@@ -395,59 +547,4 @@ def _removeComments(inputLines, commentFlag):
         if line.find(commentFlag) != 0:
             outputLines.append(line)
     return outputLines
-
-class _XmlSplitter:
-    """
-    Class for breaking down a single XML file that contains SPD, PRF, and SCD
-    content into the 3 separate XML files.
-
-    """
-
-    def __init__(self, componentName, lines, outputDir):
-        self.componentName = componentName
-        self.lines = lines
-        self.outputDir = outputDir
-
-        if not os.path.exists(self.outputDir+"/"+self.componentName):
-            os.makedirs(self.outputDir+"/"+self.componentName)
-
-    def _getContent(self, lines, begin, end):
-        """
-        Get the lines after the begin tag and before the end tag.
-
-        """
-
-        recording = False
-        content = []
-        for line in lines:
-            if line.find(end) != -1:
-                recording = False
-            if recording:
-                content.append(line)
-            if line.find(begin) != -1:
-                recording = True
-        return content
-
-    def _createXmlFile(self, beginTag, endTag, extention, hidden = False):
-        """
-        Take the content between beginTag and endTag and write it to
-        self.componentName + extention.
-
-        """
-
-        prependVal = ""
-        if hidden:
-            prependVal = "."
-        content = self._getContent(self.lines, beginTag, endTag)
-        outputFile=self.outputDir+"/"+self.componentName+"/"+prependVal+\
-                   self.componentName+extention
-        outputFilePointer = open(outputFile, 'w')
-
-        outputFilePointer.writelines(content)
-
-    def generate(self):
-        self._createXmlFile("BEGIN_SPD", "END_SPD", ".spd.xml")
-        self._createXmlFile("BEGIN_SCD", "END_SCD", ".scd.xml")
-        self._createXmlFile("BEGIN_PRF", "END_PRF", ".prf.xml")
-        self._createXmlFile("BEGIN_WAVEDEV", "END_WAVEDEV", ".wavedev", hidden=True)
 

@@ -78,7 +78,7 @@ multiple implementations, must use --impl to specify which):
 Function = strenum('list', 'generate')
 
 if __name__ == '__main__':
-    opts, args = getopt(sys.argv[1:], 'flC:B:m:', ['template=', 'impl=', 'impldir='])
+    opts, args = getopt(sys.argv[1:], 'flC:B:m:', ['help', 'template=', 'impl=', 'impldir='])
     outputdir = None
     action = Function.GENERATE
     overwrite = False
@@ -86,7 +86,9 @@ if __name__ == '__main__':
     implId = None
     mFiles = []
     for key, value in opts:
-        if key == '-C':
+        if key == '--help':
+            raise SystemExit(usage)
+        elif key == '-C':
             outputdir = value
         elif key == '-m':
             mFiles.append(value)
@@ -195,6 +197,11 @@ if __name__ == '__main__':
     from redhawk.codegen.jinja.project import component
     generator = component.factory(outputdir='.', overwrite=overwrite, crcs=toplevelCRCs)
     generators.append(('Component '+softpkg.name(), '', generator))
+
+    # Generate unit tests
+    from redhawk.codegen.jinja.unitTests.resource import sca
+    generator = sca.factory(outputdir='tests', overwrite=overwrite)
+    generators.append(('Tests '+softpkg.name(), 'tests', generator))
 
     # Set up generation for each requested implementation.
     for implId in implList:

@@ -18,36 +18,40 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
-import jinja2
-
+from redhawk.codegen.lang import python
 from redhawk.codegen.lang.idl import IDLInterface
-from redhawk.codegen.lang import java
 from redhawk.codegen.jinja.ports import PortFactory
 
-from generator import JavaPortGenerator
+from generator import PythonPortGenerator
 
-class BulkioPortFactory(PortFactory):
-    NAMESPACE = 'BULKIO'
+class BurstioPortFactory(PortFactory):
+    NAMESPACE = 'BURSTIO'
 
     def match(self, port):
         return IDLInterface(port.repid()).namespace() == self.NAMESPACE
-
+    
     def generator(self, port):
-        return BulkioPortGenerator(port)
+        return BurstioPortGenerator(port)
 
-class BulkioPortGenerator(JavaPortGenerator):
+class BurstioPortGenerator(PythonPortGenerator):
+    def _ctorArgs(self, port):
+        return (python.stringLiteral(port.name()),)
+
+    def imports(self):
+        return ('from redhawk import burstio',)
+
     def className(self):
-        # Trim 'data' from front of interface to get data type
-        datatype = self.interface.lstrip('data')
-        # If interface is unsigned need to make sure next character is upper
-        # case to conform with bulkio base classes
-        if datatype.startswith('U'):
-            datatype = datatype[0] + datatype[1].upper() + datatype[2:]
-        if self.direction == 'provides':
-            direction = 'In'
+        # The port class is the interface name (first character capitalized),
+        # plus the direction, e.g., "BurstByteIn" for "burstByte" provides port
+        classname = 'burstio.' + self.interface[0].upper() + self.interface[1:]
+        if self.direction == 'uses':
+            classname += 'Out'
         else:
-            direction = 'Out'
-        return 'bulkio.' + direction + datatype + 'Port'
+            classname += 'In'
+        return classname
 
-    def _ctorArgs(self, name):
-        return (java.stringLiteral(name),)
+    def start(self):
+        return 'start()'
+
+    def stop(self):
+        return 'stop()'

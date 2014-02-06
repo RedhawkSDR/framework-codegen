@@ -42,7 +42,6 @@ class PullComponentMapper(BaseComponentMapper):
         javacomp['jarfile'] = softpkg.name() + '.jar'
         javacomp['interfacedeps'] = list(self.getInterfaceDependencies(softpkg))
         javacomp['interfacejars'] = self.getInterfaceJars(softpkg)
-        javacomp['hasbulkio'] = self.hasBulkioPorts(softpkg)
         javacomp['softpkgcp'] = self.softPkgDeps(softpkg, format='cp')
         return javacomp
 
@@ -50,6 +49,8 @@ class PullComponentMapper(BaseComponentMapper):
         for namespace in self.getInterfaceNamespaces(softpkg):
             if namespace == 'BULKIO':
                 yield 'bulkio >= 1.0 bulkioInterfaces >= 1.9'
+            elif namespace == 'BURSTIO':
+                yield 'burstio >= 1.8'
             elif namespace == 'REDHAWK':
                 yield 'redhawkInterfaces >= 1.2.0'
             else:
@@ -58,6 +59,7 @@ class PullComponentMapper(BaseComponentMapper):
     def getInterfaceJars(self, softpkg):
         jars = [ns+'Interfaces.jar' for ns in self.getInterfaceNamespaces(softpkg)]
         jars.append('bulkio.jar')
+        jars.append('burstio.jar')
         return jars
 
     def superclass(self, softpkg):
@@ -74,9 +76,3 @@ class PullComponentMapper(BaseComponentMapper):
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
         return {'name': name}
-
-    def hasBulkioPorts(self, softpkg):
-        for port in softpkg.ports():
-            if 'BULKIO' in port.repid():
-                return True
-        return False

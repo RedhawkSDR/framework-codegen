@@ -24,6 +24,11 @@ ${gplHeader(component)}
 /*{%endblock%}*/
 
 /*{% block componentConstructor %}*/
+PREPARE_LOGGING(${className})
+
+/**
+ * Constructor.  Makes the initial call to set up the Octave interpreter.
+ */
 ${className}::${className}(const char *uuid, const char *label):
     ${baseClass}(uuid, label)
 {
@@ -37,33 +42,129 @@ ${className}::${className}(const char *uuid, const char *label):
     outputPackets["${port.cppname}"] = createDefaultDataTransferType(streamID_${component.name}_${port.cppname});
 /*{% endfor %}*/
 
+    _sriPort = "";
+
     construct();
 }
 /*{% endblock %}*/
 
+/*{%block extensions%}*/
 ${className}::~${className}()
 {
+/*{%if component.ports%}*/
     // Deallocate the allocated DataTransferType objects for the output packets
     std::map<std::string, bulkio::InDoublePort::DataTransferType*>::iterator iter;
     for (iter = outputPackets.begin(); iter != outputPackets.end(); ++iter) {
        delete iter->second;
     }
 
+/*{%endif%}*/
     // Prevent octave from leaving around temporary files after shutdown.
     do_octave_atexit();
 }
 
-/*{%block extensions%}*/
+/**
+ * Wrapper to Octave's feval method that monitors the Octave error state.
+ * If an error is detected, it is logged and an exception (invalid_argument)
+ * is thrown.
+ */
+const octave_value_list ${className}::_feval(
+    const std::string function,
+    const octave_value_list &functionArguments)
+{
+    octave_value_list result;
+
+    // Make sure the error state is cleared before calling feval so that
+    // we only get errors related to this feval call.
+    reset_error_handler();
+    result = feval(function.c_str(), functionArguments);
+
+    if (error_state != 0) { // If Octave reports an error
+        // Formulate the error message to send to the REDHAWK log
+        std::string errorStr = "Octave entered an error state.  ";
+        std::string error_msg = last_error_message();
+        if ((error_msg != "\n") and (not error_msg.empty())) {
+            errorStr += "\nThe following error occurred:\n"+error_msg+"\n";
+        }
+        errorStr += "If the diaryOnOrOff property is set to \"on\", you may check the diary file written to ";
+        errorStr += _diaryFile;
+
+        // Log the error and throw an exception
+        LOG_ERROR(${className}, errorStr);
+        throw std::invalid_argument("");
+    }
+    return result;
+}
+
+/**
+ * Set the OCTAVEPATH to the same directory as the component executable
+ */
 void ${className}::setCurrentWorkingDirectory(std::string& cwd)
-{ 
+{
     Resource_impl::setCurrentWorkingDirectory(cwd);
 
     // set the OCTAVEPATH to the same directory as the component executable
     octave_value_list functionArguments; // pass to octave
     functionArguments(0) = octave_value(getCurrentWorkingDirectory());
-    feval("addpath", functionArguments);
+    _feval("addpath", functionArguments);
 }
 
+/**
+ * Turn the diary on or off based on the value of the class data field
+ * (property) diaryOnOrOff.  If turning the diary on, set the output
+ * directory for the diary to $SDRROOT/dev/logs/{componentName}/logSubDir.
+ */
+void ${className}::setDiary(std::string logSubDir)
+{
+    octave_value_list functionArguments; // pass to octave
+    if (diaryOnOrOff == "on") {
+        // determine the absolute path of the log file
+        std::string sdrroot    = getenv("SDRROOT");
+        std::string logdir     = std::string("/dev/logs/");
+        std::string file       = "/${component.name}.diary";
+        _diaryFile             = sdrroot + logdir + logSubDir + file;
+        std::string target_dir = sdrroot + logdir + logSubDir;
+
+        boost::filesystem::path dirPath(target_dir);
+        boost::filesystem::path currentPath;
+
+        // recursively create the directory for the diary file (in case it
+        // does not exist)
+        for (boost::filesystem::path::iterator walkPath = dirPath.begin();
+             walkPath != dirPath.end();
+             ++walkPath) {
+            currentPath /= *walkPath;
+            if (!boost::filesystem::exists(currentPath)) {
+                boost::filesystem::create_directory(currentPath);
+            }
+        }
+
+        // call the diary method with a location for the diary file
+        functionArguments(0) = octave_value(_diaryFile);
+        _feval("diary", functionArguments);
+    }
+
+    // call the diary function to turn the diary on or off
+    functionArguments(0) = octave_value(diaryOnOrOff);
+    _feval("diary", functionArguments);
+}
+
+/**
+ * Flush the diary by turning it off.
+ *
+ * Ignore any errors reported by the Octave interpreter.
+ */
+void ${className}::flushDiary()
+{
+    octave_value_list functionArguments; // pass to octave
+    functionArguments(0) = octave_value("off");
+    try {
+        _feval("diary", functionArguments);
+    } catch ( std::invalid_argument ) {}
+}
+
+/*# bulkio will only be imported if ports are defined #*/
+/*{%if component.ports%}*/
 /**
  * Initialize a new DataTransferType with some default values.
  *
@@ -97,8 +198,6 @@ bulkio::InDoublePort::DataTransferType* ${className}::createDefaultDataTransferT
         inputQueueFlushed); /* flush-to-report flag */
 }
 
-/*# bulkio will only be imported if ports are defined #*/
-/*{%if component.ports%}*/
 /**
  * Sub-method of appendInputPacketToFunctionArguments.
  */
@@ -226,71 +325,6 @@ int ${className}::buffer(std::string portName, bulkio::InDoublePort* port)
 }
 
 /**
- * Push a packet whose payload cannot fit within the CORBA limit.
- * The packet is broken down into sub-packets and sent via multiple pushPacket
- * calls.  The EOS is set to false for all of the sub-packets, except for
- * the last sub-packet, who uses the EOS outputPacket.
- */
-void pushOversizedPacket(
-    bulkio::OutDoublePort*                  outputPort,   /* port to push to */
-    bulkio::InDoublePort::DataTransferType* outputPacket) /* input */
-{
-    // If there is no data to break into smaller packets, skip
-    // straight to the pushPacket call and return.
-    if (outputPacket->dataBuffer.size() == 0) {
-        outputPort->pushPacket(
-            outputPacket->dataBuffer, /* data      */
-            outputPacket->T,          /* timestamp */
-            outputPacket->EOS,        /* EOS       */
-            outputPacket->streamID);  /* stream ID */
-        return;
-    }
-
-    // Multiply by some number < 1 to leave some margin for the CORBA header
-    size_t maxPayloadSize    = (size_t) (bulkio::Const::MAX_TRANSFER_BYTES * .9);
-    size_t numSamplesPerPush = maxPayloadSize/sizeof(outputPacket->dataBuffer.front());
-
-    // Determine how many sub-packets to send.
-    size_t numFullPackets    = outputPacket->dataBuffer.size()/numSamplesPerPush;
-    size_t lenOfLastPacket   = outputPacket->dataBuffer.size()%numSamplesPerPush;
-
-    // Send all of the sub-packets of length numSamplesPerPush.
-    // Always send EOS false, (the EOS of the parent packet will be sent
-    // eith the last sub-packet).
-    bool EOS = false;
-    unsigned int rowNum;
-    for (rowNum = 0; rowNum < numFullPackets; rowNum++) {
-        if ( (rowNum == numFullPackets -1) && (lenOfLastPacket == 0)) {
-            // This is the last sub-packet.
-            EOS = outputPacket->EOS;
-        }
-
-        std::vector<double> subPacket(
-            outputPacket->dataBuffer.begin() + rowNum*numSamplesPerPush,
-            outputPacket->dataBuffer.begin() + rowNum*numSamplesPerPush + numSamplesPerPush);
-        outputPort->pushPacket(
-            subPacket,               /* data      */
-            outputPacket->T,         /* timestamp */
-            EOS,                     /* EOS       */
-            outputPacket->streamID); /* stream ID */
-    }
-
-    if (lenOfLastPacket != 0) {
-        // Send the last sub-packet, whose length is less than
-        // numSamplesPerPush.  Note that the EOS of the master packet is
-        // sent with the last sub-packet.
-        std::vector<double> subPacket(
-            outputPacket->dataBuffer.begin() + numFullPackets*numSamplesPerPush,
-            outputPacket->dataBuffer.begin() + numFullPackets*numSamplesPerPush + lenOfLastPacket);
-        outputPort->pushPacket(
-            subPacket,               /* data      */
-            outputPacket->T,         /* timestamp */
-            outputPacket->EOS,       /* EOS       */
-            outputPacket->streamID); /* stream ID */
-    }
-}
-
-/**
  * Sub-method of populateOutputPacket.
  */
 void populateComplexOutputPacket(
@@ -298,7 +332,26 @@ void populateComplexOutputPacket(
     const octave_value_list&                result,       /* input  */
     const int                               resultIndex)  /* input  */
 {
-    if (result(resultIndex).ndims() == 1)
+    int ndims = result(resultIndex).ndims();
+
+    // In Octave 3.6.4, the call:
+    //    int ndims = result(resultIndex).ndims();
+    // has historically produced bad data (sometimes returning
+    // ndims=2 for n-by-m matrices).  As a result, we determine
+    // ndims ourselves.  We can only do this if Octave returned
+    // a matrix, as data that is explicityly one-dimentional
+    // will not have the methods rows()/cols().
+    if (ndims == 2) {
+        int ncols = result(resultIndex).matrix_value().cols();
+        int nrows = result(resultIndex).matrix_value().rows();
+        if ((ncols == 1) or (nrows == 1) ){
+            ndims = 1;
+        } else {
+            ndims = 2;
+        }
+    }
+
+    if (ndims == 1)
     { // Vector Data
         // convert RowVector to std::vector
         // (with alternating real/complex values)
@@ -309,15 +362,20 @@ void populateComplexOutputPacket(
             outputPacket->dataBuffer[i*2+1] = (CORBA::Double)outputVector(i).imag();
         }
     } // end vector data 
-    else if (result(resultIndex).ndims() == 2) 
+    else if (ndims == 2) 
     { // 2-D matrix
         ComplexMatrix outputMatrix = result(resultIndex).complex_matrix_value();
         outputPacket->dataBuffer.resize(outputMatrix.nelem()*2);
-        for (int i = 0; i < outputMatrix.nelem(); i++) {
-            outputPacket->dataBuffer[i*2]   = (CORBA::Double)outputMatrix(i).real();
-            outputPacket->dataBuffer[i*2+1] = (CORBA::Double)outputMatrix(i).imag();
-        }
+        int numRows = outputMatrix.rows(); 
         outputPacket->SRI.subsize = outputMatrix.cols();
+        unsigned int dataBufferCount = 0;
+        for (int row = 0; row < numRows; row++) {
+            for (int elem = row; elem < outputMatrix.nelem(); elem+=numRows) {
+                 outputPacket->dataBuffer[dataBufferCount*2]   = (CORBA::Double)outputMatrix(elem).real();
+                 outputPacket->dataBuffer[dataBufferCount*2+1] = (CORBA::Double)outputMatrix(elem).imag();
+                 dataBufferCount++;
+             }
+         }
     } // end 2-D matrix
     else
     { // more thank 2 dimensions
@@ -334,7 +392,26 @@ void populateScalarOutputPacket(
     const octave_value_list&                result,       /* input  */
     const int                               resultIndex)  /* input  */
 {
-    if (result(resultIndex).ndims() == 1)
+    int ndims = result(resultIndex).ndims();
+
+    // In Octave 3.6.4, the call:
+    //    int ndims = result(resultIndex).ndims();
+    // has historically produced bad data (sometimes returning
+    // ndims=2 for n-by-m matrices).  As a result, we determine
+    // ndims ourselves.  We can only do this if Octave returned
+    // a matrix, as data that is explicityly one-dimentional
+    // will not have the methods rows()/cols().
+    if (ndims == 2) {
+        int ncols = result(resultIndex).matrix_value().cols();
+        int nrows = result(resultIndex).matrix_value().rows();
+        if ((ncols == 1) or (nrows == 1) ){
+            ndims = 1;
+        } else {
+            ndims = 2;
+        }
+    }
+
+    if (ndims == 1)
     { // Vector Data
         // convert RowVector to std::vector
         RowVector outputVector = result(resultIndex).array_value();
@@ -343,12 +420,18 @@ void populateScalarOutputPacket(
             outputPacket->dataBuffer[i] = (CORBA::Double)outputVector(i);
         }
     }
-    else if (result(resultIndex).ndims() == 2) 
+    else if (ndims == 2) 
     { // 2-D matrix
         Matrix outputMatrix = result(resultIndex).matrix_value();
         outputPacket->dataBuffer.resize(outputMatrix.nelem());
-        for (int i = 0; i < outputMatrix.nelem(); i++) {
-            outputPacket->dataBuffer[i] = (CORBA::Double)outputMatrix(i);
+        int numRows = outputMatrix.rows(); 
+        outputPacket->SRI.subsize = outputMatrix.cols();
+
+        unsigned int dataBufferCount = 0;
+        for (int row = 0; row < numRows; row++) {
+            for (int elem = row; elem < outputMatrix.nelem(); elem+=numRows) {
+                outputPacket->dataBuffer[dataBufferCount++] = (CORBA::Double)outputMatrix(elem);
+            }
         }
         outputPacket->SRI.subsize = outputMatrix.cols();
     } // end 2-D matrix
@@ -362,19 +445,40 @@ void populateScalarOutputPacket(
 /**
  * Convert the item number resultIndex of result into a std::vector.
  * Populates and returns outputPacket.
+ *
+ * Set the streamID and sample rate of the outputPacket (uses port) to
+ * that of the _sriPort (an input/prides port).
+ *
+ * If no provides (input) ports exist, leave the original settings
+ * for the outputPacket (usesPort).
+ *
+ * Note that these SRI settings can be overloaded in the the postProcess()
+ * method.
  */
-void populateOutputPacket(
+void ${className}::populateOutputPacket(
     bulkio::InDoublePort::DataTransferType* outputPacket, /* output */
     const octave_value_list&                result,       /* input  */
     const int                               resultIndex)  /* input  */
 {
-    outputPacket->T = bulkio::time::utils::now();
+    if (resultIndex < result.length()) {
+        // Got data for this argument
+        if (result(resultIndex).is_complex_type()) {
+            populateComplexOutputPacket(outputPacket, result, resultIndex);
+        } else {
+            populateScalarOutputPacket(outputPacket, result, resultIndex);
+        }
+     } else {
+        // Did not get data for this argument.  Send an empty packet.
+        outputPacket->dataBuffer.clear();
+     }
 
-    if (result(resultIndex).is_complex_type()) {
-        populateComplexOutputPacket(outputPacket, result, resultIndex);
-    } else {
-        populateScalarOutputPacket(outputPacket, result, resultIndex);
-    }
+    outputPacket->SRI          = inputPackets[_sriPort]->SRI;
+    outputPacket->SRI.xdelta   = 1./sampleRate;
+    outputPacket->SRI.streamID = streamID.c_str();
+    outputPacket->T            = bulkio::time::utils::now();
+    outputPacket->streamID     = streamID.c_str();
+    outputPacket->EOS          = inputPackets[_sriPort]->EOS;
+    outputPacket->sriChanged   = inputPackets[_sriPort]->sriChanged;
 }
 /*# end bulkio conditional #*/
 /*{%endif%}*/

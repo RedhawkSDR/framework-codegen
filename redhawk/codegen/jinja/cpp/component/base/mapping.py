@@ -35,6 +35,8 @@ class BaseComponentMapper(ComponentMapper):
         for namespace in self.getInterfaceNamespaces(softpkg):
             if namespace == 'BULKIO':
                 yield 'bulkio >= 1.0 bulkioInterfaces >= 1.9'
+            elif namespace == 'BURSTIO':
+                yield 'burstio >= 1.8'
             elif namespace == 'REDHAWK':
                 yield 'redhawkInterfaces >= 1.2.0'
             else:

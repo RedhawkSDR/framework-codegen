@@ -30,25 +30,45 @@ ${gplHeader(component)}
 #include <octave/parse.h>
 #include <octave/octave.h>
 #include <octave/toplev.h>
+
+#include <boost/filesystem.hpp>
 /*{% endblock %}*/
 
 /*{% block basePublicFunctions %}*/
+        ~${className}();
         void loadProperties();
         int serviceFunction();
         void setCurrentWorkingDirectory(std::string& cwd);
+        const octave_value_list _feval(const std::string function, const octave_value_list &functionArguments);
+/*{% endblock %}*/
+
+/*{% block extendedPrivate %}*/
+        ENABLE_LOGGING
+        std::map<std::string, std::vector<double> > inputBuffers;
+/*{%if component.ports%}*/
+        int buffer(std::string portName, bulkio::InDoublePort* port);
+        void populateOutputPacket(
+            bulkio::InDoublePort::DataTransferType* outputPacket,
+            const octave_value_list&                result,
+            const int                               resultIndex);
+/*{%endif%}*/
+        void setDiary(std::string diaryFolder);
+        void flushDiary();
 /*{% endblock %}*/
 
 /*{% block extendedProtected%}*/
+
+/*{%if component.ports%}*/
         std::map<std::string, bulkio::InDoublePort::DataTransferType*> inputPackets;
         std::map<std::string, bulkio::InDoublePort::DataTransferType*> outputPackets;
-        std::map<std::string, std::vector<double> > inputBuffers;
 
         bulkio::InDoublePort::DataTransferType* createDefaultDataTransferType(std::string&);
 
-        int buffer(std::string portName, bulkio::InDoublePort* port);
+/*{%endif%}*/
         virtual int preProcess();
         virtual int postProcess();
 
-        bool _enableBuffering;
-        int  _serviceFunctionReturnVal;
+        int         _serviceFunctionReturnVal;
+        std::string _sriPort;
+        std::string _diaryFile;
 /*{% endblock %}*/

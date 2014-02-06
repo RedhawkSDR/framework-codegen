@@ -33,7 +33,6 @@
 
 /*{% block includes %}*/
 #include <ossie/CorbaUtils.h>
-#include <ossie/PropertyInterface.h>
 /*{% endblock %}*/
 
 /*{% block struct %}*/

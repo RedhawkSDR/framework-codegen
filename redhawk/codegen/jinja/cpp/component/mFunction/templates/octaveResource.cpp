@@ -40,23 +40,26 @@ PREPARE_LOGGING(${className})
 ${className}::${className}(const char *uuid, const char *label) :
     ${baseName}(uuid, label)
 {
-    /* Indicate whether or not buffering should be turned on.  If buffering
-     * is turned on, the component will wait for EOS flags on all ports before
-     * calling the M function.  If buffering is turned off, the component will
-     * send incoming packets to the M function without waiting for EOS flags.
-     *
-     * If working with streaming data (i.e., data should be processed before
-     * an EOS is encountered), the _enableBuffering variable should be set to
-     * false.
-     */
-    _enableBuffering = true;
-
     /* Indicate whether or not the service function should only be run once.
      * If the component is a file source that should only read the input
      * file once, this should be set to FINISH.  Otherwise, if the service
      * function should be called indefinitely, this should be set to NORMAL.
      */
     _serviceFunctionReturnVal = NORMAL;
+
+    /* Indicate which input port should be used for populating the output 
+     * streamID and sampleRate.  Note that these values can be overloaded in 
+     * the postProces() method.
+     *
+     * Leave this as an empty string if no inputs exist: this will cause
+     * default SRI to be pushed.
+     */ 
+    _sriPort = "";
+/*{% for port in component.ports%}*/
+/*{%     if port.direction == "provides"%}*/
+    _sriPort = "${port.name}";
+//%      endif
+/*{% endfor %}*/
 }
 
 ${className}::~${className}()

@@ -71,12 +71,17 @@ class PullComponentGenerator(CppCodeGenerator):
             CppTemplate('resource_base.h', component['baseclass']['header'])
         ]
 
-        for gen in component['portgenerators']:
-            # Need to include port_impl if a non-bulkio port exists
-            if str(type(gen)).find("BulkioPortGenerator") == -1:
+        has_port_impl_h = False
+        has_port_impl_cpp = False
+        for generator in component['portgenerators']:
+            if generator.hasDeclaration():
+                generator.setHeader('"port_impl.h"')
+                if not has_port_impl_h:
+                    templates.append(CppTemplate('port_impl.h'))
+                    has_port_impl_h = True
+            if generator.hasImplementation() and not has_port_impl_cpp:
                 templates.append(CppTemplate('port_impl.cpp'))
-                templates.append(CppTemplate('port_impl.h'))
-                break
+                has_port_impl_cpp = True
 
         if component['structdefs']:
             templates.append(CppTemplate('struct_props.h'))

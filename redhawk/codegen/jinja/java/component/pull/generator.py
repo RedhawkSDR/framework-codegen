@@ -26,11 +26,10 @@ from redhawk.codegen.jinja.loader import CodegenLoader
 from redhawk.codegen.jinja.common import ShellTemplate, AutomakeTemplate, AutoconfTemplate
 from redhawk.codegen.jinja.java import JavaCodeGenerator, JavaTemplate
 from redhawk.codegen.jinja.java.properties import JavaPropertyMapper
-from redhawk.codegen.jinja.java.ports import JavaPortMapper
+from redhawk.codegen.jinja.java.ports import JavaPortMapper, JavaPortFactory
 from redhawk.codegen.jinja.java.component.base import BaseComponentGenerator
 
 from mapping import PullComponentMapper
-from portfactory import PullPortFactory
 
 if not '__package__' in locals():
     # Python 2.4 compatibility
@@ -58,7 +57,7 @@ class PullComponentGenerator(BaseComponentGenerator):
         return JavaPortMapper()
 
     def portFactory(self):
-        return PullPortFactory()
+        return JavaPortFactory()
 
     def templates(self, component):
         # Put generated Java files in "src" subdirectory, followed by their

@@ -1,0 +1,216 @@
+#!/usr/bin/python
+
+'''
+Command-line wrapper to the createOctaveComponent.py's create() method.
+
+'''
+
+from getopt import getopt
+from redhawk.packagegen import autoCreateOctaveComponent
+from redhawk.packagegen import createPackage
+import sys
+import os
+
+# Default values
+__PORT_TAG__          = '_port_'
+__PROP_TAG__          = '_prop_'
+__STRING_TAG__        = '_strprop_'
+__COMPLEX_PROP_TAG__  = '_cprop_'
+
+usage = """
+Script for automatic component generation given an Octave m-function.
+All Octave components will have a streamID property (string), sampleRate
+property (string), and diaryOnOrOff property (string: "on" or "off").
+
+{0} [flags] <default values>
+
+E.g.,
+
+    {0}\\
+        --function=foo \\
+        --mFiles=foo.m,/home/user1/bar.m \\
+        --sharedLibraries=/sharedPkgs/foo/foo.spd.xml \\
+        configVarName=defaultValue configVectorName=[default1,default2,default3]
+
+
+Arguments:
+    Used for specifying default configuration values.
+
+    Simple property example:
+
+        configVarName=defaultValue
+
+    Simple sequence property example:
+
+        configVectorName=[default1,default2,default3]
+
+
+Required Flags:
+    --mFiles            List of m files to be packaged with the component.
+                        When listing multiple files, the filenames must be
+                        comma-separated, with no spaces.
+
+                            e.g., --mFiles=foo.m,/home/user1/bar.m
+
+    --function          Name of function to be called. Not required when
+                        using argMap.
+                            e.g., --function=foo
+
+
+Options:
+    --sharedLibraries   Proprietary dependencies that have been installed
+                        as a Soft Package Dependency. Points to an spd.xml file
+                        whose path is relative to $SDRROOT/dom.
+
+                            e.g., --sharedLibraries=/sharedPkgs/foo/foo.spd.xml
+
+                            When listing multiple files, the filenames must be
+                            comma-separated, with no spaces.
+
+    --outputDir         Location of all output files.  Default is ".".
+
+    -f                  Forward force flag to redhawk-codegen.
+
+    --portTag           Tag to prepend to a function arugment to indicate that
+                        the argument should be mapped to a port.
+                        Default="{1}"
+
+    --propTag           Tag to prepend to a function argument to indicate that
+                        the argument should be mapped to a double propery.
+                        Default="{2}"
+
+    --complexPropTag   Tag to prepend to a function argument to indicate that
+                        the argument should be mapped to a complex double
+                        propery.  Default="{3}"
+
+    --stringPropTag     Tag to prepend to a function argument to indicate that
+                        the argument should be mapped to a string propery.
+                        Default="{4}"
+
+    --buildRpm          If set, compile an rpm after generating the code.
+
+    --install           If set, run "reconf; configure; make install" after
+                        generating the code.
+
+    --argMap            Use an argument-mapping config file instead of
+                        using function argument naming conventions.
+
+    --enableDiary       If set, enable the Octave diary.  Diary will be written
+                        to $SDRROOT/dev/logs/componentName/streamID/diary
+
+    --disableBuffering  If set, disable buffering.  Packets will be sent
+                        immediately to Octave, even if the EOS flag is not set.
+                        Otherwise, by default, the component will buffer data
+                        until an EOS flag is encountered.
+
+""".format(os.path.basename(sys.argv[0]),
+                            __PORT_TAG__,
+                            __PROP_TAG__,
+                            __COMPLEX_PROP_TAG__,
+                            __STRING_TAG__)
+
+if __name__ == "__main__":
+    opts, args = getopt(
+        sys.argv[1:],
+        'fh',
+        ['outputDir=',
+         'help',
+         'sharedLibraries=',
+         'mFiles=',
+         'function=',
+         'portTag=',
+         'propTag=',
+         'stringPropTag=',
+         'buildRpm',
+         'argMap=',
+         'install',
+         'disableBuffering',
+         'enableDiary'])
+
+    outputDir        = "."
+    force            = False
+    propertyDefaults = {}
+    sharedLibraries  = []
+    mFiles           = None
+    function         = None
+    argMap           = None
+    stringPropTag    = __STRING_TAG__
+    portTag          = __PORT_TAG__
+    propTag          = __PROP_TAG__
+    complexPropTag   = __COMPLEX_PROP_TAG__
+    buildRpm         = False
+    install          = False
+    diaryEnabled     = False
+    bufferingEnabled = True
+
+    for key, value in opts:
+        if key == '--help' or key == '-h':
+            print usage
+            raise SystemExit
+        elif key == '--function':
+            function= value
+        elif key == '--outputDir':
+            outputDir = value
+        elif key == '--sharedLibraries':
+            sharedLibraries = value.split(',')
+        elif key == '--mFiles':
+            mFiles = value.split(',')
+        elif key == '--portTag':
+            portTag = value
+        elif key == '--propTag':
+            propTag = value
+        elif key == '--complexPropTag':
+            complexPropTag = value
+        elif key == '--stringPropTag':
+            stringPropTag = value
+        elif key == '--buildRpm':
+            buildRpm = True
+        elif key == '--install':
+            install= True
+        elif key == '--argMap':
+            argMap = value
+        elif key == '--enableDiary':
+            diaryEnabled = True
+        elif key == '--disableBuffering':
+            bufferingEnabled = False
+        elif key == '-f':
+            force = True
+
+    if mFiles is None:
+        print usage
+        raise SystemExit
+
+    if argMap is None:
+        if function is None:
+            print usage
+            print SystemExit
+
+        # Get defaults from the command-line
+        for default in args:
+            key,value = default.split('=')
+            propertyDefaults[key] = value
+
+        autoCreateOctaveComponent.create(
+            mFiles           = mFiles,
+            function         = function,
+            portTag          = portTag,
+            propTag          = propTag,
+            complexPropTag   = complexPropTag,
+            stringTag        = stringPropTag,
+            buildRpm         = buildRpm,
+            install          = install,
+            propertyDefaults = propertyDefaults,
+            outputDir        = outputDir,
+            force            = force,
+            sharedLibraries  = sharedLibraries,
+            diaryEnabled     = diaryEnabled,
+            bufferingEnabled = bufferingEnabled)
+    else:
+       createPackage.create(
+            config      = argMap,
+            outputDir   = outputDir,
+            mFiles      = mFiles,
+            force       = force,
+            buildRpm    = buildRpm,
+            install     = install)
+

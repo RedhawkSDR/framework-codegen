@@ -18,29 +18,37 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
+from redhawk.codegen.lang.idl import IDLInterface
+from redhawk.codegen.lang import java
 from redhawk.codegen.jinja.ports import PortFactory
 
-from generator import BuiltinPythonPort
+from generator import JavaPortGenerator
 
-class MessagePortFactory(PortFactory):
-    REPID = 'IDL:ExtendedEvent/MessageEvent:1.0'
+class BurstioPortFactory(PortFactory):
+    NAMESPACE = 'BURSTIO'
 
     def match(self, port):
-        return (port.repid() == self.REPID)
+        return IDLInterface(port.repid()).namespace() == self.NAMESPACE
 
     def generator(self, port):
-        if port.isProvides():
-            return MessageConsumerPortGenerator(port)
-        else:
-            return MessageSupplierPortGenerator(port)
+        return BurstioPortGenerator(port)
 
-class MessageConsumerPortGenerator(BuiltinPythonPort):
-    def __init__(self, port):
-        BuiltinPythonPort.__init__(self, 'ossie.events.MessageConsumerPort', port)
-
+class BurstioPortGenerator(JavaPortGenerator):
     def _ctorArgs(self, name):
-        return ('thread_sleep=0.1',)
+        return (java.stringLiteral(name),)
 
-class MessageSupplierPortGenerator(BuiltinPythonPort):
-    def __init__(self, port):
-        BuiltinPythonPort.__init__(self, 'ossie.events.MessageSupplierPort', port)
+    def className(self):
+        # The port class is the interface name (first character capitalized),
+        # plus the direction, e.g., "BurstByteIn" for "burstByte" provides port
+        classname = 'burstio.' + self.interface[0].upper() + self.interface[1:]
+        if self.direction == 'provides':
+            classname += 'In'
+        else:
+            classname += 'Out'
+        return classname
+
+    def start(self):
+        return 'start()'
+
+    def stop(self):
+        return 'stop()'

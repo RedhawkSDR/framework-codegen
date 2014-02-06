@@ -118,8 +118,9 @@ class GenericPortGenerator(CppPortGenerator):
     def _ctorArgs(self, name):
         return (cpp.stringLiteral(name), 'this')
 
-    def headers(self):
-        return ['<%s/%s.h>' % (self.idl.namespace(), self.idl.filename())]
+    def dependencies(self):
+        idl_header = '<%s/%s.h>' % (self.idl.namespace(), self.idl.filename())
+        return ['<boost/thread/locks.hpp>', '<ossie/Port_impl.h>', idl_header]
 
     def loader(self):
         return jinja2.PackageLoader(__package__)
@@ -145,8 +146,11 @@ class GenericPortGenerator(CppPortGenerator):
                        'returns': 'void'}
 
 class GenericUsesPortGenerator(GenericPortGenerator):
-    def headers(self):
-        return super(GenericUsesPortGenerator, self).headers() + ['<ossie/CF/QueryablePort.h>']
+    def dependencies(self):
+        # Uses ports use an std::vector of std::pairs to track connections, and
+        # support the QueryablePort CORBA interface
+        deps = ['<vector>', '<utility>', '<ossie/CF/QueryablePort.h>']
+        return super(GenericUsesPortGenerator, self).dependencies() + deps
 
     def _declaration(self):
         return CppTemplate('generic.uses.h')

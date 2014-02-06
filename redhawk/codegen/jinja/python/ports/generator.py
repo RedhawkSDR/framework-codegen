@@ -61,6 +61,12 @@ class PythonPortGenerator(PortGenerator):
     def constructor(self, port):
         return '%s(%s)' % (self.className(), ', '.join(self._ctorArgs(port)))
 
+    def start(self):
+        return None
+
+    def stop(self):
+        return None
+
 class BuiltinPythonPort(PythonPortGenerator):
     def __init__(self, pyclass, port):
         PythonPortGenerator.__init__(self, port)

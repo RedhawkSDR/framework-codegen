@@ -61,6 +61,10 @@ ${field.javatype} ${field.javaname}
         addElement(this.${field.javaname});
 /*{% endfor %}*/
     }
+
+    public String getId() {
+        return ${java.stringLiteral(prop.identifier)};
+    }
 };
 /*{%- endmacro %}*/
 

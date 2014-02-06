@@ -22,6 +22,10 @@ from redhawk.codegen.lang.idl import IDLInterface
 from redhawk.codegen.jinja.ports import PortGenerator
 
 class CppPortGenerator(PortGenerator):
+    def __init__(self, port):
+        PortGenerator.__init__(self, port)
+        self._header = None
+
     def __eq__(self, other):
         return self.className() == other.className()
 
@@ -36,7 +40,15 @@ class CppPortGenerator(PortGenerator):
     def interfaceClass(self):
         return '::'.join((self.namespace, self.interface))
 
-    def headers(self):
+    def header(self):
+        return self._header
+
+    def setHeader(self, header):
+        if not self.hasDeclaration():
+            raise AssertionError('Cannot change header for non-generated ports')
+        self._header = header
+
+    def dependencies(self):
         return tuple()
 
     def _ctorArgs(self, name):

@@ -49,9 +49,6 @@ import Queue, copy, time, threading
 #{% for portgen in component.portgenerators %}
 #{%   if loop.first %}
 from ossie.resource import usesport, providesport
-#{%     if component.hasbulkio %}
-import bulkio
-#{%     endif %}
 #{%   endif %}
 #{%   for statement in portgen.imports() %}
 ${statement}
@@ -120,6 +117,9 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{% endfor %}
 
         def start(self):
+#{% for port in component.ports if port.start%}
+            self.${port.pyname}.${port.start}
+#{% endfor %}
             self.threadControlLock.acquire()
             try:
                 ${superclass}.start(self)
@@ -136,6 +136,9 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
             raise NotImplementedError
 
         def stop(self):
+#{% for port in component.ports if port.stop%}
+            self.${port.pyname}.${port.stop}
+#{% endfor %}
             self.threadControlLock.acquire()
             try:
                 process_thread = self.process_thread

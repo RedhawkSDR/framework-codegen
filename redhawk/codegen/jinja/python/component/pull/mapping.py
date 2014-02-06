@@ -32,7 +32,6 @@ class PullComponentMapper(ComponentMapper):
         pycomp['superclasses'] = self.superClasses(softpkg)
         pycomp['poaclass'] = self.poaClass(softpkg)
         pycomp['interfacedeps'] = self.getInterfaceDependencies(softpkg)
-        pycomp['hasbulkio'] = self.hasBulkioPorts(softpkg)
         return pycomp
 
     @staticmethod
@@ -96,6 +95,10 @@ class PullComponentMapper(ComponentMapper):
             if namespace == 'BULKIO':
                 package = 'bulkio'
                 version = ' >= 1.8'
+            elif namespace == 'BURSTIO':
+                name = 'burstio'
+                package = 'redhawk'
+                version = ' >= 1.8'
             elif namespace == 'REDHAWK':
                 package = 'redhawk'
                 version = ' >= 1.2'
@@ -103,10 +106,3 @@ class PullComponentMapper(ComponentMapper):
                 package = 'redhawk'
                 version = ''
             yield {'name': name, 'module': package+'.'+name, 'version': version}
-
-    def hasBulkioPorts(self, softpkg):
-        for port in softpkg.ports():
-            if 'BULKIO' in port.repid():
-                return True
-        return False
-

@@ -5,6 +5,11 @@ from getopt import getopt
 import sys
 import os
 
+# Default values
+__COMPILE_RPM__ = False
+__INSTALL__     = False
+
+
 usage = """%s [options] <config file>
 
 Arguments:
@@ -18,18 +23,37 @@ Options:
     --outputDir     Location of all output files.  Default is ".".
     -f              Forward force flag to redhawk-codegen.
 
+    --buildRpm      If set, comile an rpm after generating the code.
+
+    --install       If set, run "reconf; configure; make install" after 
+                    generating the code.
+
 """ % os.path.basename(sys.argv[0])
 
 if __name__ == "__main__":
-    opts, args = getopt(sys.argv[1:], 'fm:', ['outputDir=', 'help'])
+    opts, args = getopt(
+        sys.argv[1:],
+        'fm:',
+        ['outputDir=',
+         'help',
+         'buildRpm',
+         'install'])
+
     outputDir = "."
-    mFiles = []
-    force = False
+    mFiles    = []
+    force     = False
+    buildRpm  = False
+    install   = False
+
     for key, value in opts:
         if key == '--help':
             raise SystemExit(usage)
         elif key == '--outputDir':
             outputDir = value
+        elif key == '--buildRpm':
+            buildRpm = True
+        elif key == '--install':
+            install= True
         elif key == '-m':
             mFiles.append(value)
         elif key == '-f':

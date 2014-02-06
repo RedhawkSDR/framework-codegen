@@ -22,6 +22,9 @@
 #% set artifactType = component.artifacttype
 #!/usr/bin/env python
 #
+#% block license
+#% endblock
+#
 # AUTO-GENERATED
 #
 # Source: ${component.profile.spd}

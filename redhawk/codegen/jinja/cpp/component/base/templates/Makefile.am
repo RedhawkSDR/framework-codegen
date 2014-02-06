@@ -35,8 +35,8 @@ dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
 #{% endblock %}
 
 #{% if component.mFunction != None %}
-install: install-am
-	cp *.m $(prefix)/dom/components/{{component.name}}/cpp
+mdir = $(prefix)/{{component.sdrpath}}/{{component.name}}/{{outputdir}}/
+dist_m_DATA = *.m
 #{% endif %}
 
 #{% block distClean %}

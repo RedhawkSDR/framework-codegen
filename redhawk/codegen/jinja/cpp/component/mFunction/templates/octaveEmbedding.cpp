@@ -26,7 +26,7 @@ if (not inputPackets["${port.cppname}"]) {
     return NOOP;
 }
 
-if (_enableBuffering) {
+if (bufferingEnabled) {
     if (NOOP == buffer("${port.cppname}", ${port.cppname}) ) {
         return NOOP;
     }
@@ -151,6 +151,13 @@ ${getPackets(port, mInputIndex)}
 /*{%    endfor %}*/
 /*{% endfor %}*/
 
+/*{%if component.ports%}*/
+if (inputPackets.count(_sriPort) > 0) {
+    sampleRate = 1./(inputPackets[_sriPort]->SRI.xdelta);
+    streamID   = inputPackets[_sriPort]->SRI.streamID;
+}
+
+/*{%endif%}*/
 // Call to user-defined code.
 retVal = preProcess();
 if (retVal != NORMAL) {
@@ -164,8 +171,16 @@ ${addInputArguments(component, functionInput, loop.index0)}
 ${addInputArguments(component, vararginName, component.mFunction.numInputs+loop.index0-1)}
 /*{% endfor %}*/
 
+setDiary(streamID);
+
 // make the call to Octave
-result = feval(__mFunction.c_str(), functionArguments); 
+try {
+    result = _feval(__mFunction.c_str(), functionArguments); 
+} catch ( std::invalid_argument ) {
+    return NORMAL;
+}
+
+flushDiary();
 
 /*{% for functionOutput in component.mFunction.outputs%}*/
 ${findOutputs(component, functionOutput, loop.index0)}
@@ -186,9 +201,12 @@ if (outputPackets["${port.cppname}"]->sriChanged) {
     outputPackets["${port.cppname}"]->sriChanged = false;
 }
 
-pushOversizedPacket(
-    ${port.cppname},                   /* port to push to */
-    outputPackets["${port.cppname}"]); /* packet to push  */
+${port.cppname}->pushPacket(
+        outputPackets["${port.cppname}"]->dataBuffer, /* data      */
+        outputPackets["${port.cppname}"]->T,          /* timestamp */
+        outputPackets["${port.cppname}"]->EOS,        /* EOS       */
+        outputPackets["${port.cppname}"]->streamID);  /* stream ID */
+
 //%         endif
 /*{%    endfor %}*/
 /*{% endfor %}*/

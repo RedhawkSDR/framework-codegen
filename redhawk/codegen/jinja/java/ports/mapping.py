@@ -28,4 +28,6 @@ class JavaPortMapper(PortMapper):
         javaport['javaname'] = java.identifier('port_'+port.name())
         javaport['javatype'] = generator.className()
         javaport['constructor'] = generator.constructor(port.name())
+        javaport['start'] = generator.start()
+        javaport['stop'] = generator.stop()
         return javaport

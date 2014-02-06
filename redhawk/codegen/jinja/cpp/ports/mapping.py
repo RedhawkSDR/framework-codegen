@@ -31,5 +31,4 @@ class CppPortMapper(PortMapper):
         if generator.hasStop():
             cppport['stop'] = generator.stop()
         cppport['constructor'] = generator.constructor(port.name())
-        cppport['headers'] = generator.headers()
         return cppport

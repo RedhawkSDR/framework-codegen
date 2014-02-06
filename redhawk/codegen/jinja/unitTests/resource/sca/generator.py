@@ -18,13 +18,27 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
-from redhawk.codegen.jinja.ports import PortFactoryList
-from redhawk.codegen.jinja.java.ports.generic import GenericPortFactory
-from redhawk.codegen.jinja.java.ports.bulkio import BulkioPortFactory
-from redhawk.codegen.jinja.java.ports.event import PropertyEventPortGenerator
-from redhawk.codegen.jinja.java.ports.message import MessagePortFactory
+import jinja2
 
-class PullPortFactory(PortFactoryList):
-    def __init__(self):
-        factories = (BulkioPortFactory(), PropertyEventPortGenerator, MessagePortFactory(), GenericPortFactory())
-        super(PullPortFactory,self).__init__(*factories)
+from redhawk.codegen.jinja.generator import TopLevelGenerator
+from redhawk.codegen.jinja.python import PythonTemplate
+
+from mapping import ProjectMapper
+
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
+loader = jinja2.PackageLoader(__package__)
+
+class TestGenerator(TopLevelGenerator):
+    def projectMapper(self):
+        return ProjectMapper()
+
+    def loader(self, project):
+        return loader
+
+    def templates(self, project):
+        return [
+            PythonTemplate('test.py', 'test_' + project['name'] + '.py')
+            ]

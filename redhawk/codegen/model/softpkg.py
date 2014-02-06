@@ -86,10 +86,9 @@ def getArguments(inputString, openDelimiter, closeDelimiter):
     args = inputString[inputString.find(openDelimiter)+1: 
                        inputString.find(closeDelimiter)]
     if args.find(",") != -1:
-        delimiter = ","
+        args = args.split(',')
     else:
-        delimiter = " "
-    args = args.split(delimiter)
+        args = args.split()
     args = [x.strip() for x in args] # get rid of extra whitespace
     # TODO: remove comments from strings
     return args

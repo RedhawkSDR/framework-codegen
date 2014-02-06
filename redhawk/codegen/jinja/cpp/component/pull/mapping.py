@@ -30,7 +30,6 @@ class PullComponentMapper(BaseComponentMapper):
         cppcomp['userclass'] = self.userClass(softpkg)
         cppcomp['superclasses'] = self.superClasses(softpkg)
         cppcomp['interfacedeps'] = tuple(self.getInterfaceDependencies(softpkg))
-        cppcomp['hasbulkio'] = self.hasBulkioPorts(softpkg)
         cppcomp['softpkgdeps'] = self.softPkgDeps(softpkg, format='deps')
         cppcomp['pkgconfigsoftpkgdeps'] = self.softPkgDeps(softpkg, format='pkgconfig')
         return cppcomp
@@ -68,28 +67,3 @@ class PullComponentMapper(BaseComponentMapper):
             classes.append({'name': aggregate, 'header': '<CF/AggregateDevices.h>'})
             classes.append({'name': 'AggregateDevice_impl', 'header': '<ossie/AggregateDevice_impl.h>'})
         return classes
-
-    def hasBulkioPorts(self, softpkg):
-        for port in softpkg.ports():
-            if 'BULKIO' in port.repid():
-                return True
-        return False
-
-    def hasBulkioProvidesPorts(self, softpkg):
-        for port in softpkg.providesPorts():
-            if 'BULKIO' in port.repid():
-                return True
-        return False
-
-    def hasProvidesPushPacket(self, softpkg):
-        for port in softpkg.providesPorts():
-            idl = IDLInterface(port.repid())
-            if idl.namespace() == 'BULKIO' and idl.interface().startswith('data'):
-                return True
-        return False
-
-    def hasSDDSInput(self, softpkg):
-        for port in softpkg.providesPorts():
-            if 'BULKIO/dataSDDS' in port.repid():
-                return True
-        return False
