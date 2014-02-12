@@ -270,6 +270,9 @@ def create(config,
     else:
         raise SystemExit("Invalid data type sent to create method")
 
+    if not os.path.exists(outputDir + "/" + component.name):
+        os.makedirs(outputDir + "/" + component.name)
+
     writeXMLUsingXMLGen(component, outputDir)
 
     # XML files -> code

@@ -39,6 +39,8 @@ class BaseComponentMapper(ComponentMapper):
                 yield 'burstio >= 1.8'
             elif namespace == 'REDHAWK':
                 yield 'redhawkInterfaces >= 1.2.0'
+            elif namespace == 'FRONTEND':
+                yield 'frontend >= 2.1 frontendInterfaces >= 2.1'
             else:
                 yield namespace.lower()+'Interfaces'
 

@@ -24,7 +24,7 @@ Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
 Version:        1.10.0
-Release:        0.1.1%{?dist}
+Release:        1%{?dist}
 Summary:        Redhawk Code Generators
 
 Group:          Applications/Engineering

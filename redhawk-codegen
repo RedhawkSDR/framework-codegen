@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
     # Check that at least one implementation has been selected.
     if len(implList) < 1:
-        raise SystemExit, 'No implementation specified and implementation(s) cannot be automatically determined'
+        raise SystemExit, 'No implementation specified and implementation(s) cannot be automatically determined.  Use --impl option.'
 
     # Disallow invalid combinations of command-line arguments.
     if len(implList) > 1:
@@ -220,7 +220,17 @@ if __name__ == '__main__':
         # command line.
         implTemplate = implSettings.template
         if not implTemplate:
-            raise SystemExit, "No generator template given for implementation '%s'" % implId
+            availableTemplates = ["redhawk.codegen.jinja.cpp.component.frontend",
+                                  "redhawk.codegen.jinja.cpp.component.octave",
+                                  "redhawk.codegen.jinja.cpp.component.pull",
+                                  "redhawk.codegen.jinja.cpp.service",
+                                  "redhawk.codegen.jinja.python.component.pull",
+                                  "redhawk.codegen.jinja.python.service",
+                                  "redhawk.codegen.jinja.java.component.pull",
+                                  "redhawk.codegen.jinja.java.service"]
+            raise SystemExit, "No generator template given for implementation '%s'\n" % implId + \
+                              "Use --template option with one of the following:\n\t" + \
+                              "\n\t".join(availableTemplates)
 
         # If no implementation directory was given at all, infer it from the entry point.
         implOutputDir = implSettings.outputDir

@@ -474,9 +474,9 @@ void ${className}::populateOutputPacket(
 
     outputPacket->SRI          = inputPackets[_sriPort]->SRI;
     outputPacket->SRI.xdelta   = 1./sampleRate;
-    outputPacket->SRI.streamID = streamID.c_str();
+    outputPacket->SRI.streamID = inputPackets[_sriPort]->streamID.c_str();
     outputPacket->T            = bulkio::time::utils::now();
-    outputPacket->streamID     = streamID.c_str();
+    outputPacket->streamID     = inputPackets[_sriPort]->streamID.c_str();
     outputPacket->EOS          = inputPackets[_sriPort]->EOS;
     outputPacket->sriChanged   = inputPackets[_sriPort]->sriChanged;
 }

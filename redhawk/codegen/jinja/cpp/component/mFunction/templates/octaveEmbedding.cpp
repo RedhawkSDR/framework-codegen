@@ -154,7 +154,6 @@ ${getPackets(port, mInputIndex)}
 /*{%if component.ports%}*/
 if (inputPackets.count(_sriPort) > 0) {
     sampleRate = 1./(inputPackets[_sriPort]->SRI.xdelta);
-    streamID   = inputPackets[_sriPort]->SRI.streamID;
 }
 
 /*{%endif%}*/
@@ -171,7 +170,8 @@ ${addInputArguments(component, functionInput, loop.index0)}
 ${addInputArguments(component, vararginName, component.mFunction.numInputs+loop.index0-1)}
 /*{% endfor %}*/
 
-setDiary(streamID);
+// TODO: get logDir from log4cxx
+setDiary(logDir);
 
 // make the call to Octave
 try {

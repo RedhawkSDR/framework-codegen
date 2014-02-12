@@ -3,7 +3,7 @@ from redhawk.packagegen import createPackage
 import subprocess
 
 # TODO: default values should probably be a class
-__DEFAULT_STRING_PROPS__ = ['diaryOnOrOff', 'streamID']
+__DEFAULT_STRING_PROPS__ = ['diaryOnOrOff', 'logDir']
 __DEFAULT_DOUBLE_PROPS__ = ['sampleRate', 'bufferingEnabled']
 
 DEFAULTS = {"double" : "0",
@@ -30,19 +30,19 @@ def ambiguousArgumentException(argument, validTags):
     '''
 
     errString = 'ERROR: Ambiguous argument: ' + argument
-    errString += '\nMust prepend one of:' 
+    errString += '\nMust prepend one of:'
     for tag in validTags:
         errString += '\n    ' + str(tag)
     raise SystemExit(errString)
 
 def addPropertyIfMissing(
-        lines, 
+        lines,
         name,
-        type, 
+        type,
         default,
         kindtype=''):
     '''
-    Check for an existing property of the same name.  If it already exists, 
+    Check for an existing property of the same name.  If it already exists,
     use the existing one, as it might have a particular default value; otherwise,
     create a new property.
 
@@ -77,8 +77,8 @@ def create(
 
     All Octave components will have the follwing properties:
 
-        streamID
-        sampleRate 
+        logDir
+        sampleRate
         bufferingEnabled
         diaryOnOrOff
 
@@ -94,14 +94,14 @@ def create(
     else:
         diaryOnOrOffStr = 'off'
 
-    # Need defaults for the implies properties
-    # sampleRate and streamID values don't really matter since
+    # Need defaults for the implied properties
+    # sampleRate and logDir values don't really matter since
     # the are effectively read only
-    propertyDefaults['sampleRate'      ] = '-1'
-    propertyDefaults['streamID'        ] = function 
-    propertyDefaults['diaryOnOrOff'    ] = diaryOnOrOffStr
-    propertyDefaults['bufferingEnabled'] = bufferingEnabledStr
- 
+    propertyDefaults['sampleRate'       ] = '-1'
+    propertyDefaults['logDir'           ] = DEFAULTS['string']
+    propertyDefaults['diaryOnOrOff'     ] = diaryOnOrOffStr
+    propertyDefaults['bufferingEnabled' ] = bufferingEnabledStr
+
     mFunctionParameters = None
 
     # find the master m file and parse its m function
@@ -139,7 +139,7 @@ def create(
                 stringProperties.append(input)
         else:
             ambiguousArgumentException(
-                input, 
+                input,
                 validTags=[portTag, propTag, stringTag])
 
     # Categorize function outputs as ports, prop, or string props
@@ -204,44 +204,39 @@ def create(
         lines.append('prop ' + property + ' string ' + default)
 
 
-    # TODO: should create a list of defaults and iterate through it
     # Create standard properties
-    lines = addPropertyIfMissing(
-        lines,
-        name    = 'streamID',
-        type    = 'string',
-        default = propertyDefaults['streamID'])
-    lines = addPropertyIfMissing(
-        lines,
-        name    = 'sampleRate',
-        type    = 'double',
-        default = propertyDefaults['sampleRate'])
-    lines = addPropertyIfMissing(
-        lines, 
-        name     = 'diaryOnOrOff',
-        type     = 'string',
-        default  = propertyDefaults['diaryOnOrOff'],
-        kindtype = 'execparam')
-    lines = addPropertyIfMissing(
-        lines, 
-        name    = 'bufferingEnabled',
-        type    = 'double',
-        default = propertyDefaults['bufferingEnabled'])
+    class Default:
+        def __init__(self, name, type, kindtype=''):
+            self.name = name
+            self.type = type
+            self.kindtype = kindtype
+
+    defaults = [Default('logDir',           'string'),
+                Default('sampleRate',       'double'),
+                Default('diaryOnOrOff',     'string'),
+                Default('bufferingEnabled', 'double')]
+    for default in defaults:
+        lines = addPropertyIfMissing(
+            lines,
+            name     = default.name,
+            type     = default.type,
+            default  = propertyDefaults[default.name],
+            kindtype = default.kindtype)
 
     # Write out lines related to the function name
-    lines.append('name ' + function) 
-    lines.append('prop __mFunction string ' + function) 
+    lines.append('name ' + function)
+    lines.append('prop __mFunction string ' + function)
 
-    lines.append('generator octave') 
+    lines.append('generator octave')
 
     # Create entries for soft package dependencies
     for dep in sharedLibraries:
         lines.append('dependency ' + dep)
-    
+
     createPackage.create(
         config     = lines,
         outputDir  = outputDir,
         mFiles     = mFiles,
         force      = force,
         buildRpm   = buildRpm,
-        install    = install) 
+        install    = install)

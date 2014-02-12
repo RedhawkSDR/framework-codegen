@@ -54,6 +54,7 @@ ${gplHeader(component)}
 /*{%endif%}*/
         void setDiary(std::string diaryFolder);
         void flushDiary();
+        std::string _diaryFile;
 /*{% endblock %}*/
 
 /*{% block extendedProtected%}*/
@@ -70,5 +71,4 @@ ${gplHeader(component)}
 
         int         _serviceFunctionReturnVal;
         std::string _sriPort;
-        std::string _diaryFile;
 /*{% endblock %}*/

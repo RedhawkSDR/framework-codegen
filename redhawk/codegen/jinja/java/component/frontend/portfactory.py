@@ -19,21 +19,10 @@
 #
 
 from redhawk.codegen.jinja.ports import PortFactoryList
-
-from generic import GenericPortFactory
-from bulkio import BulkioPortFactory
-from frontend import FrontendPortFactory
-from event import PropertyEventPortGenerator
-from message import MessagePortFactory
-from burstio import BurstioPortFactory
-
-class CppPortFactory(PortFactoryList):
-    def __init__(self):
-        factories = (FrontendPortFactory(), BulkioPortFactory(), BurstioPortFactory(), PropertyEventPortGenerator,
-                     MessagePortFactory(), GenericPortFactory())
-        super(CppPortFactory,self).__init__(*factories)
+from redhawk.codegen.jinja.java.ports.portfactory import JavaPortFactory
+from redhawk.codegen.jinja.java.ports.frontend import FrontendPortFactory
 
 class FEIPortFactory(PortFactoryList):
     def __init__(self):
-        factories = (CppPortFactory(),)
+        factories = (FrontendPortFactory(), JavaPortFactory())
         super(FEIPortFactory,self).__init__(*factories)

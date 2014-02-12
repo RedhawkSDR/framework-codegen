@@ -28,6 +28,5 @@ from message import MessagePortFactory
 
 class JavaPortFactory(PortFactoryList):
     def __init__(self):
-        factories = (BulkioPortFactory(), BurstioPortFactory(), PropertyEventPortGenerator,
-                     MessagePortFactory(), GenericPortFactory())
+        factories = (BulkioPortFactory(), BurstioPortFactory(), PropertyEventPortGenerator, MessagePortFactory(), GenericPortFactory())
         super(JavaPortFactory,self).__init__(*factories)
