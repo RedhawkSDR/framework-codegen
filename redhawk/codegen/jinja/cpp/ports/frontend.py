@@ -84,3 +84,46 @@ class FrontendPortGenerator(CppPortGenerator):
     def loader(self):
         return jinja2.PackageLoader(__package__)
 
+class FrontendOutputPortFactory(PortFactory):
+    NAMESPACE = 'FRONTEND'
+
+    def match(self, port):
+        return IDLInterface(port.repid()).namespace() == self.NAMESPACE and (not port.isProvides())
+
+    def generator(self, port):
+        interface = IDLInterface(port.repid()).interface()
+        return FrontendPortGenerator(port)
+
+class FrontendOutputPortGenerator(CppPortGenerator):
+    def header(self):
+        return '<frontend/frontend.h>'
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
+    def headers(self):
+        return [_headerMap[self.interface]]
+
+    def className(self):
+        return "frontend::" + self.templateClass()
+
+    def templateClass(self):
+        if self.direction == 'uses':
+            porttype = 'Out'
+        else:
+            porttype = 'In'
+        porttype += self.interface + 'Port'
+        return porttype
+
+    def _ctorArgs(self, name):
+        if self.direction == 'uses':
+            return (cpp.stringLiteral(name),)
+        else:
+            return [cpp.stringLiteral(name),"this"]
+
+    def loader(self):
+        return jinja2.PackageLoader(__package__)
+

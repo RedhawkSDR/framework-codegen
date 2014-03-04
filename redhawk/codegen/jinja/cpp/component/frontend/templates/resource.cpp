@@ -240,11 +240,6 @@ void ${className}::construct()
 ////////////////////////////////////////
 //// Required device specific functions // -- implemented by device developer
 //////////////////////////////////////////
-
-bool ${className}::push_EOS_on_listener(std::string listener_allocation_id){
-    #warning push_EOS_on_listener(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
-    return BOOL_VALUE_HERE;
-}
 bool ${className}::_dev_enable(size_t tuner_id){
     #warning _dev_enable(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
     return BOOL_VALUE_HERE;
@@ -309,6 +304,8 @@ port.cpptype == "frontend::InAnalogTunerPort" %}*/
 
 void ${className}::setTunerCenterFrequency(std::string& allocation_id, double freq) {
     long idx = getTunerMapping(allocation_id);
+    if(allocation_id != tunerChannels[idx].control_allocation_id)
+        throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (freq<0) throw FRONTEND::BadParameterException();
     // set hardware to new value. Raise an exception if it's not possible
@@ -321,6 +318,8 @@ double ${className}::getTunerCenterFrequency(std::string& allocation_id) {
 }
 void ${className}::setTunerBandwidth(std::string& allocation_id, double bw) {
     long idx = getTunerMapping(allocation_id);
+    if(allocation_id != tunerChannels[idx].control_allocation_id)
+        throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (bw<0) throw FRONTEND::BadParameterException();
     // set hardware to new value. Raise an exception if it's not possible
@@ -339,6 +338,8 @@ void ${className}::setTunerReferenceSource(std::string& allocation_id, long sour
 long ${className}::getTunerReferenceSource(std::string& allocation_id){throw FRONTEND::NotSupportedException("getTunerReferenceSource not supported");return 0;}
 void ${className}::setTunerEnable(std::string& allocation_id, bool enable) {
     long idx = getTunerMapping(allocation_id);
+    if(allocation_id != tunerChannels[idx].control_allocation_id)
+        throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].enabled = enable;
@@ -353,6 +354,8 @@ bool ${className}::getTunerEnable(std::string& allocation_id) {
 /*{%     if port.cpptype == "frontend::InDigitalTunerPort" %}*/
 void ${className}::setTunerOutputSampleRate(std::string& allocation_id, double sr) {
     long idx = getTunerMapping(allocation_id);
+    if(allocation_id != tunerChannels[idx].control_allocation_id)
+        throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (sr<0) throw FRONTEND::BadParameterException();
     // set hardware to new value. Raise an exception if it's not possible

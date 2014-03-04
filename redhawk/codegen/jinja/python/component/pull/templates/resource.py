@@ -140,7 +140,7 @@ class ${className}(${baseClass}):
         
   
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.WARN)
+    logging.getLogger().setLevel(logging.INFO)
 #{% if component is device %}
     logging.debug("Starting Device")
     start_device(${className})

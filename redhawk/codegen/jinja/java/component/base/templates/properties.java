@@ -110,7 +110,9 @@ public final StructProperty<${prop.javatype}> ${prop.javaname} =
 /*{% endmacro %}*/
 
 /*{% macro structsequence(prop) %}*/
+/*{% if (prop.structdef.javaname != "connection_descriptor") %}*/
 ${structdef(prop.structdef)}
+/*{% endif %}*/
 
 ${header(prop)}
 public final StructSequenceProperty<${prop.structdef.javatype}> ${prop.javaname} =

@@ -32,6 +32,7 @@ class PullComponentMapper(ComponentMapper):
         pycomp['superclasses'] = self.superClasses(softpkg)
         pycomp['poaclass'] = self.poaClass(softpkg)
         pycomp['interfacedeps'] = self.getInterfaceDependencies(softpkg)
+        pycomp['hasmultioutport'] = self.hasMultioutPort(softpkg)
         return pycomp
 
     @staticmethod
@@ -106,3 +107,23 @@ class PullComponentMapper(ComponentMapper):
                 package = 'redhawk'
                 version = ''
             yield {'name': name, 'module': package+'.'+name, 'version': version}
+
+    def hasMultioutPort(self, softpkg):
+        for prop in softpkg.getStructSequenceProperties():
+            if prop.name() == "connectionTable" and  \
+               prop.struct().name() == "connection_descriptor":
+                foundConnectionName = False
+                foundStreamId = False
+                foundPortName = False
+                for field in prop.struct().fields():
+                    if field.name() == "connection_name":
+                        foundConnectionName = True 
+                    elif field.name() == "stream_id":
+                        foundStreamId = True 
+                    elif field.name() == "port_name":
+                        foundPortName = True 
+                if foundConnectionName == True and \
+                   foundStreamId == True and \
+                   foundPortName == True:
+                    return True
+        return False

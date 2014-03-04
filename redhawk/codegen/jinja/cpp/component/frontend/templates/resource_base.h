@@ -40,7 +40,7 @@
 /*{% endblock %}*/
 
 /*{% if component.hasbulkio %}*/
-#include "bulkio/bulkio.h"
+#include <bulkio/bulkio.h>
 /*{% endif %}*/
 /*{% if "port_impl.h" in generator.sourceFiles(component) %}*/
 #include "port_impl.h"
@@ -216,6 +216,8 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
         virtual std::string getTunerGroupId(std::string& allocation_id);
         virtual std::string getTunerRfFlowId(std::string& allocation_id);
         virtual CF::Properties* getTunerStatus(std::string& allocation_id);
+        virtual void assignListener(std::string& listen_alloc_id, std::string& allocation_id);
+        virtual void removeListener(std::string& listen_alloc_id);
 /*{%             set foundInFrontendInterface = True %}*/
 /*{%         endif %}*/
 /*{%     endif %}*/
@@ -292,6 +294,13 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{% block baseProtectedMembers %}*/
         ProcessThread<${className}> *serviceThread; 
         boost::mutex serviceThreadLock;
+/*{% for port in component.ports if port is provides %}*/
+/*{%     if port.cpptype == "frontend::InDigitalTunerPort" or
+            port.cpptype == "frontend::InAnalogTunerPort" or
+            port.cpptype == "frontend::InFrontendTunerPort" %}*/
+        std::map<std::string, std::string> listeners;
+/*{%     endif %}*/
+/*{% endfor %}*/
 /*{% for prop in component.properties %}*/
 /*{%   if loop.first %}*/
 

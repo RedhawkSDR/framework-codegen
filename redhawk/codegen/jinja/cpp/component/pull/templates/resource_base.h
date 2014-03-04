@@ -182,6 +182,9 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 
         virtual int serviceFunction() = 0;
 /*{% endblock %}*/
+/*{% if component.hasmultioutport %}*/
+        void connectionTable_changed(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue);
+/*{% endif %}*/
 
     protected:
 /*{% block baseProtectedMembers %}*/

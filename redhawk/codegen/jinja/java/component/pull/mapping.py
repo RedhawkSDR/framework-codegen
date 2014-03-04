@@ -43,6 +43,7 @@ class PullComponentMapper(BaseComponentMapper):
         javacomp['interfacedeps'] = list(self.getInterfaceDependencies(softpkg))
         javacomp['interfacejars'] = self.getInterfaceJars(softpkg)
         javacomp['softpkgcp'] = self.softPkgDeps(softpkg, format='cp')
+        javacomp['hasmultioutport'] = self.hasMultioutPort(softpkg)
         return javacomp
 
     def getInterfaceDependencies(self, softpkg):
@@ -78,3 +79,23 @@ class PullComponentMapper(BaseComponentMapper):
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
         return {'name': name}
+
+    def hasMultioutPort(self, softpkg):
+        for prop in softpkg.getStructSequenceProperties():
+            if prop.name() == "connectionTable" and  \
+               prop.struct().name() == "connection_descriptor":
+                foundConnectionName = False
+                foundStreamId = False
+                foundPortName = False
+                for field in prop.struct().fields():
+                    if field.name() == "connection_name":
+                        foundConnectionName = True 
+                    elif field.name() == "stream_id":
+                        foundStreamId = True 
+                    elif field.name() == "port_name":
+                        foundPortName = True 
+                if foundConnectionName == True and \
+                   foundStreamId == True and \
+                   foundPortName == True:
+                    return True
+        return False

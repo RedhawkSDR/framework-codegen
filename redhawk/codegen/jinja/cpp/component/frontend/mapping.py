@@ -174,7 +174,7 @@ class FrontendComponentMapper(PullComponentMapper):
                 if foundConnectionName == True and \
                    foundStreamId == True and \
                    foundPortName == True:
-                    return True                    
+                    return True
         return False
 
     def hasBulkioPorts(self, softpkg):

@@ -133,7 +133,6 @@ class ${className} : public ${baseClass}
         ////////////////////////////////////////
 
         // these are pure virtual, must be implemented here
-        bool push_EOS_on_listener(std::string listener_allocation_id);
         bool _dev_enable(size_t tuner_id);
         bool _dev_disable(size_t tuner_id);
         bool _dev_set_tuning(std::string &tuner_type, frontend::tuning_request &request, size_t tuner_id);

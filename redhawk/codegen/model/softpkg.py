@@ -71,10 +71,36 @@ class mFunctionParameters:
     of an m function.
 
     """
-    def __init__(self, outputs, inputs, functionName):
+    def __init__(self, outputs, inputs, functionName, defaults={}):
         self.outputs      = outputs
         self.inputs       = inputs
         self.functionName = functionName
+        self.defaults     = defaults
+
+def parseDefaults(inputs):
+    """
+    Parse out default values that have been specified in the input parameters
+    of the function declaration.
+
+    Example:
+
+        inputs = ["var1", "var2=5"]
+
+    will return:
+
+        inputs = ["var1", "var2"]
+        defaults = {"var2" = "5"}
+
+    """
+
+    defaults = {}
+    for index in range(len(inputs)):
+        if inputs[index].find("=") != -1:
+            splits = inputs[index].split("=")
+            inputs[index] = splits[0]
+            defaults[inputs[index]] = splits[1]
+
+    return inputs, defaults
 
 def getArguments(inputString, openDelimiter, closeDelimiter):
     """
@@ -109,27 +135,35 @@ def parseMFile(filename):
 
     # get output arguments
     bracket1 = declaration.find("[")
-    if declaration.find("=") == -1:
-        # no output arguments
+    if declaration.find("=") == -1 or declaration.find("=") > declaration.find("("):
+        # no output arguments, either because no equals sign was found or
+        # because no equals sign was found before the input arguments.
         outputs = []
     elif bracket1 != -1 and declaration.find("=") > bracket1:
         # if a bracket is found before the first equals sign, parse
         # the output argument that are between the first set of brackets
         outputs = getArguments(declaration, "[", "]")
     else:
-        # single (or no) output argument
+        # list of output arguments without brackets
         outputs = getArguments(declaration, " ", "=")
 
     # get input arguments
     inputs = getArguments(declaration, "(", ")")
+    inputs, defaults = parseDefaults(inputs)
 
     # get function name
-    functionName = getArguments(declaration, "=", "(")[0]
+    if declaration.find("=") == -1 or declaration.find("=") > declaration.find("("):
+        # if there are no outputs
+        functionName = getArguments(declaration, "function", "(")[0]
+    else:
+        # If there are output arguments (output variables present)
+        functionName = getArguments(declaration, "=", "(")[0]
 
     # store off outputs, inputs and function name in a struct
     return mFunctionParameters(outputs      = outputs, 
                                inputs       = inputs, 
-                               functionName = functionName)
+                               functionName = functionName,
+                               defaults     = defaults)
 
 class SoftPkg(object):
     def __init__(self, spdFile):

@@ -28,6 +28,13 @@ def runInstall(outputDir, componentName):
         cwd=outputDir+'/'+componentName+'/cpp')
     process.wait()
 
+def _createDependency(dep):
+    softpkgref = spd.softPkgRef(localfile=spd.localFile(name=dep),
+                                implref=spd.implRef(refid="default_impl"))
+    dependency = spd.dependency(type_="runtime_requirements",
+                                softpkgref=softpkgref)
+    return dependency
+
 def _createImplementation(component):
     '''
     Create implementation element to be inserted into a softpkg element within
@@ -49,6 +56,8 @@ def _createImplementation(component):
     implementation.programminglanguage = spd.programmingLanguage(name = "C++")
     implementation.humanlanguage = spd.humanLanguage(name = "EN")
     implementation.add_os(spd.os(name = "Linux"))
+    for dep in component.dependencies:
+        implementation.add_dependency(_createDependency(dep))
     implementation.add_processor(spd.processor(name="x86"))
     implementation.add_processor(spd.processor(name="x86_64"))
     return implementation
@@ -84,7 +93,7 @@ def writeSPD(component, outputDir):
     boilerplateLines.append('<?xml version="1.0" encoding="UTF-8"?>\n')
     boilerplateLines.append('<!DOCTYPE softpkg PUBLIC "-//JTRS//DTD SCA V2.2.2 SPD//EN" "softpkg.dtd">\n')
     outfile.writelines(boilerplateLines)
-    softpkg.export(outfile = outfile, level = 0, pretty_print=True)
+    softpkg.export(outfile = outfile, level = 0, pretty_print=True, name_="softpkg")
     outfile.close()
 
 def _createComponentFeature(component):

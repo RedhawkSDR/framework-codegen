@@ -76,6 +76,14 @@ import ${portgen.package}.${portgen.className()};
 
 /*{%   endfor %}*/
 /*{% endfilter %}*/
+/*{% for struct in component.structdefs %}*/
+/*{%     if (struct.javaname == "connection_descriptor" ) %}*/
+import bulkio.connection_descriptor_struct;
+/*{%     endif %}*/
+/*{% endfor %}*/
+/*{% if component.hasmultioutport %}*/
+import java.util.List;
+/*{% endif %}*/
 
 /**
  * This is the ${artifactType} code. This file contains all the access points
@@ -128,6 +136,50 @@ public abstract class ${classname} extends ${superClass} implements Runnable {
     public ${port.javatype} ${port.javaname};
 
 /*{% endfor %}*/
+
+/*{% if component.hasmultioutport %}*/
+    /**
+     * @generated
+     */
+    public class connectionTableListener implements PropertyListener<List<connection_descriptor_struct> > {
+        protected ${classname} parent;
+        public connectionTableListener(${classname} _parent)
+        {
+            parent = _parent;
+        }
+        public void valueChanged (List<connection_descriptor_struct> oldValue, List<connection_descriptor_struct> newValue)
+        {
+/*{% for port in component.ports if port is uses %}*/
+/*{%     if port.javatype == "bulkio.OutShortPort" or
+    port.javatype == "bulkio.OutFloatPort" or
+    port.javatype == "bulkio.OutDoublePort" or
+    port.javatype == "bulkio.OutCharPort" or
+    port.javatype == "bulkio.OutOctetPort" or
+    port.javatype == "bulkio.OutUShortPort" or
+    port.javatype == "bulkio.OutLongPort" or
+    port.javatype == "bulkio.OutULongPort" or
+    port.javatype == "bulkio.OutLongLongPort" or
+    port.javatype == "bulkio.OutULongLongPort" or
+    port.javatype == "bulkio.OutURLPort" or
+    port.javatype == "bulkio.OutXMLPort" or
+    port.javatype == "bulkio.OutSDDSPort" %}*/
+            for (connection_descriptor_struct val : oldValue) {
+                if (val.port_name.equals(this.parent.${port.javaname}.getName())) {
+                    this.parent.${port.javaname}.updateConnectionFilter(newValue);
+                }
+            }
+            for (connection_descriptor_struct val : newValue) {
+                if (val.port_name.equals(this.parent.${port.javaname}.getName())) {
+                    this.parent.${port.javaname}.updateConnectionFilter(newValue);
+                }
+            }
+/*{% endif %}*/
+/*{% endfor %}*/
+        }
+    }
+    public connectionTableListener cTl;
+/*{% endif %}*/
+
     /**
      * @generated
      */
@@ -158,6 +210,10 @@ public abstract class ${classname} extends ${superClass} implements Runnable {
         this.${port.javaname} = new ${port.constructor};
         this.addPort("${port.name}", this.${port.javaname});
 /*{% endfor %}*/
+/*{% if component.hasmultioutport %}*/
+        this.cTl = new connectionTableListener(this);
+        this.connectionTable.addChangeListener(this.cTl);
+/*{% endif %}*/
     }
 
 /*{% if component.events %}*/

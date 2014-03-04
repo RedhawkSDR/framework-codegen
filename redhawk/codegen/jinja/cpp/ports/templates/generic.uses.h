@@ -46,6 +46,7 @@ class ${classname} : public Port_Uses_base_impl, public POA_ExtendedCF::Queryabl
             return retVal._retn();
         };
 
+//% if portgen.interfaceClass() != "CF::Port" 
         void connectPort(CORBA::Object_ptr connection, const char* connectionId)
         {
             boost::mutex::scoped_lock lock(updatingPortsLock);   // don't want to process while command information is coming in
@@ -70,6 +71,7 @@ class ${classname} : public Port_Uses_base_impl, public POA_ExtendedCF::Queryabl
             }
             recConnectionsRefresh = true;
         };
+//% endif 
 
         std::vector< std::pair<${vartype}, std::string> > _getConnections()
         {

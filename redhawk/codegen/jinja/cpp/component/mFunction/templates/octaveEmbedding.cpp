@@ -170,8 +170,7 @@ ${addInputArguments(component, functionInput, loop.index0)}
 ${addInputArguments(component, vararginName, component.mFunction.numInputs+loop.index0-1)}
 /*{% endfor %}*/
 
-// TODO: get logDir from log4cxx
-setDiary(logDir);
+setDiary("${component.name}");
 
 // make the call to Octave
 try {

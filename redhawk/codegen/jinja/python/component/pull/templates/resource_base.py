@@ -129,6 +129,21 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
             finally:
                 self.threadControlLock.release()
 
+#{% if component.hasmultioutport %}
+        def onconfigure_prop_connectionTable(self, oldval, newval):
+            self.connectionTable = newval
+#{% for port in component.ports %}
+            for val in oldval:
+                if val.port_name == self.${port.pyname}.name:
+                    self.${port.pyname}.updateConnectionFilter(newval)
+                    break
+            for val in newval:
+                if val.port_name == self.${port.pyname}.name:
+                    self.${port.pyname}.updateConnectionFilter(newval)
+                    break
+#{% endfor %}
+#{% endif %}
+
         def process(self):
             """The process method should process a single "chunk" of data and then return.  This method will be called
             from the processing thread again, and again, and again until it returns FINISH or stop() is called on the

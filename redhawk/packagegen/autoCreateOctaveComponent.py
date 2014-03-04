@@ -3,7 +3,7 @@ from redhawk.packagegen import createPackage
 import subprocess
 
 # TODO: default values should probably be a class
-__DEFAULT_STRING_PROPS__ = ['diaryOnOrOff', 'logDir']
+__DEFAULT_STRING_PROPS__ = ['diaryOnOrOff']
 __DEFAULT_DOUBLE_PROPS__ = ['sampleRate', 'bufferingEnabled']
 
 DEFAULTS = {"double" : "0",
@@ -75,9 +75,8 @@ def create(
     '''
     Create an octave component using tags in the function arguments.
 
-    All Octave components will have the follwing properties:
+    All Octave components will have the following properties:
 
-        logDir
         sampleRate
         bufferingEnabled
         diaryOnOrOff
@@ -95,10 +94,9 @@ def create(
         diaryOnOrOffStr = 'off'
 
     # Need defaults for the implied properties
-    # sampleRate and logDir values don't really matter since
+    # sampleRate value doesn't really matter since
     # the are effectively read only
     propertyDefaults['sampleRate'       ] = '-1'
-    propertyDefaults['logDir'           ] = DEFAULTS['string']
     propertyDefaults['diaryOnOrOff'     ] = diaryOnOrOffStr
     propertyDefaults['bufferingEnabled' ] = bufferingEnabledStr
 
@@ -111,6 +109,11 @@ def create(
             break
     if mFunctionParameters is None:
         raise SystemExit('ERROR: No matching m file for specified function')
+
+    # Add defaults values that were parsef from the m function declaration
+    for defaultName in mFunctionParameters.defaults.keys():
+        if not propertyDefaults.has_key(defaultName):
+            propertyDefaults[defaultName] = mFunctionParameters.defaults[defaultName]
 
     properties        = []
     complexProperties = []
@@ -211,8 +214,7 @@ def create(
             self.type = type
             self.kindtype = kindtype
 
-    defaults = [Default('logDir',           'string'),
-                Default('sampleRate',       'double'),
+    defaults = [Default('sampleRate',       'double'),
                 Default('diaryOnOrOff',     'string'),
                 Default('bufferingEnabled', 'double')]
     for default in defaults:

@@ -30,15 +30,22 @@
 
 *******************************************************************************************/
 /*{% endblock %}*/
-
 /*{% block includes %}*/
 #include <ossie/CorbaUtils.h>
+/*{% for struct in component.structdefs %}*/
+/*{%     if (struct.cppname == "connection_descriptor") %}*/
+#include <bulkio/bulkio.h>
+typedef bulkio::connection_descriptor_struct connection_descriptor_struct;
+/*{%     endif %}*/
+/*{% endfor %}*/
 /*{% endblock %}*/
 
 /*{% block struct %}*/
 /*{% from "properties/properties.cpp" import structdef with context %}*/
 /*{% for struct in component.structdefs %}*/
+/*{%     if (struct.cppname != "connection_descriptor") %}*/
 ${structdef(struct)}
+/*{%     endif %}*/
 
 /*{% endfor %}*/
 /*{% endblock %}*/

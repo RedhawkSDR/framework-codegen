@@ -408,7 +408,7 @@ _dev_get_sample_rate(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
         
   
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.WARN)
+    logging.getLogger().setLevel(logging.INFO)
 #{% if component is device %}
     logging.debug("Starting Device")
     start_device(${className})

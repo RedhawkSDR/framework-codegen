@@ -69,7 +69,7 @@ class ServiceMapper(ComponentMapper):
         operations = []
         for op in idl.operations():
             operations.append({'name': op.name,
-                   'arglist': ', '.join('%s %s' % (generic.paramType(p), p.name) for p in op.params),
+                   'arglist': ', '.join('%s %s' % (generic.argumentType(p.paramType,p.direction), p.name) for p in op.params),
                    'argnames': ', '.join(p.name for p in op.params),
                    'returns': generic.baseReturnType(op.returnType)})
         for attr in idl.attributes():

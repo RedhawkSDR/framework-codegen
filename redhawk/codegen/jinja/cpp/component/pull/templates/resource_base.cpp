@@ -121,6 +121,9 @@ void ${className}::construct()
 /*{% for port in component.ports if port is uses %}*/
     registerOutPort(${port.cppname}, ${port.cppname}->_this());
 /*{% endfor %}*/
+/*{% if component.hasmultioutport %}*/
+    this->addPropertyChangeListener("connectionTable",this,&${className}::connectionTable_changed);
+/*{% endif %}*/
 }
 /*{% endblock %}*/
 
@@ -221,6 +224,41 @@ void ${className}::releaseObject() throw (CORBA::SystemException, CF::LifeCycle:
     ${baseClass}::releaseObject();
 }
 /*{% endblock %}*/
+
+/*{% if component.hasmultioutport %}*/
+void ${className}::connectionTable_changed(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue)
+{
+    /*{% for port in component.ports %}*/
+    /*{%     if port.cpptype == "bulkio::OutShortPort" or
+    port.cpptype == "bulkio::OutFloatPort" or
+    port.cpptype == "bulkio::OutDoublePort" or
+    port.cpptype == "bulkio::OutCharPort" or
+    port.cpptype == "bulkio::OutOctetPort" or
+    port.cpptype == "bulkio::OutUShortPort" or
+    port.cpptype == "bulkio::OutLongPort" or
+    port.cpptype == "bulkio::OutULongPort" or
+    port.cpptype == "bulkio::OutLongLongPort" or
+    port.cpptype == "bulkio::OutULongLongPort" or
+    port.cpptype == "bulkio::OutURLPort" or
+    port.cpptype == "bulkio::OutXMLPort" or
+    port.cpptype == "bulkio::OutSDDSPort" %}*/
+    // Check to see if port "${port.cppname}" is on connectionTable (old or new)
+    for (std::vector<connection_descriptor_struct>::const_iterator prop_itr = oldValue->begin(); prop_itr != oldValue->end(); prop_itr++) {
+        if (prop_itr->port_name == "${port.cppname}") {
+            ${port.cppname}->updateConnectionFilter(*newValue);
+            break;
+        }
+    }
+    for (std::vector<connection_descriptor_struct>::const_iterator prop_itr = newValue->begin(); prop_itr != newValue->end(); prop_itr++) {
+        if (prop_itr->port_name == "${port.cppname}") {
+            ${port.cppname}->updateConnectionFilter(*newValue);
+            break;
+        }
+    }
+    /*{%     endif %}*/
+/*{% endfor %}*/
+}
+/*{% endif %}*/
 
 /*{% block loadProperties %}*/
 /*{% from "properties/properties.cpp" import addproperty, initsequence %}*/

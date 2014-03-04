@@ -52,7 +52,8 @@ typedef bulkio::connection_descriptor_struct connection_descriptor_struct;
 /*{% from "frontend_properties.cpp" import frontendstructdef with context %}*/
 /*{% for struct in component.structdefs %}*/
 /*{%     if (struct.cppname != "frontend_tuner_allocation" and
-             struct.cppname != "frontend_listener_allocation") %}*/ 
+             struct.cppname != "frontend_listener_allocation" and
+             struct.cppname != "connection_descriptor" ) %}*/
 ${frontendstructdef(struct)}
 /*{%     endif %}*/
 /*{% endfor %}*/

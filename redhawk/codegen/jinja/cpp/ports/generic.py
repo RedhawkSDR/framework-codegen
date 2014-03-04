@@ -57,6 +57,9 @@ def baseType(typeobj, direction=None):
         return 'char*'
     elif kind == CORBA.tk_any:
         return 'CORBA::Any'
+    elif kind == CORBA.tk_alias and \
+        typeobj.aliasType().kind() == CORBA.tk_string: 
+        return 'char*' 
     
     name = '::'.join(typeobj.scopedName())
     if kind == CORBA.tk_objref:
@@ -86,23 +89,43 @@ def baseReturnType(typeobj):
     else:
         return name
 
-def paramType(param):
-    name = baseType(param.paramType)
-    if not param.direction == 'in':
+def passByValue(argType,direction):
+    if direction == 'in':
+        if not passConst(argType,direction):
+            return True
+        else:
+            kind = argType.kind()
+            if kind == CORBA.tk_string or \
+               (kind == CORBA.tk_alias and argType.aliasType().kind() == CORBA.tk_string):
+                return True
+            else:
+                return False
+    else:
+        return False
+
+def passConst(argType,direction):
+    if direction == 'in':
+        kind = argType.kind()
+        if kind in _baseMap or \
+            (kind == CORBA.tk_alias and isinstance(argType.aliasType(), BaseType) and argType.aliasType().kind() != CORBA.tk_string) or \
+            kind == CORBA.tk_objref or kind == CORBA.tk_enum:
+            return False 
+        else:
+            return True
+    else:
+        return False 
+
+def argumentType(argType, direction):
+    name = baseType(argType)
+    if not direction == 'in':
         # OctetSequence is special case becuase arg is different in C++ than the IDL
         if name == 'CF::OctetSequence':
             return name + '_out'
-        else:
-            return name + '&'
-    kind = param.paramType.kind()
-    if kind in _baseMap:
-        return name
-    else:
+    if passConst(argType,direction):
         name = 'const '+name
-    if kind == CORBA.tk_string or kind == CORBA.tk_objref or kind == CORBA.tk_enum or \
-            (kind == CORBA.tk_alias and isinstance(param.paramType.aliasType(), BaseType)):
-        return name
-    return name + '&'
+    if not passByValue(argType,direction):
+        name = name + '&'
+    return name
 
 class GenericPortFactory(PortFactory):
     def match(self, port):
@@ -128,7 +151,7 @@ class GenericPortGenerator(CppPortGenerator):
     def operations(self):
         for op in self.idl.operations():
             yield {'name': op.name,
-                   'arglist': ', '.join('%s %s' % (paramType(p), p.name) for p in op.params),
+                   'arglist': ', '.join('%s %s' % (argumentType(p.paramType,p.direction), p.name) for p in op.params),
                    'argnames': ', '.join(p.name for p in op.params),
                    'returns': baseReturnType(op.returnType)}
         #
@@ -141,7 +164,7 @@ class GenericPortGenerator(CppPortGenerator):
                    'returns': baseReturnType(attr.attrType)}
             if not attr.readonly:
                 yield {'name': attr.name,
-                       'arglist':   ' const ' + baseType(attr.attrType,'in') + ' data',
+                       'arglist':   argumentType(attr.attrType,'in') + ' data',
                        'argnames': 'data',
                        'returns': 'void'}
 

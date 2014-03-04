@@ -268,18 +268,97 @@ void ${className}::frontend_tuner_status_changed(const std::vector<frontend_tune
     }
 }
 
-CF::Properties* ${className}::getTunerStatus(std::string& id)
+CF::Properties* ${className}::getTunerStatus(std::string& allocation_id)
 {
     CF::Properties* tmpVal = new CF::Properties();
-    long tuner_id = getTunerMapping(id);
+    long tuner_id = getTunerMapping(allocation_id);
     if (tuner_id < 0)
-        throw FRONTEND::FrontendException(("ERROR: ID: " + std::string(id) + " IS NOT ASSOCIATED WITH ANY TUNER!").c_str());
+        throw FRONTEND::FrontendException(("ERROR: ID: " + std::string(allocation_id) + " IS NOT ASSOCIATED WITH ANY TUNER!").c_str());
     CORBA::Any prop;
     prop <<= *(static_cast<frontend_tuner_status_struct_struct*>(tunerChannels[tuner_id].frontend_status));
     prop >>= tmpVal;
 
     CF::Properties_var tmp = new CF::Properties(*tmpVal);
     return tmp._retn();
+}
+
+void ${className}::assignListener(std::string& listen_alloc_id, std::string& allocation_id)
+{
+    listeners[listen_alloc_id] = allocation_id;
+/*{% if component.hasmultioutport %}*/
+    std::vector<connection_descriptor_struct> old_table = this->connectionTable;
+    for (std::map<std::string, std::string>::iterator listener=listeners.begin();listener!=listeners.end();listener++) {
+        std::vector<std::string> streamids;
+        std::vector<std::string> port_names;
+        for (std::vector<connection_descriptor_struct>::iterator entry=this->connectionTable.begin();entry!=this->connectionTable.end();entry++) {
+            if (entry->connection_name == listener->second) {
+                streamids.push_back(entry->stream_id);
+                port_names.push_back(entry->port_name);
+            }
+        }
+        for (unsigned int i=0; i<streamids.size(); i++) {
+            bool foundEntry = false;
+            for (std::vector<connection_descriptor_struct>::iterator entry=this->connectionTable.begin();entry!=this->connectionTable.end();entry++) {
+                if ((entry->stream_id == streamids[i]) and (entry->connection_name == listen_alloc_id)) {
+                    foundEntry = true;
+                    break;
+                }
+            }
+            if (!foundEntry) {
+                connection_descriptor_struct tmp;
+                tmp.stream_id = streamids[i];
+                tmp.connection_name = listen_alloc_id;
+                tmp.port_name = port_names[i];
+                this->connectionTable.push_back(tmp);
+            }
+        }
+    }
+    this->connectionTable_changed(&old_table, &this->connectionTable);
+/*{% endif %}*/
+}
+
+void ${className}::removeListener(std::string& listen_alloc_id)
+{
+/*{% if component.hasmultioutport %}*/
+    std::vector<connection_descriptor_struct> old_table = this->connectionTable;
+    if (listeners.find(listen_alloc_id) != listeners.end()) {
+        listeners.erase(listen_alloc_id);
+    }
+    std::vector<connection_descriptor_struct>::iterator entry = this->connectionTable.begin();
+    while (entry != this->connectionTable.end()) {
+        if (entry->connection_name == listen_alloc_id) {
+            entry = this->connectionTable.erase(entry);
+        } else {
+            entry++;
+        }
+    }
+    ExtendedCF::UsesConnectionSequence_var tmp;
+/*{% for port in component.ports %}*/
+/*{%     if port.cpptype == "bulkio::OutShortPort" or
+    port.cpptype == "bulkio::OutFloatPort" or
+    port.cpptype == "bulkio::OutDoublePort" or
+    port.cpptype == "bulkio::OutCharPort" or
+    port.cpptype == "bulkio::OutOctetPort" or
+    port.cpptype == "bulkio::OutUShortPort" or
+    port.cpptype == "bulkio::OutLongPort" or
+    port.cpptype == "bulkio::OutULongPort" or
+    port.cpptype == "bulkio::OutLongLongPort" or
+    port.cpptype == "bulkio::OutULongLongPort" or
+    port.cpptype == "bulkio::OutURLPort" or
+    port.cpptype == "bulkio::OutXMLPort" or
+    port.cpptype == "bulkio::OutSDDSPort" %}*/
+    // Check to see if port "${port.cppname}" is on connectionTable (old or new)
+    tmp = this->${port.cppname}->connections();
+    for (unsigned int i=0; i<this->${port.cppname}->connections()->length(); i++) {
+        std::string connection_id = ossie::corba::returnString(tmp[i].connectionId);
+        if (connection_id == listen_alloc_id) {
+            this->${port.cppname}->disconnectPort(connection_id.c_str());
+        }
+    }
+/*{%     endif %}*/
+/*{% endfor %}*/
+    this->connectionTable_changed(&old_table, &this->connectionTable);
+/*{% endif %}*/
 }
 
 std::string ${className}::getTunerType(std::string& allocation_id){throw FRONTEND::NotSupportedException("getTunerType not supported");return std::string("none");}
@@ -349,14 +428,20 @@ void ${className}::connectionTable_changed(const std::vector<connection_descript
     port.cpptype == "bulkio::OutURLPort" or
     port.cpptype == "bulkio::OutXMLPort" or
     port.cpptype == "bulkio::OutSDDSPort" %}*/
-    // Check to see if port "${port.cppname}" is on connectionTable
+    // Check to see if port "${port.cppname}" is on connectionTable (old or new)
+    for (std::vector<connection_descriptor_struct>::const_iterator prop_itr = oldValue->begin(); prop_itr != oldValue->end(); prop_itr++) {
+        if (prop_itr->port_name == "${port.cppname}") {
+            ${port.cppname}->updateConnectionFilter(*newValue);
+            break;
+        }
+    }
     for (std::vector<connection_descriptor_struct>::const_iterator prop_itr = newValue->begin(); prop_itr != newValue->end(); prop_itr++) {
         if (prop_itr->port_name == "${port.cppname}") {
             ${port.cppname}->updateConnectionFilter(*newValue);
             break;
         }
     }
-/*{%     endif %}*/
+    /*{%     endif %}*/
 /*{% endfor %}*/
 }
 void ${className}::reconcileAllocationIdStreamId(const std::string allocation_id, const std::string stream_id, const std::string port_name) {
@@ -409,11 +494,23 @@ void ${className}::removeAllocationIdRouting(const std::string allocation_id) {
     std::vector<connection_descriptor_struct> old_table = this->connectionTable;
     std::vector<connection_descriptor_struct>::iterator itr = this->connectionTable.begin();
     while (itr != this->connectionTable.end()) {
-        if ((*itr).connection_name == allocation_id) {
-            this->connectionTable.erase(itr);
+        if (itr->connection_name == allocation_id) {
+            itr = this->connectionTable.erase(itr);
             continue;
         }
         itr++;
+    }
+    for (std::map<std::string, std::string>::iterator listener=listeners.begin();listener!=listeners.end();listener++) {
+        if (listener->second == allocation_id) {
+            std::vector<connection_descriptor_struct>::iterator itr = this->connectionTable.begin();
+            while (itr != this->connectionTable.end()) {
+                if (itr->connection_name == listener->first) {
+                    itr = this->connectionTable.erase(itr);
+                    continue;
+                }
+                itr++;
+            }
+        }
     }
     this->connectionTable_changed(&old_table, &this->connectionTable);
 }
@@ -423,17 +520,29 @@ void ${className}::removeStreamIdRouting(const std::string stream_id, const std:
     std::vector<connection_descriptor_struct>::iterator itr = this->connectionTable.begin();
     while (itr != this->connectionTable.end()) {
         if (allocation_id == "") {
-            if ((*itr).stream_id == stream_id) {
-                this->connectionTable.erase(itr);
+            if (itr->stream_id == stream_id) {
+                itr = this->connectionTable.erase(itr);
                 continue;
             }
         } else {
-            if (((*itr).stream_id == stream_id) and ((*itr).connection_name == allocation_id)) {
-                this->connectionTable.erase(itr);
+            if ((itr->stream_id == stream_id) and (itr->connection_name == allocation_id)) {
+                itr = this->connectionTable.erase(itr);
                 continue;
             }
         }
         itr++;
+    }
+    for (std::map<std::string, std::string>::iterator listener=listeners.begin();listener!=listeners.end();listener++) {
+        if (listener->second == allocation_id) {
+            std::vector<connection_descriptor_struct>::iterator itr = this->connectionTable.begin();
+            while (itr != this->connectionTable.end()) {
+                if ((itr->connection_name == listener->first) and (itr->stream_id == stream_id)) {
+                    itr = this->connectionTable.erase(itr);
+                    continue;
+                }
+                itr++;
+            }
+        }
     }
     this->connectionTable_changed(&old_table, &this->connectionTable);
 }

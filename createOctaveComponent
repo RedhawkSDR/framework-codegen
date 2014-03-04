@@ -20,9 +20,9 @@ __COMPLEX_PROP_TAG__  = '_cprop_'
 usage = """
 Script for automatic component generation given an Octave m-function.
 
-All Octave components will have a logDir property (string, read only),
-sampleRate property (string, read only), diaryOnOrOff property (string: 
-"on" or "off"), and a bufferingEnabled property (double).
+All Octave components will have a sampleRate property (string, read only),
+diaryOnOrOff property (string:"on" or "off"), and a bufferingEnabled property
+(double).
 
 {0} [flags] <default values>
 
@@ -98,7 +98,7 @@ Options:
                         using function argument naming conventions.
 
     --enableDiary       If set, enable the Octave diary.  Diary will be written
-                        to the component logDir (retrieved from log4cxx).
+                        to the logging directory (retrieved from log4cxx).
 
     --disableBuffering  If set, disable buffering.  Packets will be sent
                         immediately to Octave, even if the EOS flag is not set.
