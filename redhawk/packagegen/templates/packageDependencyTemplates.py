@@ -5,7 +5,7 @@ xmldir = $(prefix)/dom/sharedPkgs/__LIBRARY_NAME__Pkg/\n\
 dist_xml_DATA = __LIBRARY_NAME__Pkg.spd.xml\n\
 domdir = $(prefix)/dom/sharedPkgs/__LIBRARY_NAME__Pkg/\n\
 \n\
-nobase_dist_dom_SCRIPTS = __LIBRARY_NAME__/*'
+nobase_dist_dom_SCRIPTS = default_impl___ARCH__/*'
 
 spd='<?xml version="1.0" encoding="UTF-8"?>\n\
 <!-- \n\
@@ -31,10 +31,10 @@ program.  If not, see http://www.gnu.org/licenses/.\n\
   <author>\n\
     <name></name>\n\
   </author>\n\
-  <implementation id="default_impl">\n\
+  <implementation id="default_impl___ARCH__">\n\
     <description></description>\n\
     <code type="SharedLibrary">\n\
-      <localfile name="__LIBRARY_NAME__"/>\n\
+      <localfile name="default_impl___ARCH__"/>\n\
     </code>\n\
     <compiler name="/usr/bin/gcc" version="4.1.2"/>\n\
     <programminglanguage name="Octave"/>\n\

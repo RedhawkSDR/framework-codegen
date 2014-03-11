@@ -26,6 +26,7 @@ Arguments:
 
 Options:
     --outputDir    Location of all output files.  Default is ".".
+    --arch         Architecture (default noarch)
 
 """ % os.path.basename(sys.argv[0])
 
@@ -36,11 +37,15 @@ if __name__ == "__main__":
 
     """
 
-    opts, args = getopt(sys.argv[1:], '', ['outputDir=', 'help'])
+    opts, args = getopt(sys.argv[1:], '', ['outputDir=','arch=', 'help'])
     outputDir = "."
+    arch = "noarch"
+
     for key, value in opts:
         if key == '--outputDir':
             outputDir = value
+        elif key == '--arch':
+            arch = value
         elif key == '--help':
             raise SystemExit(usage)
     try:
@@ -48,4 +53,7 @@ if __name__ == "__main__":
     except:
         raise SystemExit(usage)
 
-    createPackageDependency.create(libraryLocation, outputDir)
+    createPackageDependency.create(
+        libraryLocation = libraryLocation,
+        outputDir = outputDir,
+        arch = arch)

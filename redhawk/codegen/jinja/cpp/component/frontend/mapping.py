@@ -165,7 +165,7 @@ class FrontendComponentMapper(PullComponentMapper):
                 foundStreamId = False
                 foundPortName = False
                 for field in prop.struct().fields():
-                    if field.name() == "connection_name":
+                    if field.name() == "connection_id":
                         foundConnectionName = True 
                     elif field.name() == "stream_id":
                         foundStreamId = True 

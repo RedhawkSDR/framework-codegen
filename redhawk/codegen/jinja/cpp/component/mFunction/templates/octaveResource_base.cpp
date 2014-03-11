@@ -86,7 +86,7 @@ const octave_value_list ${className}::_feval(
         if ((error_msg != "\n") and (not error_msg.empty())) {
             errorStr += "\nThe following error occurred:\n"+error_msg+"\n";
         }
-        errorStr += "If the diaryOnOrOff property is set to \"on\", you may check the diary file written to ";
+        errorStr += "If the diaryEnabled property is set to \"true\", you may check the diary file written to ";
         errorStr += _diaryFile;
 
         // Log the error and throw an exception
@@ -111,13 +111,13 @@ void ${className}::setCurrentWorkingDirectory(std::string& cwd)
 
 /**
  * Turn the diary on or off based on the value of the class data field
- * (property) diaryOnOrOff.  If turning the diary on, set the output
+ * (property) diaryEnabled.  If turning the diary on, set the output
  * directory for the diary to $SDRROOT/dev/logs/{componentName}/logSubDir.
  */
-void ${className}::setDiary(std::string logSubDir)
+void ${className}::setDiary(const std::string logSubDir)
 {
     octave_value_list functionArguments; // pass to octave
-    if (diaryOnOrOff == "on") {
+    if (diaryEnabled) {
         // determine the absolute path of the log file
         std::string sdrroot    = getenv("SDRROOT");
         std::string logdir     = std::string("/dev/logs/");
@@ -142,10 +142,12 @@ void ${className}::setDiary(std::string logSubDir)
         // call the diary method with a location for the diary file
         functionArguments(0) = octave_value(_diaryFile);
         _feval("diary", functionArguments);
+        functionArguments(0) = octave_value("on");
+    } else {
+        functionArguments(0) = octave_value("off");
     }
 
     // call the diary function to turn the diary on or off
-    functionArguments(0) = octave_value(diaryOnOrOff);
     _feval("diary", functionArguments);
 }
 

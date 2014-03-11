@@ -6,8 +6,7 @@ Command-line wrapper to the createOctaveComponent.py's create() method.
 '''
 
 from getopt import getopt
-from redhawk.packagegen import autoCreateOctaveComponent
-from redhawk.packagegen import createPackage
+from redhawk.packagegen.octavePackage import OctavePackage
 import sys
 import os
 
@@ -20,32 +19,17 @@ __COMPLEX_PROP_TAG__  = '_cprop_'
 usage = """
 Script for automatic component generation given an Octave m-function.
 
-All Octave components will have a sampleRate property (string, read only),
-diaryOnOrOff property (string:"on" or "off"), and a bufferingEnabled property
-(double).
+All Octave components will have a diaryOnOrOff property (string:"on" or "off",
+default "off"), and a bufferingEnabled property (double: 1 or 0, default 0).
 
-{0} [flags] <default values>
+{0} [flags]
 
 E.g.,
 
     {0}\\
         --function=foo \\
         --mFiles=foo.m,/home/user1/bar.m \\
-        --sharedLibraries=/sharedPkgs/foo/foo.spd.xml \\
-        configVarName=defaultValue configVectorName=[default1,default2,default3]
-
-
-Arguments:
-    Used for specifying default configuration values.
-
-    Simple property example:
-
-        configVarName=defaultValue
-
-    Simple sequence property example:
-
-        configVectorName=[default1,default2,default3]
-
+        --sharedLibraries=/sharedPkgs/foo/foo.spd.xml
 
 Required Flags:
     --mFiles            List of m files to be packaged with the component.
@@ -54,8 +38,8 @@ Required Flags:
 
                             e.g., --mFiles=foo.m,/home/user1/bar.m
 
-    --function          Name of function to be called. Not required when
-                        using argMap.
+    --function          Name of function to be called.
+
                             e.g., --function=foo
 
 
@@ -73,43 +57,20 @@ Options:
 
     -f                  Forward force flag to redhawk-codegen.
 
-    --portTag           Tag to prepend to a function arugment to indicate that
-                        the argument should be mapped to a port.
-                        Default="{1}"
-
-    --propTag           Tag to prepend to a function argument to indicate that
-                        the argument should be mapped to a double propery.
-                        Default="{2}"
-
-    --complexPropTag   Tag to prepend to a function argument to indicate that
-                        the argument should be mapped to a complex double
-                        propery.  Default="{3}"
-
-    --stringPropTag     Tag to prepend to a function argument to indicate that
-                        the argument should be mapped to a string propery.
-                        Default="{4}"
-
     --buildRpm          If set, compile an rpm after generating the code.
 
     --install           If set, run "reconf; configure; make install" after
                         generating the code.
 
-    --argMap            Use an argument-mapping config file instead of
-                        using function argument naming conventions.
-
     --enableDiary       If set, enable the Octave diary.  Diary will be written
                         to the logging directory (retrieved from log4cxx).
 
-    --disableBuffering  If set, disable buffering.  Packets will be sent
+    --enableBuffering   If set, enable buffering.  If enabled, the component
+                        will buffer data at its input until an EOS flag is
+                        encountered. If disabled, packets will be sent
                         immediately to Octave, even if the EOS flag is not set.
-                        Otherwise, by default, the component will buffer data
-                        until an EOS flag is encountered.
 
-""".format(os.path.basename(sys.argv[0]),
-                            __PORT_TAG__,
-                            __PROP_TAG__,
-                            __COMPLEX_PROP_TAG__,
-                            __STRING_TAG__)
+""".format(os.path.basename(sys.argv[0]))
 
 if __name__ == "__main__":
     opts, args = getopt(
@@ -120,30 +81,20 @@ if __name__ == "__main__":
          'sharedLibraries=',
          'mFiles=',
          'function=',
-         'portTag=',
-         'propTag=',
-         'stringPropTag=',
          'buildRpm',
-         'argMap=',
          'install',
-         'disableBuffering',
+         'enableBuffering',
          'enableDiary'])
 
     outputDir        = "."
     force            = False
-    propertyDefaults = {}
     sharedLibraries  = []
     mFiles           = None
     function         = None
-    argMap           = None
-    stringPropTag    = __STRING_TAG__
-    portTag          = __PORT_TAG__
-    propTag          = __PROP_TAG__
-    complexPropTag   = __COMPLEX_PROP_TAG__
     buildRpm         = False
     install          = False
     diaryEnabled     = False
-    bufferingEnabled = True
+    bufferingEnabled = False
 
     for key, value in opts:
         if key == '--help' or key == '-h':
@@ -157,62 +108,33 @@ if __name__ == "__main__":
             sharedLibraries = value.split(',')
         elif key == '--mFiles':
             mFiles = value.split(',')
-        elif key == '--portTag':
-            portTag = value
-        elif key == '--propTag':
-            propTag = value
-        elif key == '--complexPropTag':
-            complexPropTag = value
-        elif key == '--stringPropTag':
-            stringPropTag = value
         elif key == '--buildRpm':
             buildRpm = True
         elif key == '--install':
             install= True
-        elif key == '--argMap':
-            argMap = value
         elif key == '--enableDiary':
             diaryEnabled = True
-        elif key == '--disableBuffering':
-            bufferingEnabled = False
+        elif key == '--enableBuffering':
+            bufferingEnabled = True
         elif key == '-f':
             force = True
 
-    if mFiles is None:
+    if mFiles is None or function is None:
         print usage
         raise SystemExit
 
-    if argMap is None:
-        if function is None:
-            print usage
-            print SystemExit
+    myOctavePackage = OctavePackage(
+        mFiles           = mFiles,
+        function         = function,
+        outputDir        = outputDir,
+        sharedLibraries  = sharedLibraries,
+        diaryEnabled     = diaryEnabled,
+        bufferingEnabled = bufferingEnabled)
 
-        # Get defaults from the command-line
-        for default in args:
-            key,value = default.split('=')
-            propertyDefaults[key] = value
+    myOctavePackage.writeXML()
+    myOctavePackage.callCodegen(force)
 
-        autoCreateOctaveComponent.create(
-            mFiles           = mFiles,
-            function         = function,
-            portTag          = portTag,
-            propTag          = propTag,
-            complexPropTag   = complexPropTag,
-            stringTag        = stringPropTag,
-            buildRpm         = buildRpm,
-            install          = install,
-            propertyDefaults = propertyDefaults,
-            outputDir        = outputDir,
-            force            = force,
-            sharedLibraries  = sharedLibraries,
-            diaryEnabled     = diaryEnabled,
-            bufferingEnabled = bufferingEnabled)
-    else:
-       createPackage.create(
-            config      = argMap,
-            outputDir   = outputDir,
-            mFiles      = mFiles,
-            force       = force,
-            buildRpm    = buildRpm,
-            install     = install)
-
+    if buildRpm:
+        myOctavePackage.runCompileRpm()
+    if install:
+        myOctavePackage.runInstall()

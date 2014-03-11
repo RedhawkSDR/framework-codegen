@@ -33,6 +33,19 @@ from redhawk.codegen.settings import ImplementationSettings, importWavedevSettin
 if os.path.exists("/usr/lib/python2.6/site-packages/Jinja2-2.6-py2.6.egg"):
    sys.path.insert(0, "/usr/lib/python2.6/site-packages/Jinja2-2.6-py2.6.egg")
 
+#
+# dict: for each resource type :  ( [ list of maps: impl:template name ], help text )
+#
+TemplateSetup = {
+    "frontend": ( [ {"cpp" : "redhawk.codegen.jinja.cpp.component.frontend"} ], "Generate a frontend compliant device" ),
+    "octave"  : ( [ {"cpp": "redhawk.codegen.jinja.cpp.component.octave"} ], "Generate an octave device" ),
+    "persona"  : ( [ {"cpp": "redhawk.codegen.jinja.cpp.component.persona"} ], "Generate a persona device" ),
+    "pgdevice" : ( [ { "cpp": "redhawk.codegen.jinja.cpp.component.programmable"} ], "Generate programmable device"),
+    "component" : ( [ {"cpp": "redhawk.codegen.jinja.cpp.component.pull"}, {"java": "redhawk.codegen.jinja.java.component.pull"}, {"python": "redhawk.codegen.jinja.python.component.pull"} ], "Generate a component or device" ),
+    "device" : ( [ {"cpp": "redhawk.codegen.jinja.cpp.component.pull"}, {"java": "redhawk.codegen.jinja.java.component.pull"}, {"python": "redhawk.codegen.jinja.python.component.pull"} ], "Generate a component or device" ),
+    "service" : ([ {"cpp": "redhawk.codegen.jinja.cpp.service.pull"}, {"java": "redhawk.codegen.jinja.java.service.pull"}, {"python": "redhawk.codegen.jinja.python.service.pull"}  ], "Generate a service" )
+}
+
 # Try to use setuptools to locate Jinja2 and import it
 try:
     import pkg_resources
@@ -61,11 +74,12 @@ Arguments:
     [filenames]         Optional list of specific filenames to generate
 
 Options:
+    -i                  ignore wavedev file, requires resource type option
     -l                  List the files that would be generated
     -f                  Overwrite existing files even if modified
     -C <dir>            Put output files in directory <dir>
     --impl <id>         Generate implementation <id> [default: all]
-    -m <mfile>          Provide .m file to be copied into the component cpp directory
+    -m <mfile>          Provide .m file to be copied into the component cpp directory 
 
 Options only valid with a single implementation (if a component contains
 multiple implementations, must use --impl to specify which):
@@ -73,17 +87,24 @@ multiple implementations, must use --impl to specify which):
                         (relative to -C if given)
     --template <id>     Use template <id> for generation
     -B <name[=value]>   Pass option 'name' (with optional value) to template
-""" % os.path.basename(sys.argv[0])
+
+Select from one of the following resource types when generating output:
+%s
+""" % (os.path.basename(sys.argv[0]), "\n".join( [ "    --" + x[0]+"\t\t"+x[1][1] for x in TemplateSetup.items() ] ) )
 
 Function = strenum('list', 'generate')
 
 if __name__ == '__main__':
-    opts, args = getopt(sys.argv[1:], 'flC:B:m:', ['help', 'template=', 'impl=', 'impldir='])
+    # add predefined template settings a full word options
+    topts = ['help', 'template=', 'impl=', 'impldir='] + [ x for x in TemplateSetup.keys() ]
+    opts, args = getopt(sys.argv[1:], 'filC:B:m:', topts )
     outputdir = None
     action = Function.GENERATE
     overwrite = False
     overrides = ImplementationSettings()
     implId = None
+    ignoreWavedev=False
+    resource_type=None
     mFiles = []
     for key, value in opts:
         if key == '--help':
@@ -92,10 +113,14 @@ if __name__ == '__main__':
             outputdir = value
         elif key == '-m':
             mFiles.append(value)
+        elif key == '-i':
+            ignoreWavedev=True
         elif key == '--impl':
             implId = value
         elif key == '--template':
             overrides.template = value
+        elif key[2:] in TemplateSetup.keys():
+            resource_type=key[2:]
         elif key == '--impldir':
             overrides.outputDir = value
         elif key == '-l':
@@ -112,7 +137,14 @@ if __name__ == '__main__':
     try:
         spdFile = args[0]
     except:
-        raise SystemExit(usage)
+        raise SystemExit(usage)       
+
+    
+    if resource_type and overrides.template:
+        raise SystemExit, '--template cannot be selected with a predefined resource type.'
+
+    if ignoreWavedev and ( resource_type==None or implId ==None ):
+        raise SystemExit, 'Ignore wavedev option, requires resource type and --impl options.'
 
     # Any remaining arguments are filenames to be generated; place into bins
     # based on the first path component.
@@ -147,8 +179,8 @@ if __name__ == '__main__':
     # Read existing WaveDev settings file
     wavedev = '.' + os.path.basename(spdFile).replace('.spd.xml', '.wavedev')
     wavedev = os.path.join(os.path.dirname(spdFile), wavedev)
-    if os.path.exists(wavedev):
-        settings = importWavedevSettings(wavedev)
+    if os.path.exists(wavedev) and not ignoreWavedev:
+       settings = importWavedevSettings(wavedev)
     else:
         settings = {}
 
@@ -162,7 +194,6 @@ if __name__ == '__main__':
     # Check that at least one implementation has been selected.
     if len(implList) < 1:
         raise SystemExit, 'No implementation specified and implementation(s) cannot be automatically determined.  Use --impl option.'
-
     # Disallow invalid combinations of command-line arguments.
     if len(implList) > 1:
         if overrides.template:
@@ -171,6 +202,16 @@ if __name__ == '__main__':
             raise SystemExit, 'Cannot override implementation directory for multiple implementations'
         if overrides.properties:
             raise SystemExit, 'Cannot override template-specific options for multiple implementations'
+
+    if resource_type and overrides.template==None:
+       if implId :
+          try:
+             overrides.template = filter( lambda  x: implId in x.keys(), TemplateSetup[resource_type][0]  )[0][implId]
+             print "using template:" + str(overrides.template)
+          except:
+             raise SystemExit, 'Template override does not exist or --impl missing'
+       else :
+             raise SystemExit, 'Template override requires missing --impl option'
 
     # Change to the output directory; all XML should have been processed, so
     # there are no wories about relative paths.
@@ -220,14 +261,7 @@ if __name__ == '__main__':
         # command line.
         implTemplate = implSettings.template
         if not implTemplate:
-            availableTemplates = ["redhawk.codegen.jinja.cpp.component.frontend",
-                                  "redhawk.codegen.jinja.cpp.component.octave",
-                                  "redhawk.codegen.jinja.cpp.component.pull",
-                                  "redhawk.codegen.jinja.cpp.service",
-                                  "redhawk.codegen.jinja.python.component.pull",
-                                  "redhawk.codegen.jinja.python.service",
-                                  "redhawk.codegen.jinja.java.component.pull",
-                                  "redhawk.codegen.jinja.java.service"]
+            availableTemplates = [ y.values()[0] for x in TemplateSetup.values()  for y in x[0] ]
             raise SystemExit, "No generator template given for implementation '%s'\n" % implId + \
                               "Use --template option with one of the following:\n\t" + \
                               "\n\t".join(availableTemplates)

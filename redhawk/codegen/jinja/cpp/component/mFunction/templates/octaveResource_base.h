@@ -52,7 +52,7 @@ ${gplHeader(component)}
             const octave_value_list&                result,
             const int                               resultIndex);
 /*{%endif%}*/
-        void setDiary(std::string diaryFolder);
+        void setDiary(const std::string diaryFolder);
         void flushDiary();
         std::string _diaryFile;
 /*{% endblock %}*/

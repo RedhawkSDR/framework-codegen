@@ -191,7 +191,7 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 
 /*{% if component.hasmultioutport %}*/
         void connectionTable_changed(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue);
-        void reconcileAllocationIdStreamId(const std::string allocation_id, const std::string stream_id, const std::string port_name="");
+        void matchAllocationIdToStreamId(const std::string allocation_id, const std::string stream_id, const std::string port_name="");
         void removeAllocationIdRouting(const std::string allocation_id);
         void removeStreamIdRouting(const std::string stream_id, const std::string allocation_id="");
 /*{% else %}*/

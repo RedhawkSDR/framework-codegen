@@ -259,10 +259,6 @@ bool ${className}::_dev_set_tuning(std::string &tuner_type, frontend::tuning_req
     #warning _dev_set_tuning(): Evaluate whether or not a tuner is added  *********
     return BOOL_VALUE_HERE;
 }
-bool ${className}::_dev_get_tuning(frontend::tuning_request &response, size_t tuner_id){
-    #warning _dev_get_tuning(): Return the setttings for a particular tuner  *********
-    return BOOL_VALUE_HERE;
-}
 bool ${className}::_dev_del_tuning(size_t tuner_id) {
     #warning _dev_del_tuning(): Deallocate an allocated tuner  *********
     return BOOL_VALUE_HERE;

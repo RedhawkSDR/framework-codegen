@@ -77,6 +77,22 @@ class mFunctionParameters:
         self.functionName = functionName
         self.defaults     = defaults
 
+def stringToList(stringInput):
+    """
+    Convert a string of the form:
+
+        "[1,2,3]"
+
+    To:
+
+        ["1", "2", "3"]
+
+    """
+
+    stringInput = stringInput[1:-1]
+    stringInput = stringInput.replace(" ", "")  # remove whitespace
+    return stringInput.split(",")
+
 def parseDefaults(inputs):
     """
     Parse out default values that have been specified in the input parameters
@@ -99,6 +115,8 @@ def parseDefaults(inputs):
             splits = inputs[index].split("=")
             inputs[index] = splits[0]
             defaults[inputs[index]] = splits[1]
+            if defaults[inputs[index]].find("[") != -1:
+                defaults[inputs[index]] = stringToList(defaults[inputs[index]])
 
     return inputs, defaults
 
@@ -115,7 +133,9 @@ def getArguments(inputString, openDelimiter, closeDelimiter):
         args = args.split(',')
     else:
         args = args.split()
-    args = [x.strip() for x in args] # get rid of extra whitespace
+
+    args = [x.replace(" ","") for x in args] # get rid of extra whitespace
+
     # TODO: remove comments from strings
     return args
 

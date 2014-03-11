@@ -136,7 +136,6 @@ class ${className} : public ${baseClass}
         bool _dev_enable(size_t tuner_id);
         bool _dev_disable(size_t tuner_id);
         bool _dev_set_tuning(std::string &tuner_type, frontend::tuning_request &request, size_t tuner_id);
-        bool _dev_get_tuning(frontend::tuning_request &response, size_t tuner_id);
         bool _dev_del_tuning(size_t tuner_id);
 //%     endif
         

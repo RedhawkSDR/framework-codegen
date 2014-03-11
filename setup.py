@@ -46,7 +46,7 @@ if not homeSys and ossiehome != None and not buildArg:
 
 setup(name='redhawk-codegen',
       version='1.10.0',
-      scripts=['redhawk-codegen','codegen_version','update_project','createPackage','createPackageDependency','createOctaveComponent'],
+      scripts=['redhawk-codegen','codegen_version','update_project','createPackageDependency','createOctaveComponent'],
       cmdclass={'install_lib':filtered_install_lib},
       packages=['redhawk',
                 'redhawk.codegen',
@@ -85,7 +85,8 @@ setup(name='redhawk-codegen',
                 'redhawk.codegen.jinja.cpp.properties',
                 'redhawk.codegen.jinja.cpp.component.persona',
                 'redhawk.codegen.jinja.cpp.component.programmable',
-                'redhawk.packagegen'],
+                'redhawk.packagegen',
+                'redhawk.packagegen.templates'],
       package_data={'redhawk.codegen.jinja.common':['templates/*'],
                     'redhawk.codegen.jinja.project.component':['templates/*'],
                     'redhawk.codegen.jinja.unitTests.resource.sca':['templates/*'],
@@ -107,5 +108,6 @@ setup(name='redhawk-codegen',
                     'redhawk.codegen.jinja.cpp.service':['templates/*'],
                     'redhawk.codegen.jinja.cpp.component.persona':['templates/*'],
                     'redhawk.codegen.jinja.cpp.component.programmable':['templates/*'],
-                    'redhawk.codegen.jinja.cpp.properties':['templates/*.cpp']}
+                    'redhawk.codegen.jinja.cpp.properties':['templates/*.cpp'],
+                    'redhawk.packagegen':['templates/*xml']}
       )

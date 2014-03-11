@@ -24,7 +24,7 @@ Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
 Version:        1.10.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Redhawk Code Generators
 
 Group:          Applications/Engineering
@@ -75,7 +75,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/redhawk-codegen
 %{_bindir}/codegen_version
 %{_bindir}/update_project
-%{_bindir}/createPackage
 %{_bindir}/createPackageDependency
 %{_bindir}/createOctaveComponent
 %{_prefix}/lib/python/redhawk/codegen

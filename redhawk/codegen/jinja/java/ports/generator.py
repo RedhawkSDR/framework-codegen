@@ -27,6 +27,8 @@ class JavaPortGenerator(PortGenerator):
 
     def className(self):
         porttype = '%s_%s' % (self.namespace, self.interface)
+        # If IDL starts with omg.org/, don't include that in port name
+        porttype = porttype.replace('omg.org/','')
         if self.direction == 'uses':
             porttype += 'OutPort'
         else:
@@ -34,7 +36,10 @@ class JavaPortGenerator(PortGenerator):
         return porttype
 
     def _basename(self):
-        return '.'.join((self.namespace, self.interface))
+        name =  '.'.join((self.namespace, self.interface))
+        # If IDL starts with omg.org/, java package actually starts with org.omg.
+        name = name.replace('omg.org/','org.omg.')
+        return name
 
     def interfaceClass(self):
         return self._basename() + 'Operations'

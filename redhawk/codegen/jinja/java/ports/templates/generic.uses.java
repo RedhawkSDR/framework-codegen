@@ -62,6 +62,7 @@ public class ${classname} extends QueryableUsesPort<${interface}> implements ${i
         return ops; 
     }
 
+//% if interface != "CF.PortOperations" 
     public void connectPort(final org.omg.CORBA.Object connection, final String connectionId) throws CF.PortPackage.InvalidPort, CF.PortPackage.OccupiedPort
     {
         try {
@@ -78,7 +79,7 @@ public class ${classname} extends QueryableUsesPort<${interface}> implements ${i
 
     }
 
-    public void disconnectPort(final String connectionId) {
+    public void disconnectPort(final String connectionId) throws CF.PortPackage.InvalidPort{
         // don't want to process while command information is coming in
         synchronized (this.updatingPortsLock) {
             super.disconnectPort(connectionId);
@@ -86,6 +87,7 @@ public class ${classname} extends QueryableUsesPort<${interface}> implements ${i
             this.active = (this.outConnections.size() != 0);
         }
     }
+//% endif
 /*{% for operation in portgenerator.operations() %}*/
 
    /**

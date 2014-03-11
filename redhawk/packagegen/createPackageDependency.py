@@ -17,13 +17,13 @@ Example usage:
 import os
 import shutil
 
-from packageDependencyTemplates import Makefile as MAKEFILE_TEMPLATE
-from packageDependencyTemplates import spd as SPD_TEMPLATE
-from packageDependencyTemplates import reconf as RECONF_STRING
-from packageDependencyTemplates import configureAc as CONFIGUREAC_STRING
+from templates.packageDependencyTemplates import Makefile as MAKEFILE_TEMPLATE
+from templates.packageDependencyTemplates import spd as SPD_TEMPLATE
+from templates.packageDependencyTemplates import reconf as RECONF_STRING
+from templates.packageDependencyTemplates import configureAc as CONFIGUREAC_STRING
 
 
-def create(libraryLocation, outputDir):
+def create(libraryLocation, outputDir, arch):
     """
     This is the main entry point to the module.
 
@@ -34,9 +34,11 @@ def create(libraryLocation, outputDir):
         outputDir       - where to write the associated soft package dependency
                           files.  Default is current working directory.
 
+        arch            - Architecture (e.g., noarch or x86)
+
     Creates output dir and sym links to the input package.
     Copies over standard files, such as reconf.
-    Calls _processTemplate on all applicable templates strings, which will write 
+    Calls _processTemplate on all applicable templates strings, which will write
     files to the outputDir.
 
     """
@@ -46,10 +48,10 @@ def create(libraryLocation, outputDir):
     fullOutputDir = outputDir+"/" + libraryName+"Pkg/"
     if not os.path.exists(fullOutputDir):
         os.makedirs(fullOutputDir)
-    if not os.path.exists(fullOutputDir+libraryName):
+    if not os.path.exists(fullOutputDir+"default_impl_"+arch):
         if not os.path.isabs(libraryLocation):
             libraryLocation = os.path.join(os.getcwd(), libraryLocation)
-        os.symlink(libraryLocation, fullOutputDir+libraryName)
+        os.symlink(libraryLocation, fullOutputDir+"default_impl_"+arch)
 
     fp = open(fullOutputDir+"configure.ac", 'w')
     fp.write(CONFIGUREAC_STRING)
@@ -60,15 +62,19 @@ def create(libraryLocation, outputDir):
     fp.close()
     os.chmod(fullOutputDir+"reconf", 0775)
 
-    _processTemplateString(MAKEFILE_TEMPLATE,
-                     outputDir + "/" + libraryName + "Pkg/"+ "Makefile.am",
-                     libraryName)
-    _processTemplateString(SPD_TEMPLATE,
-                     outputDir + "/" + libraryName + "Pkg/"+ libraryName+"Pkg.spd.xml",
-                     libraryName)
+    _processTemplateString(
+            templateString = MAKEFILE_TEMPLATE,
+            outputFileName = outputDir + "/" + libraryName + "Pkg/"+ "Makefile.am",
+            libraryName = libraryName,
+            arch = arch)
+    _processTemplateString(
+            templateString = SPD_TEMPLATE,
+            outputFileName = outputDir + "/" + libraryName + "Pkg/"+ libraryName+"Pkg.spd.xml",
+            libraryName = libraryName,
+            arch = arch)
 
 
-def _processTemplateString(templateString, outputFileName, libraryName):
+def _processTemplateString(templateString, outputFileName, libraryName, arch):
     """
     Replace the package name tag in templateString with libraryName 
     and write to outputFileName.
@@ -76,6 +82,7 @@ def _processTemplateString(templateString, outputFileName, libraryName):
     """
 
     templateString = templateString.replace("__LIBRARY_NAME__", libraryName)
+    templateString = templateString.replace("__ARCH__", arch)
 
     # Write to file.
     fp = open(outputFileName, 'w')
