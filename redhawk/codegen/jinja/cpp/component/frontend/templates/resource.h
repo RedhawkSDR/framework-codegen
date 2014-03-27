@@ -133,10 +133,10 @@ class ${className} : public ${baseClass}
         ////////////////////////////////////////
 
         // these are pure virtual, must be implemented here
-        bool _dev_enable(size_t tuner_id);
-        bool _dev_disable(size_t tuner_id);
-        bool _dev_set_tuning(std::string &tuner_type, frontend::tuning_request &request, size_t tuner_id);
-        bool _dev_del_tuning(size_t tuner_id);
+        bool deviceEnable(size_t tuner_id);
+        bool deviceDisable(size_t tuner_id);
+        bool deviceSetTuning(frontend::frontend_tuner_allocation_struct &request, size_t tuner_id);
+        bool deviceDeleteTuning(size_t tuner_id);
 //%     endif
         
     protected:

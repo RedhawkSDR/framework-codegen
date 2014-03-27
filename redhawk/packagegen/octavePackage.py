@@ -1,9 +1,6 @@
 from redhawk.codegen.model import softpkg
 from redhawk.packagegen.resourcePackage import ResourcePackage
 
-#TODO: handle sampleRate correctly
-__RESERVED_KEYWORDS__    = ['sampleRate', '__sampleRate', 'diaryOnOrOff', 'bufferingEnabled']
-
 def ambiguousArgumentException(argument, validTags):
     '''
     Print an error and raise an exception indicating that an ambiguous
@@ -60,8 +57,8 @@ class OctavePackage(ResourcePackage):
 
         mFunctionParameters = getMFunctionParameters(function, mFiles)
 
-        self.diaryEnabled = str(diaryEnabled).lower()
-        self.bufferingEnabled= str(bufferingEnabled).lower()
+        self.diaryEnabledStr = str(diaryEnabled).lower()
+        self.bufferingEnabledStr= str(bufferingEnabled).lower()
 
         ResourcePackage.__init__(
             self,
@@ -72,8 +69,7 @@ class OctavePackage(ResourcePackage):
 
         self._addDefaultProps()
 
-        nonPropOrKeywordArgs = []
-        nonPropOrKeywordArgs.extend(__RESERVED_KEYWORDS__)
+        propArgs = ["__sampleRate"]
 
         def isStringProp(value):
             if type(value) == type([]):
@@ -120,14 +116,14 @@ class OctavePackage(ResourcePackage):
                     self.addSimpleProperty(
                         id=propName,
                         value=value)
-            nonPropOrKeywordArgs.append(propName)
+            propArgs.append(propName)
 
         for input in mFunctionParameters.inputs:
-            if nonPropOrKeywordArgs.count(input) == 0:
+            if propArgs.count(input) == 0:
                 self.addProvidesPort(input, "IDL:BULKIO/dataDouble:1.0")
 
         for output in mFunctionParameters.outputs:
-            if nonPropOrKeywordArgs.count(output) == 0:
+            if propArgs.count(output) == 0:
                 self.addUsesPort(output, "IDL:BULKIO/dataDouble:1.0")
 
         for sharedLibrary in sharedLibraries:
@@ -138,21 +134,13 @@ class OctavePackage(ResourcePackage):
             complex=False,
             type="boolean",
             id="diaryEnabled",
-            value=self.diaryEnabled)
+            value=self.diaryEnabledStr)
 
         self.addSimpleProperty(
             complex=False,
             type="boolean",
             id="bufferingEnabled",
-            value=self.bufferingEnabled)
-
-        # TODO: fix this
-        self.addSimpleProperty(
-            complex=False,
-            type="double",
-            id="sampleRate",
-            mode="readonly",
-            value="0")
+            value=self.bufferingEnabledStr)
 
         self.addSimpleProperty(
             complex=False,

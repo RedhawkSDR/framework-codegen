@@ -75,6 +75,9 @@ appendInputPacketToFunctionArguments(
 ${defineInputProperty(prop, mInputIndex)}
 //%      endif
 /*{% endfor %}*/
+/*{% if functionInput == '__sampleRate'%}*/
+functionArguments.append(octave_value(__sampleRate));
+//%  endif
 /*{%- endmacro %}*/
 
 
@@ -142,7 +145,7 @@ ${defineOutputProperty(prop, mOutputIndex)}
 octave_value_list functionArguments; // pass to octave
 octave_value_list result;            // pass from octave
 int retVal;
- 
+
 /*{% for functionInput in component.mFunction.inputs%}*/
 /*{%    for port in component.ports%}*/
 /*{%        if port.name == functionInput%}*/
@@ -153,7 +156,7 @@ ${getPackets(port, mInputIndex)}
 
 /*{%if component.ports%}*/
 if (inputPackets.count(_sriPort) > 0) {
-    sampleRate = 1./(inputPackets[_sriPort]->SRI.xdelta);
+    __sampleRate = 1./(inputPackets[_sriPort]->SRI.xdelta);
 }
 
 /*{%endif%}*/

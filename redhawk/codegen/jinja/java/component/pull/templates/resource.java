@@ -187,14 +187,14 @@ public class ${classname} extends ${baseclass} {
      *
      *    This example assumes that the ${artifactType} has two ports:
      *        - A bulkio.InShortPort provides (input) port called dataShort_in
-     *        - A bulkio.InFloatPort uses (output) port called dataFloat_out
+     *        - A bulkio.OutFloatPort uses (output) port called dataFloat_out
      *    The mapping between the port and the class is found in the ${artifactType}
      *    base class file.
      *    This example also makes use of the following Properties:
      *        - A float value called amplitude with a default value of 2.0
      *        - A boolean called increaseAmplitude with a default value of true
      *
-     *    InShortPort.Packet data = this.port_dataShort_in.getPacket(125);
+     *    bulkio.InShortPort.Packet data = this.port_dataShort_in.getPacket(125);
      *
      *    if (data != null) {
      *        float[] outData = new float[data.getData().length];

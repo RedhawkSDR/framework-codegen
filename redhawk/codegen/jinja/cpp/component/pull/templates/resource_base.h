@@ -22,7 +22,6 @@
 /*{% block license %}*/
 /*# Allow child templates to include license #*/
 /*{% endblock %}*/
-
 /*{% block includeGuard %}*/
 #ifndef ${includeGuard}
 #define ${includeGuard}
@@ -183,7 +182,7 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
         virtual int serviceFunction() = 0;
 /*{% endblock %}*/
 /*{% if component.hasmultioutport %}*/
-        void connectionTable_changed(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue);
+        void connectionTableChanged(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue);
 /*{% endif %}*/
 
     protected:
@@ -205,7 +204,6 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
         ${port.cpptype} *${port.cppname};
 /*{% endfor %}*/
 /*{% endblock %}*/
-
 /*{% block extendedProtected%}*/
 /*{% endblock %}*/
 
@@ -214,7 +212,6 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 
 /*{% block extendedPrivate%}*/
 /*{% endblock %}*/
-
 /*{% block extensions %}*/
 /*# Allow for child template extensions #*/
 /*{% endblock %}*/

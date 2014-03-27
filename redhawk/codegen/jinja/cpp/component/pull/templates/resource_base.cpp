@@ -23,7 +23,6 @@
 /*{% block license %}*/
 /*# Allow child templates to include license #*/
 /*{% endblock %}*/
-
 /*{% block includes %}*/
 #include "${component.baseclass.header}"
 /*{% endblock %}*/
@@ -122,7 +121,7 @@ void ${className}::construct()
     registerOutPort(${port.cppname}, ${port.cppname}->_this());
 /*{% endfor %}*/
 /*{% if component.hasmultioutport %}*/
-    this->addPropertyChangeListener("connectionTable",this,&${className}::connectionTable_changed);
+    this->addPropertyChangeListener("connectionTable",this,&${className}::connectionTableChanged);
 /*{% endif %}*/
 }
 /*{% endblock %}*/
@@ -226,7 +225,7 @@ void ${className}::releaseObject() throw (CORBA::SystemException, CF::LifeCycle:
 /*{% endblock %}*/
 
 /*{% if component.hasmultioutport %}*/
-void ${className}::connectionTable_changed(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue)
+void ${className}::connectionTableChanged(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue)
 {
     /*{% for port in component.ports %}*/
     /*{%     if port.cpptype == "bulkio::OutShortPort" or
@@ -258,8 +257,8 @@ void ${className}::connectionTable_changed(const std::vector<connection_descript
     /*{%     endif %}*/
 /*{% endfor %}*/
 }
-/*{% endif %}*/
 
+/*{% endif %}*/
 /*{% block loadProperties %}*/
 /*{% from "properties/properties.cpp" import addproperty, initsequence %}*/
 void ${className}::loadProperties()

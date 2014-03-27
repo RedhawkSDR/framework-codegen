@@ -128,17 +128,28 @@ void ${className}::construct()
     registerOutPort(${port.cppname}, ${port.cppname}->_this());
 /*{% endfor %}*/
 /*{% if component.hasmultioutport %}*/
-    this->addPropertyChangeListener("connectionTable",this,&${className}::connectionTable_changed);
+    this->addPropertyChangeListener("connectionTable",this,&${className}::connectionTableChanged);
 /*{% endif %}*/
 /*{% for port in component.ports if port is provides %}*/
 /*{%     if port.cpptype == "frontend::InDigitalTunerPort" or
             port.cpptype == "frontend::InAnalogTunerPort" or
             port.cpptype == "frontend::InFrontendTunerPort" %}*/
-    this->addPropertyChangeListener("FRONTEND::tuner_status",this,&${className}::frontend_tuner_status_changed);
+    this->addPropertyChangeListener("FRONTEND::tuner_status",this,&${className}::frontendTunerStatusChanged);
 /*{% endif %}*/
 /*{% endfor %}*/
 }
 /*{% endblock %}*/
+
+/* This sets the number of entries in the frontend_tuner_status struct sequence property
+ *  * as well as the tuner_allocation_ids vector. Call this function during initialization
+ *   */
+void ${className}::setNumChannels(size_t num)
+{
+    frontend_tuner_status.clear();
+    frontend_tuner_status.resize(num);
+    tuner_allocation_ids.clear();
+    tuner_allocation_ids.resize(num);
+}
 
 /*******************************************************************************************
     Framework-level functions
@@ -260,12 +271,9 @@ void ${className}::loadProperties()
 /*{%     if port.cpptype == "frontend::InDigitalTunerPort" or
             port.cpptype == "frontend::InAnalogTunerPort" or
             port.cpptype == "frontend::InFrontendTunerPort" %}*/
-void ${className}::frontend_tuner_status_changed(const std::vector<frontend_tuner_status_struct_struct>* oldValue, const std::vector<frontend_tuner_status_struct_struct>* newValue)
+void ${className}::frontendTunerStatusChanged(const std::vector<frontend_tuner_status_struct_struct>* oldValue, const std::vector<frontend_tuner_status_struct_struct>* newValue)
 {
-    this->tunerChannels.resize(this->frontend_tuner_status.size());
-    for (unsigned int i=0; i<newValue->size(); i++) {
-        this->tunerChannels[i].frontend_status = &this->frontend_tuner_status[i];
-    }
+    this->tuner_allocation_ids.resize(this->frontend_tuner_status.size());
 }
 
 CF::Properties* ${className}::getTunerStatus(std::string& allocation_id)
@@ -275,7 +283,7 @@ CF::Properties* ${className}::getTunerStatus(std::string& allocation_id)
     if (tuner_id < 0)
         throw FRONTEND::FrontendException(("ERROR: ID: " + std::string(allocation_id) + " IS NOT ASSOCIATED WITH ANY TUNER!").c_str());
     CORBA::Any prop;
-    prop <<= *(static_cast<frontend_tuner_status_struct_struct*>(tunerChannels[tuner_id].frontend_status));
+    prop <<= *(static_cast<frontend_tuner_status_struct_struct*>(&this->frontend_tuner_status[tuner_id]));
     prop >>= tmpVal;
 
     CF::Properties_var tmp = new CF::Properties(*tmpVal);
@@ -313,7 +321,7 @@ void ${className}::assignListener(std::string& listen_alloc_id, std::string& all
             }
         }
     }
-    this->connectionTable_changed(&old_table, &this->connectionTable);
+    this->connectionTableChanged(&old_table, &this->connectionTable);
 /*{% endif %}*/
 }
 
@@ -357,7 +365,7 @@ void ${className}::removeListener(std::string& listen_alloc_id)
     }
 /*{%     endif %}*/
 /*{% endfor %}*/
-    this->connectionTable_changed(&old_table, &this->connectionTable);
+    this->connectionTableChanged(&old_table, &this->connectionTable);
 /*{% endif %}*/
 }
 
@@ -412,7 +420,7 @@ void ${className}::set_current_rf_input(std::string& port_name, const frontend::
 /*{% endfor %}*/
 
 /*{% if component.hasmultioutport %}*/
-void ${className}::connectionTable_changed(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue)
+void ${className}::connectionTableChanged(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue)
 {
 /*{% for port in component.ports %}*/
 /*{%     if port.cpptype == "bulkio::OutShortPort" or
@@ -462,7 +470,7 @@ void ${className}::matchAllocationIdToStreamId(const std::string allocation_id, 
         tmp.port_name = port_name;
         tmp.stream_id = stream_id;
         this->connectionTable.push_back(tmp);
-        this->connectionTable_changed(&old_table, &this->connectionTable);
+        this->connectionTableChanged(&old_table, &this->connectionTable);
         return;
     }
     std::vector<connection_descriptor_struct> old_table = this->connectionTable;
@@ -487,10 +495,11 @@ void ${className}::matchAllocationIdToStreamId(const std::string allocation_id, 
     this->connectionTable.push_back(tmp);
 /*{%     endif %}*/
 /*{% endfor %}*/
-    this->connectionTable_changed(&old_table, &this->connectionTable);
+    this->connectionTableChanged(&old_table, &this->connectionTable);
 }
 
-void ${className}::removeAllocationIdRouting(const std::string allocation_id) {
+void ${className}::removeAllocationIdRouting(const size_t tuner_id) {
+    std::string allocation_id = getControlAllocationId(tuner_id);
     std::vector<connection_descriptor_struct> old_table = this->connectionTable;
     std::vector<connection_descriptor_struct>::iterator itr = this->connectionTable.begin();
     while (itr != this->connectionTable.end()) {
@@ -512,7 +521,7 @@ void ${className}::removeAllocationIdRouting(const std::string allocation_id) {
             }
         }
     }
-    this->connectionTable_changed(&old_table, &this->connectionTable);
+    this->connectionTableChanged(&old_table, &this->connectionTable);
 }
 
 void ${className}::removeStreamIdRouting(const std::string stream_id, const std::string allocation_id) {
@@ -544,10 +553,10 @@ void ${className}::removeStreamIdRouting(const std::string stream_id, const std:
             }
         }
     }
-    this->connectionTable_changed(&old_table, &this->connectionTable);
+    this->connectionTableChanged(&old_table, &this->connectionTable);
 }
 /*{% else %}*/
-void ${className}::removeAllocationIdRouting(const std::string allocation_id) {
+void ${className}::removeAllocationIdRouting(const size_t tuner_id) {
 }
 /*{% endif %}*/
 

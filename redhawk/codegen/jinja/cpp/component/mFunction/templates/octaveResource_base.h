@@ -71,4 +71,5 @@ ${gplHeader(component)}
 
         int         _serviceFunctionReturnVal;
         std::string _sriPort;
+        double      __sampleRate;
 /*{% endblock %}*/

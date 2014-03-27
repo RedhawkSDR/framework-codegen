@@ -96,7 +96,7 @@ Function = strenum('list', 'generate')
 
 if __name__ == '__main__':
     # add predefined template settings a full word options
-    topts = ['help', 'template=', 'impl=', 'impldir='] + [ x for x in TemplateSetup.keys() ]
+    topts = ['help', 'template=', 'impl=', 'impldir=', 'lang='] + [ x for x in TemplateSetup.keys() ]
     opts, args = getopt(sys.argv[1:], 'filC:B:m:', topts )
     outputdir = None
     action = Function.GENERATE
@@ -105,6 +105,7 @@ if __name__ == '__main__':
     implId = None
     ignoreWavedev=False
     resource_type=None
+    language=None
     mFiles = []
     for key, value in opts:
         if key == '--help':
@@ -123,6 +124,8 @@ if __name__ == '__main__':
             resource_type=key[2:]
         elif key == '--impldir':
             overrides.outputDir = value
+        elif key == '--lang':
+            language = value
         elif key == '-l':
             action = Function.LIST
         elif key == '-f':
@@ -138,7 +141,6 @@ if __name__ == '__main__':
         spdFile = args[0]
     except:
         raise SystemExit(usage)       
-
     
     if resource_type and overrides.template:
         raise SystemExit, '--template cannot be selected with a predefined resource type.'
@@ -194,6 +196,7 @@ if __name__ == '__main__':
     # Check that at least one implementation has been selected.
     if len(implList) < 1:
         raise SystemExit, 'No implementation specified and implementation(s) cannot be automatically determined.  Use --impl option.'
+
     # Disallow invalid combinations of command-line arguments.
     if len(implList) > 1:
         if overrides.template:
@@ -202,16 +205,6 @@ if __name__ == '__main__':
             raise SystemExit, 'Cannot override implementation directory for multiple implementations'
         if overrides.properties:
             raise SystemExit, 'Cannot override template-specific options for multiple implementations'
-
-    if resource_type and overrides.template==None:
-       if implId :
-          try:
-             overrides.template = filter( lambda  x: implId in x.keys(), TemplateSetup[resource_type][0]  )[0][implId]
-             print "using template:" + str(overrides.template)
-          except:
-             raise SystemExit, 'Template override does not exist or --impl missing'
-       else :
-             raise SystemExit, 'Template override requires missing --impl option'
 
     # Change to the output directory; all XML should have been processed, so
     # there are no wories about relative paths.
@@ -251,6 +244,31 @@ if __name__ == '__main__':
             impl = softpkg.getImplementation(implId)
         except KeyError:
             raise SystemExit, "No implementation '%s'" % implId
+
+        # look up template if resource type was given
+        if resource_type and overrides.template==None:
+           if implId :
+              try:
+                 tkey = implId
+                 if language :
+                    tkey = language
+                 else:
+                     tkey=None
+                     # get programming language from implementation
+                     pl = impl.programminglanguage()
+                     if pl == 'C++' :
+                        tkey="cpp"
+                     elif pl.upper() == 'PYTHON' :
+                        tkey="python"
+                     elif pl.upper() == 'JAVA' :
+                        tkey="java"
+
+                     overrides.template = filter( lambda  x: tkey in x.keys(), TemplateSetup[resource_type][0]  )[0][tkey]
+                     print "using template:" + str(overrides.template)
+              except:
+                 raise SystemExit, 'Template override does not exist or --impl missing'
+           else :
+                 raise SystemExit, 'Template override requires missing --impl option'
 
         # Get generation settings, from a combination of the command line and (optionally)
         # the .wavedev configuration file; the former has higher precedence.

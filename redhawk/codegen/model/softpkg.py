@@ -45,24 +45,33 @@ class Implementation(object):
     def programminglanguage(self):
         return self.__impl.programminglanguage.name
 
-def softPkgRef(name, localfile):
+def softPkgRef(root_impl, name, localfile, implref):
     try:
         spd = ossie.parsers.spd.parse(os.getenv('SDRROOT')+'/dom/'+localfile)
     except:
         spd = None
-    return {'name':name, 'localfile':localfile, 'spd':spd}
+    return {'name':name, 'root_impl': root_impl, 'implref': implref, 'localfile':localfile, 'spd':spd }
 
-def resolveSoftPkgDeps(spd=None):
+def resolveSoftPkgDeps(spd=None, root_impl=None):
     softpkgdeps = []
     if spd == None:
         return softpkgdeps
     for impl in spd.get_implementation():
+        if root_impl != None:
+            troot = root_impl
+        else:
+            troot = impl.get_id()
         for dep in impl.get_dependency():
             if dep.get_softpkgref() != None:
                 localfile = dep.get_softpkgref().get_localfile().name
+                implref=None
+                try:
+                    implref = dep.get_softpkgref().get_implref().get_refid()
+                except:
+                    pass
                 pkg_name = localfile.split('/')[-1].split('.')[0]
-                softpkgdeps.append(softPkgRef(pkg_name, localfile))
-                softpkgdeps += resolveSoftPkgDeps(softpkgdeps[-1]['spd'])
+                softpkgdeps.append(softPkgRef(troot, pkg_name, localfile,implref))
+                softpkgdeps += resolveSoftPkgDeps(softpkgdeps[-1]['spd'], troot)
     return softpkgdeps
 
 class mFunctionParameters:
@@ -76,6 +85,8 @@ class mFunctionParameters:
         self.inputs       = inputs
         self.functionName = functionName
         self.defaults     = defaults
+        if "__sampleRate" in self.defaults:
+            del self.defaults["__sampleRate"]
 
 def stringToList(stringInput):
     """

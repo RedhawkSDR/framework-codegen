@@ -64,7 +64,7 @@ distclean-local:
 # you wish to manually control these options.
 include $(srcdir)/Makefile.am.ide
 {{target}}_SOURCES = $(redhawk_SOURCES_auto)
-{{target}}_LDADD = $(PROJECTDEPS_LIBS) $(BOOST_LDFLAGS) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB) $(INTERFACEDEPS_LIBS) $(redhawk_LDADD_auto)
+{{target}}_LDADD = $(PROJECTDEPS_LIBS) $(BOOST_LDFLAGS) $(BOOST_THREAD_LIB) $(BOOST_REGEX_LIB) $(BOOST_SYSTEM_LIB) $(INTERFACEDEPS_LIBS) $(redhawk_LDADD_auto)
 #{% if component.mFunction != None %}
 {{target}}_CXXFLAGS = -Wall $(PROJECTDEPS_CFLAGS) $(BOOST_CPPFLAGS) $(INTERFACEDEPS_CFLAGS) $(redhawk_INCLUDES_auto) $(M_FUNCTION_INTERPRETER_INCLUDE)
 {{target}}_LDFLAGS = -Wall $(redhawk_LDFLAGS_auto) $(M_FUNCTION_INTERPRETER_LOAD)

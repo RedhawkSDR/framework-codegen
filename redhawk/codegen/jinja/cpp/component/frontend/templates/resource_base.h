@@ -190,12 +190,12 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{% endblock %}*/
 
 /*{% if component.hasmultioutport %}*/
-        void connectionTable_changed(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue);
+        void connectionTableChanged(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue);
         void matchAllocationIdToStreamId(const std::string allocation_id, const std::string stream_id, const std::string port_name="");
-        void removeAllocationIdRouting(const std::string allocation_id);
+        void removeAllocationIdRouting(const size_t tuner_id);
         void removeStreamIdRouting(const std::string stream_id, const std::string allocation_id="");
 /*{% else %}*/
-        void removeAllocationIdRouting(const std::string allocation_id);
+        void removeAllocationIdRouting(const size_t tuner_id);
 /*{% endif %}*/
 
 /*{% block callbackMethods %}*/
@@ -286,7 +286,7 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{%     if port.cpptype == "frontend::InDigitalTunerPort" or
          port.cpptype == "frontend::InAnalogTunerPort" or
          port.cpptype == "frontend::InFrontendTunerPort" %}*/
-        void frontend_tuner_status_changed(const std::vector<frontend_tuner_status_struct_struct>* oldValue, const std::vector<frontend_tuner_status_struct_struct>* newValue);
+        void frontendTunerStatusChanged(const std::vector<frontend_tuner_status_struct_struct>* oldValue, const std::vector<frontend_tuner_status_struct_struct>* newValue);
 /*{%     endif %}*/
 /*{% endfor %}*/
         
@@ -327,6 +327,7 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 
 /*{% block extendedProtected%}*/
 /*{% endblock %}*/
+        virtual void setNumChannels(size_t num);
         void construct();
 
 /*{% block extensions %}*/

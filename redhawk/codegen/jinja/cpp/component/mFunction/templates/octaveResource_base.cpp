@@ -475,7 +475,7 @@ void ${className}::populateOutputPacket(
      }
 
     outputPacket->SRI          = inputPackets[_sriPort]->SRI;
-    outputPacket->SRI.xdelta   = 1./sampleRate;
+    outputPacket->SRI.xdelta   = inputPackets[_sriPort]->SRI.xdelta;
     outputPacket->SRI.streamID = inputPackets[_sriPort]->streamID.c_str();
     outputPacket->T            = bulkio::time::utils::now();
     outputPacket->streamID     = inputPackets[_sriPort]->streamID.c_str();

@@ -58,19 +58,19 @@ _typeMap = {
     CorbaTypes.OBJREF:    'std::string'
 }
 
-_complexTypeMap = {
-    CorbaTypes.FLOAT:     'std::complex<float> ',
-    CorbaTypes.DOUBLE:    'std::complex<double> ',
-    CorbaTypes.CHAR:      'std::complex<char> ',
-    CorbaTypes.OCTET:     'std::complex<unsigned char> ',
-    CorbaTypes.SHORT:     'std::complex<short> ',
-    CorbaTypes.USHORT:    'std::complex<unsigned short> ',
-    CorbaTypes.BOOLEAN:   'std::complex<bool> ',
-    CorbaTypes.LONG:      'std::complex<CORBA::Long> ',
-    CorbaTypes.ULONG:     'std::complex<CORBA::ULong> ',
-    CorbaTypes.LONGLONG:  'std::complex<CORBA::LongLong> ',
-    CorbaTypes.ULONGLONG: 'std::complex<CORBA::ULongLong> '
-}
+_complexTypes = [
+    CorbaTypes.FLOAT,
+    CorbaTypes.DOUBLE,
+    CorbaTypes.CHAR,
+    CorbaTypes.OCTET,
+    CorbaTypes.SHORT,
+    CorbaTypes.USHORT,
+    CorbaTypes.BOOLEAN,
+    CorbaTypes.LONG,
+    CorbaTypes.ULONG,
+    CorbaTypes.LONGLONG,
+    CorbaTypes.ULONGLONG
+]
 
 def stringLiteral(string):
     return '"' + string + '"'
@@ -78,12 +78,17 @@ def stringLiteral(string):
 def charLiteral(string):
     return "'" + string + "'"
 
+def complexType(typename):
+    return 'std::complex<%s>' % (cppType(typename),)
+
 def cppType(typename, complex=False):
     """
     Returns the C++ type for the given CORBA type.
     """
     if complex:
-        return _complexTypeMap[typename]
+        if not typename in _complexTypes:
+            raise TypeError("Cannot create complex '"+typename+"' type")
+        return complexType(typename)
     else:
         return _typeMap[typename]
 
@@ -110,16 +115,21 @@ def identifier(name):
 def literal(value, typename, complex=False):
 
     if complex:
-        real, imag = parseComplexString(value, 
-                                        typename)
-        return cppType(typename, complex) + "(" + str(real) + "," + str(imag) + ")"
+        # Parse real and imaginary components
+        real, imag = parseComplexString(value, typename)
+        # Convert real and imaginary into type-specific literals
+        real, imag = (literal(str(x), typename) for x in (real, imag))
+        return "%s(%s,%s)" % (cppType(typename, complex), real, imag)
     elif typename == CorbaTypes.STRING:
         return stringLiteral(value)
     elif typename == CorbaTypes.BOOLEAN:
         if parseBoolean(value):
             return TRUE
         else:
-            return FALSE  
+            return FALSE
+    elif typename in (CorbaTypes.LONGLONG, CorbaTypes.ULONGLONG):
+        # Explicitly mark the literal as a 'long long' for 32-bit systems
+        return value + 'LL'
     elif typename == CorbaTypes.CHAR:
         return charLiteral(value)
     else:

@@ -240,27 +240,27 @@ void ${className}::construct()
 ////////////////////////////////////////
 //// Required device specific functions // -- implemented by device developer
 //////////////////////////////////////////
-bool ${className}::_dev_enable(size_t tuner_id){
-    #warning _dev_enable(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
+bool ${className}::deviceEnable(size_t tuner_id){
+    #warning deviceEnable(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
     return BOOL_VALUE_HERE;
 }
-bool ${className}::_dev_disable(size_t tuner_id){
-    #warning _dev_disable(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
+bool ${className}::deviceDisable(size_t tuner_id){
+    #warning deviceDisable(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
     return BOOL_VALUE_HERE;
 }
-bool ${className}::_dev_set_tuning(std::string &tuner_type, frontend::tuning_request &request, size_t tuner_id){
+bool ${className}::deviceSetTuning(frontend::frontend_tuner_allocation_struct &request, size_t tuner_id){
     /************************************************************
-    modify this->tunerChannels
+    modify this->frontend_tuner_status[tuner_id]
 
-    This data structure is a vector of tuner_status structures
+    This data structure is the vector of structures
     that is referenced by the base class to determine whether
     or not tuners are available
     ************************************************************/
-    #warning _dev_set_tuning(): Evaluate whether or not a tuner is added  *********
+    #warning deviceSetTuning(): Evaluate whether or not a tuner is added  *********
     return BOOL_VALUE_HERE;
 }
-bool ${className}::_dev_del_tuning(size_t tuner_id) {
-    #warning _dev_del_tuning(): Deallocate an allocated tuner  *********
+bool ${className}::deviceDeleteTuning(size_t tuner_id) {
+    #warning deviceDeleteTuning(): Deallocate an allocated tuner  *********
     return BOOL_VALUE_HERE;
 }
 
@@ -279,7 +279,7 @@ std::string ${className}::getTunerType(std::string& allocation_id) {
 bool ${className}::getTunerDeviceControl(std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
-    if (this->tunerChannels[idx].control_allocation_id == allocation_id)
+    if (getControlAllocationId(idx) == allocation_id)
         return true;
     return false;
 }
@@ -300,7 +300,7 @@ port.cpptype == "frontend::InAnalogTunerPort" %}*/
 
 void ${className}::setTunerCenterFrequency(std::string& allocation_id, double freq) {
     long idx = getTunerMapping(allocation_id);
-    if(allocation_id != tunerChannels[idx].control_allocation_id)
+    if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (freq<0) throw FRONTEND::BadParameterException();
@@ -314,7 +314,7 @@ double ${className}::getTunerCenterFrequency(std::string& allocation_id) {
 }
 void ${className}::setTunerBandwidth(std::string& allocation_id, double bw) {
     long idx = getTunerMapping(allocation_id);
-    if(allocation_id != tunerChannels[idx].control_allocation_id)
+    if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (bw<0) throw FRONTEND::BadParameterException();
@@ -334,7 +334,7 @@ void ${className}::setTunerReferenceSource(std::string& allocation_id, long sour
 long ${className}::getTunerReferenceSource(std::string& allocation_id){throw FRONTEND::NotSupportedException("getTunerReferenceSource not supported");return 0;}
 void ${className}::setTunerEnable(std::string& allocation_id, bool enable) {
     long idx = getTunerMapping(allocation_id);
-    if(allocation_id != tunerChannels[idx].control_allocation_id)
+    if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     // set hardware to new value. Raise an exception if it's not possible
@@ -350,7 +350,7 @@ bool ${className}::getTunerEnable(std::string& allocation_id) {
 /*{%     if port.cpptype == "frontend::InDigitalTunerPort" %}*/
 void ${className}::setTunerOutputSampleRate(std::string& allocation_id, double sr) {
     long idx = getTunerMapping(allocation_id);
-    if(allocation_id != tunerChannels[idx].control_allocation_id)
+    if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (sr<0) throw FRONTEND::BadParameterException();

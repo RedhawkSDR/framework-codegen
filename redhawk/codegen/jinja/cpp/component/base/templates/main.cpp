@@ -20,7 +20,6 @@
 /*{% block license %}*/
 /*# Allow child templates to include license #*/
 /*{% endblock %}*/
-
 /*{% block includes %}*/
 #include <iostream>
 #include "ossie/ossieSupport.h"

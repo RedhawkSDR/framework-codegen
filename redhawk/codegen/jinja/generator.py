@@ -266,9 +266,10 @@ class CodeGenerator(Generator):
     
     def map(self, softpkg):
         # Apply template-specific mapping for component.
-        compmapper = self.componentMapper()
-        component = compmapper.mapComponent(softpkg)
         impl = softpkg.getImplementation(self.implId)
+        compmapper = self.componentMapper()
+        compmapper.setImplementation( impl)
+        component = compmapper.mapComponent(softpkg)
         component['impl'] = compmapper.mapImplementation(impl)
 
         # If generator has a mapping for properties, apply that.

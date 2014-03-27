@@ -124,6 +124,12 @@ class PortMapper(object):
 
 
 class ComponentMapper(object):
+    def __init__(self):
+        self._impl=None
+
+    def setImplementation(self, impl=None ):
+        self._impl=impl
+    
     def mapImplementation(self, impl):
         impldict = {}
         impldict['id'] = impl.identifier()

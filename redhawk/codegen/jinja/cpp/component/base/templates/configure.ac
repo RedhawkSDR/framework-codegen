@@ -56,6 +56,7 @@ PKG_CHECK_MODULES([INTERFACEDEPS], [{{component.interfacedeps|join(', ')}}])
 #{% block coreDeps %}
 OSSIE_ENABLE_LOG4CXX
 AX_BOOST_BASE([1.41])
+AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_REGEX
 #{% endblock %}
