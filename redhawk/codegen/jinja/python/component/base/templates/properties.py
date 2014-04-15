@@ -33,11 +33,11 @@ ${prop.pyname} = simple_property(id_="${prop.identifier}",
                                  mode="${prop.mode}",
                                  action="${prop.action}",
                                  kinds=${prop.kinds|quote|tuple}
-#%-    if prop.hasDescription
+#%-   if prop.hasDescription
 ,
                                  description="""${prop.description}"""
-#%    endif
-                                 )
+#%-   endif
+)
 #{%   endfilter %}
 #{% endmacro %}
 
@@ -66,11 +66,11 @@ ${prop.pyname} = simpleseq_property(id_="${prop.identifier}",
                                     mode="${prop.mode}",
                                     action="${prop.action}",
                                     kinds=${prop.kinds|quote|tuple}
-#%-    if prop.hasDescription
+#%-   if prop.hasDescription
 ,
                                     description="""${prop.description}"""
-#%    endif
-                                    )
+#%-   endif
+)
 #{%   endfilter %}
 #{% endmacro %}
 
@@ -83,11 +83,11 @@ ${prop.pyname} = struct_property(id_="${prop.identifier}",
                                  structdef=${prop.pyclass},
                                  configurationkind=${prop.kinds|quote|tuple},
                                  mode="${prop.mode}"
-#%-    if prop.hasDescription
+#%-   if prop.hasDescription
 ,
                                  description="""${prop.description}"""
-#%    endif
-                                 )
+#%-   endif
+)
 #{%   endfilter %}
 #{% endmacro %}
 
@@ -101,11 +101,11 @@ ${prop.pyname} = structseq_property(id_="${prop.identifier}",
                                     defvalue=[${prop.pyvalues|join(',')}],
                                     configurationkind=${prop.kinds|quote|tuple},
                                     mode="${prop.mode}"
-#%-    if prop.hasDescription
+#%-   if prop.hasDescription
 ,
-                                 description="""${prop.description}"""
-#%    endif
-                                    )
+                                    description="""${prop.description}"""
+#%-   endif
+)
 #{%   endfilter %}
 #{% endmacro %}
 
@@ -130,20 +130,22 @@ class ${struct.pyclass}(object):
 #{%   for field in struct.fields %}
 #{%   filter codealign %}
     ${field.pyname} = simple_property(id_="${field.identifier}",
-#{%     if field.name %}
+#%      if field.name
                                       name="${field.name}",
-#{%     endif %}
-                                      type_="${field.type}",
-#{%     if field.pyvalue %}
-                                      defvalue=${field.pyvalue},
-#{%     endif %}
-#{%     if field.isComplex %}
-                                      complex=True,
-#{%     endif %}
-                                      )
+#%      endif
+                                      type_="${field.type}"
+#%-     if field.pyvalue
+,
+                                      defvalue=${field.pyvalue}
+#%-     endif
+#%-     if field.isComplex
+,
+                                      complex=True
+#%-     endif
+)
 #{%   endfilter %}
-#{%   endfor %}
 
+#{%   endfor %}
 #{%   if initialize: %}
     def __init__(self, **kw):
         """Construct an initialized instance of this struct definition"""
@@ -175,4 +177,22 @@ class ${struct.pyclass}(object):
 
     def getMembers(self):
         return [${members(struct.fields)}]
+#{% endmacro %}
+
+#{% macro create(prop) %}
+#{% if prop is simple %}
+${simple(prop)}
+#{% elif prop is simplesequence %}
+${simplesequence(prop)}
+#{% elif prop is struct %}
+#{%   if not prop.builtin %}
+${structdef(prop)}
+#{%   endif %}
+${struct(prop)}
+#{% elif prop is structsequence %}
+#{%   if not prop.structdef.builtin %}
+${structdef(prop.structdef,False)}
+#{%   endif %}
+${structsequence(prop)}
+#{% endif %}
 #{% endmacro %}

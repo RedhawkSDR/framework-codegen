@@ -55,3 +55,6 @@ class BurstioPortGenerator(PythonPortGenerator):
 
     def stop(self):
         return 'stop()'
+
+    def supportsMultiOut(self):
+        return (self.direction == 'uses')

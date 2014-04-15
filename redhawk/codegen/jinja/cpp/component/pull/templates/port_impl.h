@@ -40,4 +40,4 @@ class ${component.userclass.name};
 /*{% include portgen.declaration() %}*/
 
 /*{% endfor %}*/
-#endif
+#endif // PORT_H

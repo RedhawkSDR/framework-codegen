@@ -228,7 +228,10 @@ if __name__ == '__main__':
 
     # Top-level code generation
     # TODO: Allow disabling, explicit file list, template selection
-    from redhawk.codegen.jinja.project import component
+    if len(mFiles) == 0:
+        from redhawk.codegen.jinja.project import component
+    else:
+        from redhawk.codegen.jinja.project import octaveComponent as component
     generator = component.factory(outputdir='.', overwrite=overwrite, crcs=toplevelCRCs)
     generators.append(('Component '+softpkg.name(), '', generator))
 

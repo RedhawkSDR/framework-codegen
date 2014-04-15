@@ -50,10 +50,21 @@ class GenericPortGenerator(PythonPortGenerator):
         return ('self', python.stringLiteral(port.name()))
 
     def imports(self):
-        modname = python.idlModule(self.namespace)
         if self.direction == 'provides':
-            modname += '__POA'
-        return [python.importModule(modname)]
+            modules = [python.poaModule(self.namespace)]
+        else:
+            modules = [
+                'ossie.cf.ExtendedCF',
+                'ossie.cf.ExtendedCF__POA',
+                python.idlModule(self.namespace)
+            ]
+        return [python.importModule(m) for m in modules]
+
+    def poaClass(self):
+        if self.direction == 'uses':
+            return 'ExtendedCF__POA.QueryablePort'
+        else:
+            return super(GenericPortGenerator,self).poaClass()
 
     def loader(self):
         return jinja2.PackageLoader(__package__)

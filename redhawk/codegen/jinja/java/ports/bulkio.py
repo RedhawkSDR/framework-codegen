@@ -49,5 +49,8 @@ class BulkioPortGenerator(JavaPortGenerator):
             direction = 'Out'
         return 'bulkio.' + direction + datatype + 'Port'
 
+    def supportsMultiOut(self):
+        return (self.direction == 'uses')
+
     def _ctorArgs(self, name):
         return (java.stringLiteral(name),)

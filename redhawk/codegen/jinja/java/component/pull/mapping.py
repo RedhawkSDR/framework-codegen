@@ -21,6 +21,7 @@
 from redhawk.codegen.lang import java
 from redhawk.codegen.model.softwarecomponent import ComponentTypes
 from redhawk.codegen.lang.idl import IDLInterface
+from redhawk.codegen import libraries
 
 from redhawk.codegen.jinja.java.component.base import BaseComponentMapper
 
@@ -48,54 +49,26 @@ class PullComponentMapper(BaseComponentMapper):
 
     def getInterfaceDependencies(self, softpkg):
         for namespace in self.getInterfaceNamespaces(softpkg):
-            if namespace == 'BULKIO':
-                yield 'bulkio >= 1.0 bulkioInterfaces >= 1.9'
-            elif namespace == 'BURSTIO':
-                yield 'burstio >= 1.8'
-            elif namespace == 'REDHAWK':
-                yield 'redhawkInterfaces >= 1.2.0'
-            elif namespace == 'FRONTEND':
-                yield 'frontend >= 2.1 frontendInterfaces >= 2.1'
-            else:
-                yield namespace.lower()+'Interfaces'
+            yield libraries.getPackageRequires(namespace)
 
     def getInterfaceJars(self, softpkg):
-        jars = [ns+'Interfaces.jar' for ns in self.getInterfaceNamespaces(softpkg)]
-        jars.append('bulkio.jar')
-        jars.append('burstio.jar')
+        jars = []
+        for namespace in self.getInterfaceNamespaces(softpkg):
+            library = libraries.getInterfaceLibrary(namespace)
+            jars.extend(library['jarfiles'])
         return jars
 
     def superclass(self, softpkg):
         if softpkg.type() == ComponentTypes.RESOURCE:
-            name = 'Resource'
+            name = 'ThreadedResource'
         elif softpkg.type() == ComponentTypes.DEVICE:
-            name = 'Device'
+            name = 'ThreadedDevice'
         elif softpkg.type() == ComponentTypes.LOADABLEDEVICE:
             # NOTE: If java gets support for Loadable Devices, this needs to change
-            name = 'Device'
+            name = 'ThreadedDevice'
         elif softpkg.type() == ComponentTypes.EXECUTABLEDEVICE:
             # NOTE: If java gets support for Executable Devices, this needs to change
-            name = 'Device'
+            name = 'ThreadedDevice'
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
         return {'name': name}
-
-    def hasMultioutPort(self, softpkg):
-        for prop in softpkg.getStructSequenceProperties():
-            if prop.name() == "connectionTable" and  \
-               prop.struct().name() == "connection_descriptor":
-                foundConnectionName = False
-                foundStreamId = False
-                foundPortName = False
-                for field in prop.struct().fields():
-                    if field.name() == "connection_id":
-                        foundConnectionName = True 
-                    elif field.name() == "stream_id":
-                        foundStreamId = True 
-                    elif field.name() == "port_name":
-                        foundPortName = True 
-                if foundConnectionName == True and \
-                   foundStreamId == True and \
-                   foundPortName == True:
-                    return True
-        return False

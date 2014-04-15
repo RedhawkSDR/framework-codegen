@@ -17,15 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  #*/
-/*{% macro header(prop) %}*/
-/**
- * The property ${prop.identifier}
- * ${prop.description|default("If the meaning of this property isn't clear, a description should be added.", true)}
- *
- * @generated
- */
-/*{%- endmacro %}*/
-
 /*{% macro structdef(prop) %}*/
 /**
  * The structure for property ${prop.identifier}
@@ -69,7 +60,6 @@ ${field.javatype} ${field.javaname}
 /*{%- endmacro %}*/
 
 /*{% macro simple(prop) %}*/
-${header(prop)}
 public final ${prop.javaclass}Property ${prop.javaname} =
     new ${prop.javaclass}Property(
         "${prop.identifier}", //id
@@ -82,7 +72,6 @@ public final ${prop.javaclass}Property ${prop.javaname} =
 /*{% endmacro %}*/
 
 /*{% macro simplesequence(prop) %}*/
-${header(prop)}
 public final ${prop.javaclass}SequenceProperty ${prop.javaname} =
     new ${prop.javaclass}SequenceProperty(
         "${prop.identifier}", //id
@@ -95,9 +84,10 @@ public final ${prop.javaclass}SequenceProperty ${prop.javaname} =
 /*{% endmacro %}*/
 
 /*{% macro struct(prop) %}*/
+/*{% if not prop.builtin %}*/
 ${structdef(prop)}
 
-${header(prop)}
+/*{% endif %}*/
 public final StructProperty<${prop.javatype}> ${prop.javaname} =
     new StructProperty<${prop.javatype}>(
         "${prop.identifier}", //id
@@ -110,11 +100,10 @@ public final StructProperty<${prop.javatype}> ${prop.javaname} =
 /*{% endmacro %}*/
 
 /*{% macro structsequence(prop) %}*/
-/*{% if (prop.structdef.javaname != "connection_descriptor") %}*/
+/*{% if not prop.structdef.builtin %}*/
 ${structdef(prop.structdef)}
-/*{% endif %}*/
 
-${header(prop)}
+/*{% endif %}*/
 public final StructSequenceProperty<${prop.structdef.javatype}> ${prop.javaname} =
     new StructSequenceProperty<${prop.structdef.javatype}> (
         "${prop.identifier}", //id
@@ -137,5 +126,20 @@ public final StructSequenceProperty<${prop.structdef.javatype}> ${prop.javaname}
     );
 /*{% endmacro %}*/
 
-/*{% macro structsequence_init(prop) %}*/
+/*{% macro create(prop) %}*/
+/**
+ * The property ${prop.identifier}
+ * ${prop.description|default("If the meaning of this property isn't clear, a description should be added.", true)}
+ *
+ * @generated
+ */
+/*{%   if prop is simple %}*/
+${simple(prop)}
+/*{%   elif prop is simplesequence %}*/
+${simplesequence(prop)}
+/*{%   elif prop is struct %}*/
+${struct(prop)}
+/*{%   elif prop is structsequence %}*/
+${structsequence(prop)}
+/*{%   endif %}*/
 /*{% endmacro %}*/

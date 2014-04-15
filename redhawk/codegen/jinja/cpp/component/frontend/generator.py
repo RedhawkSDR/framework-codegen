@@ -37,6 +37,20 @@ loader = CodegenLoader(__package__,
                         'properties'     : 'redhawk.codegen.jinja.cpp.properties'})
 
 class FrontendComponentGenerator(PullComponentGenerator):
+    def map(self, softpkg):
+        component = super(FrontendComponentGenerator,self).map(softpkg)
+        if 'FrontendTuner' in component['implements']:
+            # For FEI tuner devices, disable member variable generation for
+            # properties that are inherited from frontend::FrontendTunerDevice
+            # base class
+            for prop in component['properties']:
+                if prop['cppname'] in ('device_kind', 'device_model',
+                                       'frontend_tuner_allocation',
+                                       'frontend_listener_allocation',
+                                       'frontend_tuner_status'):
+                    prop['inherited'] = True
+        return component
+
     def loader(self, component):
         return loader
 
@@ -64,12 +78,8 @@ class FrontendComponentGenerator(PullComponentGenerator):
             CppTemplate('template_impl.cpp')
         ]
 
-        for gen in component['portgenerators']:
-            # Need to include port_impl if a non-bulkio port exists
-            if str(type(gen)).find("BulkioPortGenerator") == -1:
-                templates.append(CppTemplate('pull/port_impl.cpp'))
-                templates.append(CppTemplate('pull/port_impl.h'))
-                break
+        # Add port implementations from base class if required
+        templates.extend(CppTemplate('pull/'+fn) for fn in self.getPortTemplates(component))
 
         if component['structdefs']:
             templates.append(CppTemplate('struct_props.h'))

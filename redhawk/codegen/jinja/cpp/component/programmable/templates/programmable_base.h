@@ -828,4 +828,4 @@ template <typename HW_LOAD_REQUEST, typename HW_LOAD_STATUS>
 PREPARE_ALT_LOGGING(${className}<HW_LOAD_REQUEST BOOST_PP_COMMA() 
                                  HW_LOAD_STATUS>, ${className});
 
-#endif
+#endif // ${includeGuard}

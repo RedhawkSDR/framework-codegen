@@ -49,4 +49,4 @@ class ${className} : public ${baseClass}
 };
 
 
-#endif
+#endif // ${includeGuard}

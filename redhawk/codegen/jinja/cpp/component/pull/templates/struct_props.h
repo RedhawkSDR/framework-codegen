@@ -30,24 +30,20 @@
 
 *******************************************************************************************/
 /*{% endblock %}*/
+
 /*{% block includes %}*/
 #include <ossie/CorbaUtils.h>
-/*{% for struct in component.structdefs %}*/
-/*{%     if (struct.cppname == "connection_descriptor") %}*/
+/*{% if component['hasmultioutport'] %}*/
 #include <bulkio/bulkio.h>
 typedef bulkio::connection_descriptor_struct connection_descriptor_struct;
-/*{%     endif %}*/
-/*{% endfor %}*/
+/*{% endif %}*/
 /*{% endblock %}*/
 
 /*{% block struct %}*/
 /*{% from "properties/properties.cpp" import structdef with context %}*/
-/*{% for struct in component.structdefs %}*/
-/*{%     if (struct.cppname != "connection_descriptor") %}*/
+/*{% for struct in component.structdefs if not struct.builtin %}*/
 ${structdef(struct)}
-/*{%     endif %}*/
 
 /*{% endfor %}*/
 /*{% endblock %}*/
-
-#endif
+#endif // STRUCTPROPS_H

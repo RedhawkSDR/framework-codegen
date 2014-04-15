@@ -55,12 +55,6 @@ class FrontendPortGenerator(CppPortGenerator):
     def header(self):
         return '<frontend/frontend.h>'
 
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
-
     def headers(self):
         return [_headerMap[self.interface]]
 
@@ -97,12 +91,6 @@ class FrontendOutputPortFactory(PortFactory):
 class FrontendOutputPortGenerator(CppPortGenerator):
     def header(self):
         return '<frontend/frontend.h>'
-
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
 
     def headers(self):
         return [_headerMap[self.interface]]

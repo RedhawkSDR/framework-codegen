@@ -74,4 +74,4 @@ class ${className} : public ${baseClass}
 //% endif
 };
 
-#endif
+#endif // ${includeGuard}

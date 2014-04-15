@@ -77,12 +77,8 @@ class PersonaComponentGenerator(PullComponentGenerator):
         if is_executable:
             templates.append(CppTemplate('entry_point.h', userfile=True))
 
-        for gen in component['portgenerators']:
-            # Need to include port_impl if a non-bulkio port exists
-            if str(type(gen)).find("BulkioPortGenerator") == -1:
-                templates.append(CppTemplate('pull/port_impl.cpp'))
-                templates.append(CppTemplate('pull/port_impl.h'))
-                break
+        # Add port implementations if required
+        templates.extend(CppTemplate('pull/'+fn) for fn in self.getPortTemplates(component))
 
         if component['structdefs']:
             templates.append(CppTemplate('pull/struct_props.h'))

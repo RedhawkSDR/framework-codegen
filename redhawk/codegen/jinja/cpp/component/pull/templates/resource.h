@@ -43,10 +43,14 @@ class ${className} : public ${baseClass}
         ~${className}();
         int serviceFunction();
 /*{% if component is device %}*/
+/*{% block updateUsageState %}*/
 
     protected:
         void updateUsageState();
+/*{% endblock %}*/
 /*{% endif %}*/
+/*{% block extensions %}*/
+/*{% endblock %}*/
 };
 
-#endif
+#endif // ${includeGuard}

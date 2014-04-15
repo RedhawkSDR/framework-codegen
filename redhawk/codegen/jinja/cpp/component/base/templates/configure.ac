@@ -26,15 +26,12 @@ AM_INIT_AUTOMAKE(nostdinc)
 #{% endblock %}
 
 #{% block acChecks %}
-
-#{% if component.mFunction != None %}
-AC_HEADER_M_FUNCTION()
-AC_LIB_M_FUNCTION()
-#{% endif %}
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
+#{% endblock %}
 
+#{% block acOssie %}
 AC_CORBA_ORB
 OSSIE_CHECK_OSSIE
 OSSIE_SDRROOT_AS_PREFIX
@@ -47,7 +44,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 export PKG_CONFIG_PATH="{{component.pkgconfigsoftpkgdeps}}$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig"
 #{% endblock %}
 #{% block projectDeps %}
-PKG_CHECK_MODULES([PROJECTDEPS], [ossie >= 1.9 omniORB4 >= 4.1.0 {{component.softpkgdeps}}#{% endblock %} ])
+PKG_CHECK_MODULES([PROJECTDEPS], [ossie >= {{versions.redhawk}} omniORB4 >= {{versions.omniORB4}} {{component.softpkgdeps}}#{% endblock %} ])
 #{% block interfaceDeps %}
 #{% if component.interfacedeps %}
 PKG_CHECK_MODULES([INTERFACEDEPS], [{{component.interfacedeps|join(', ')}}])
@@ -55,7 +52,7 @@ PKG_CHECK_MODULES([INTERFACEDEPS], [{{component.interfacedeps|join(', ')}}])
 #{% endblock %}
 #{% block coreDeps %}
 OSSIE_ENABLE_LOG4CXX
-AX_BOOST_BASE([1.41])
+AX_BOOST_BASE([{{versions.boost}}])
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_BOOST_REGEX

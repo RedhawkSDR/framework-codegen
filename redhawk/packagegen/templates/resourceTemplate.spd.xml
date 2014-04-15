@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE softpkg PUBLIC "-//JTRS//DTD SCA V2.2.2 SPD//EN" "softpkg.dtd">
-<softPkg type="sca_compliant" id="template" name="template">
+<softpkg type="sca_compliant" id="template" name="template">
     <title></title>
     <author>
         <name>null</name>
@@ -24,4 +24,4 @@
         <processor name="x86"/>
         <processor name="x86_64"/>
     </implementation>
-</softPkg>
+</softpkg>

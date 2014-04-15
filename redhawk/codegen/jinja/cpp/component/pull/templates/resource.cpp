@@ -40,34 +40,43 @@ PREPARE_LOGGING(${className})
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl) :
     ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl)
 {
+/*{% block ctorBody %}*/
+/*{% endblock %}*/
 }
 
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, char *compDev) :
     ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, compDev)
 {
+${ self.ctorBody() -}
 }
 
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, CF::Properties capacities) :
     ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, capacities)
 {
+${ self.ctorBody() -}
 }
 
 ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, CF::Properties capacities, char *compDev) :
     ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, capacities, compDev)
 {
+${ self.ctorBody() -}
 }
 /*{% else %}*/
 ${className}::${className}(const char *uuid, const char *label) :
     ${baseClass}(uuid, label)
 {
+${ self.ctorBody() }
 }
 /*{% endif %}*/
 
 ${className}::~${className}()
 {
+/*{% block dtorBody %}*/
+/*{% endblock %}*/
 }
 
 /*{% if component is device %}*/
+/*{%   block updateUsageState %}*/
 /**************************************************************************
 
     This is called automatically after allocateCapacity or deallocateCapacity are called.
@@ -82,6 +91,7 @@ void ${className}::updateUsageState()
 {
 }
 
+/*{%   endblock %}*/
 /*{% endif %}*/
 /***********************************************************************************************
 
@@ -120,7 +130,7 @@ void ${className}::updateUsageState()
         To send data using a BULKIO interface, a convenience interface has been added 
         that takes a std::vector as the data input
 
-        NOTE: If you have a BULKIO dataSDDS port, you must manually call 
+        NOTE: If you have a BULKIO dataSDDS or dataVITA49  port, you must manually call 
               "port->updateStats()" to update the port statistics when appropriate.
 
         Example:
@@ -225,3 +235,5 @@ int ${className}::serviceFunction()
     
     return NOOP;
 }
+/*{% block extensions %}*/
+/*{% endblock %}*/

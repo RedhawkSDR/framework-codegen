@@ -44,4 +44,4 @@
 //
 typedef ${executeClass}* (*ConstructorPtr)(int, char*[], Device_impl* parentDevice);
 
-#endif
+#endif // ${includeGuard}

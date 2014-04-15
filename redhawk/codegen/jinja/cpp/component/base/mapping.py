@@ -19,6 +19,7 @@
 #
 
 from redhawk.codegen.jinja.mapping import ComponentMapper
+from redhawk.codegen import libraries
 import commands, os
 
 class BaseComponentMapper(ComponentMapper):
@@ -33,16 +34,7 @@ class BaseComponentMapper(ComponentMapper):
 
     def getInterfaceDependencies(self, softpkg):
         for namespace in self.getInterfaceNamespaces(softpkg):
-            if namespace == 'BULKIO':
-                yield 'bulkio >= 1.0 bulkioInterfaces >= 1.9'
-            elif namespace == 'BURSTIO':
-                yield 'burstio >= 1.8'
-            elif namespace == 'REDHAWK':
-                yield 'redhawkInterfaces >= 1.2.0'
-            elif namespace == 'FRONTEND':
-                yield 'frontend >= 2.1 frontendInterfaces >= 2.1'
-            else:
-                yield namespace.lower()+'Interfaces'
+            yield libraries.getPackageRequires(namespace)
 
     def softPkgDeps(self, softpkg, format='deps'):
         deps = ''

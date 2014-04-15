@@ -22,13 +22,30 @@ from redhawk.codegen.model.softwarecomponent import ComponentTypes
 from redhawk.codegen.lang.idl import IDLInterface
 
 from redhawk.codegen.jinja.cpp.component.pull.mapping import PullComponentMapper
+import sys
 
 class ProgrammableComponentMapper(PullComponentMapper):
     def _mapComponent(self, softpkg):
         cppcomp = PullComponentMapper._mapComponent(self, softpkg)
         cppcomp['reprogclass'] = self.reprogClass(softpkg)
         cppcomp['executesHWComponents'] = False # TODO: Implement this 
+        self._validateAggregateDevice(cppcomp)
         return cppcomp
+
+    def _validateAggregateDevice(self, comp):
+        if not comp.has_key('superclasses'):
+            print >> sys.stderr, "WARNING: Programmable device MUST be an aggregate device!"
+            return
+
+        missingAggDevice = True
+        for superclass in comp['superclasses']:
+            if not superclass.has_key('name'):
+                continue
+            if superclass['name'] == "AggregateDevice_impl":
+                missingAggDevice = False
+                break
+        if missingAggDevice:
+            print >> sys.stderr, "WARNING: Programmable device MUST be an aggregate device!"
 
     @staticmethod
     def reprogClass(softpkg):

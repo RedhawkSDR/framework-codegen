@@ -18,7 +18,9 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
+from redhawk.codegen.lang import cpp
 from redhawk.codegen.lang.idl import IDLInterface
+from redhawk.codegen import libraries
 from redhawk.codegen.jinja.mapping import ComponentMapper
 from redhawk.codegen.jinja.cpp.ports import generic
 
@@ -30,11 +32,8 @@ class ServiceMapper(ComponentMapper):
         cppcomp['userclass'] = self.userClass(softpkg)
         cppcomp['superclass'] = self.superClass(softpkg)
         cppcomp['interfacedeps'] = tuple(self.getInterfaceDependencies(softpkg))
-        idl = IDLInterface(softpkg.descriptor().repid().repid)
-        cppcomp['namespace'] = self.getNamespace(idl)
-        cppcomp['interface'] = idl.interface()
+        cppcomp['poaclass'] = self.poaClass(idl)
         cppcomp['operations'] = self.getOperations(idl)
-        cppcomp['header'] = self.getHeader(idl)
         return cppcomp
 
     @staticmethod
@@ -56,14 +55,14 @@ class ServiceMapper(ComponentMapper):
         return {'name': name,
                 'header': '<ossie/'+name+'.h>'}
 
+    def poaClass(self, idl):
+        poaclass = 'POA_%s::%s' % (cpp.idlNamespace(idl), idl.interface())
+        return {'name': poaclass,
+                'header': cpp.idlHeader(idl)}
+
     def getInterfaceDependencies(self, softpkg):
         for namespace in self.getInterfaceNamespaces(softpkg):
-            if namespace == 'BULKIO':
-                yield 'bulkio >= 1.0 bulkioInterfaces >= 1.9'
-            elif namespace == 'REDHAWK':
-                yield 'redhawkInterfaces >= 1.2.0'
-            else:
-                yield namespace.lower()+'Interfaces'
+            yield libraries.getPackageRequires(namespace)
 
     def getOperations(self, idl):
         operations = []
@@ -83,33 +82,3 @@ class ServiceMapper(ComponentMapper):
                        'argnames': 'data',
                        'returns': 'void'})
         return operations
-
-    def getNamespace(self, idl):
-        if idl.namespace().startswith('omg.org'):
-            return idl.namespace().split('/')[1]
-        elif idl.namespace().startswith('BULKIO'):
-            return idl.namespace()
-        elif idl.namespace().startswith('CF'):
-            return idl.namespace()
-        else:
-            # Assume custom IDL
-            return idl.namespace()
-
-    def getHeader(self, idl):
-        if idl.namespace().startswith('omg.org'):
-            retidl = idl.idl().fullpath.split('/')[-2]+'/'+idl.idl().fullpath.split('/')[-1]
-            retidl = retidl.replace('.idl','.hh')
-            return retidl
-        elif idl.namespace().startswith('BULKIO'):
-            retidl = idl.idl().fullpath.split('/')[-2]+'/'+idl.idl().fullpath.split('/')[-1]
-            retidl = retidl.replace('.idl','.h')
-            return retidl
-        elif idl.namespace().startswith('CF'):
-            retidl = idl.idl().fullpath.split('/')[-2]+'/'+idl.idl().fullpath.split('/')[-1]
-            retidl = retidl.replace('.idl','.h')
-            return retidl
-        else:
-            # Assume custom IDL
-            retidl = idl.idl().fullpath.split('/')[-2]+'/'+idl.idl().fullpath.split('/')[-1]
-            retidl = retidl.replace('.idl','.h')
-            return retidl

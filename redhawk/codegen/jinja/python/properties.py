@@ -56,8 +56,14 @@ class PythonPropertyMapper(PropertyMapper):
 
     def mapStructProperty(self, struct, fields):
         pyprop = self.mapProperty(struct)
-        pyprop['pyclass'] = self._structName(struct.name())
+        pyprop['pyclass'] = self.getStructPropertyType(struct)
         return pyprop
+
+    def getStructPropertyType(self, prop):
+        if prop.identifier() == 'connectionTable::connection_descriptor':
+            return 'bulkio.connection_descriptor'
+        else:
+            return self._structName(prop.name())
 
     def mapStructSequenceProperty(self, structsequence, structdef):
         pyprop = self.mapProperty(structsequence)

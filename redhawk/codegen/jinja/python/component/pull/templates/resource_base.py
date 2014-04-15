@@ -25,12 +25,15 @@
 # AUTO-GENERATED CODE.  DO NOT MODIFY!
 #
 # Source: ${component.profile.spd}
-from ossie.cf import CF, CF__POA
+#{% filter lines|unique(keep_blank_lines=true)|join('\n') %}
+from ossie.cf import CF
+from ossie.cf import CF__POA
 from ossie.utils import uuid
 
 #{% for parent in component.superclasses %}
 from ${parent.package} import ${parent.name}
 #{% endfor %}
+from ossie.threadedcomponent import *
 #{% if component.properties|test('simple') is sometimes(true) or component.structdefs %}
 from ossie.properties import simple_property
 #{% endif %}
@@ -45,7 +48,6 @@ from ossie.properties import structseq_property
 #{% endif %}
 
 import Queue, copy, time, threading
-#{% filter lines|unique|join('\n') %}
 #{% for portgen in component.portgenerators %}
 #{%   if loop.first %}
 from ossie.resource import usesport, providesport
@@ -56,34 +58,7 @@ ${statement}
 #{% endfor %}
 #{% endfilter %}
 
-NOOP = -1
-NORMAL = 0
-FINISH = 1
-class ProcessThread(threading.Thread):
-    def __init__(self, target, pause=0.0125):
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
-        self.target = target
-        self.pause = pause
-        self.stop_signal = threading.Event()
-
-    def stop(self):
-        self.stop_signal.set()
-
-    def updatePause(self, pause):
-        self.pause = pause
-
-    def run(self):
-        state = NORMAL
-        while (state != FINISH) and (not self.stop_signal.isSet()):
-            state = self.target()
-            delay = 1e-6
-            if (state == NOOP):
-                # If there was no data to process sleep to avoid spinning
-                delay = self.pause
-            time.sleep(delay)
-
-class ${className}(${component.poaclass}, ${component.superclasses|join(', ', attribute='name')}):
+class ${className}(${component.poaclass}, ${component.superclasses|join(', ', attribute='name')}, ThreadedComponent):
         # These values can be altered in the __init__ of your derived class
 
         PAUSE = 0.0125 # The amount of time to sleep if process return NOOP
@@ -101,16 +76,12 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
             loggerName = (execparams['NAME_BINDING'].replace('/', '.')).rsplit("_", 1)[0]
             Resource.__init__(self, identifier, execparams, loggerName=loggerName)
 #{% endif %}
-            self.threadControlLock = threading.RLock()
-            self.process_thread = None
+            ThreadedComponent.__init__(self)
+
             # self.auto_start is deprecated and is only kept for API compatibility
             # with 1.7.X and 1.8.0 ${artifactType}s.  This variable may be removed
             # in future releases
             self.auto_start = False
-
-        def initialize(self):
-            ${superclass}.initialize(self)
-            
             # Instantiate the default implementations for all ports on this ${artifactType}
 #{% for port in component.ports %}
             self.${port.pyname} = ${port.constructor}
@@ -120,64 +91,31 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{% for port in component.ports if port.start%}
             self.${port.pyname}.${port.start}
 #{% endfor %}
-            self.threadControlLock.acquire()
-            try:
-                ${superclass}.start(self)
-                if self.process_thread == None:
-                    self.process_thread = ProcessThread(target=self.process, pause=self.PAUSE)
-                    self.process_thread.start()
-            finally:
-                self.threadControlLock.release()
+            ${superclass}.start(self)
+            ThreadedComponent.startThread(self, pause=self.PAUSE)
 
 #{% if component.hasmultioutport %}
         def onconfigure_prop_connectionTable(self, oldval, newval):
             self.connectionTable = newval
-#{% for port in component.ports %}
-            for val in oldval:
-                if val.port_name == self.${port.pyname}.name:
-                    self.${port.pyname}.updateConnectionFilter(newval)
-                    break
-            for val in newval:
-                if val.port_name == self.${port.pyname}.name:
-                    self.${port.pyname}.updateConnectionFilter(newval)
-                    break
+#{% for port in component.ports if port.multiout %}
+            self.${port.pyname}.updateConnectionFilter(newval)
 #{% endfor %}
+
 #{% endif %}
-
-        def process(self):
-            """The process method should process a single "chunk" of data and then return.  This method will be called
-            from the processing thread again, and again, and again until it returns FINISH or stop() is called on the
-            ${artifactType}.  If no work is performed, then return NOOP"""
-            raise NotImplementedError
-
         def stop(self):
 #{% for port in component.ports if port.stop%}
             self.${port.pyname}.${port.stop}
 #{% endfor %}
-            self.threadControlLock.acquire()
-            try:
-                process_thread = self.process_thread
-                self.process_thread = None
-
-                if process_thread != None:
-                    process_thread.stop()
-                    process_thread.join(self.TIMEOUT)
-                    if process_thread.isAlive():
-                        raise CF.Resource.StopError(CF.CF_NOTSET, "Processing thread did not die")
-                ${superclass}.stop(self)
-            finally:
-                self.threadControlLock.release()
+            if not ThreadedComponent.stopThread(self, self.TIMEOUT):
+                raise CF.Resource.StopError(CF.CF_NOTSET, "Processing thread did not die")
+            ${superclass}.stop(self)
 
         def releaseObject(self):
             try:
                 self.stop()
             except Exception:
                 self._log.exception("Error stopping")
-            self.threadControlLock.acquire()
-            try:
-                ${superclass}.releaseObject(self)
-            finally:
-                self.threadControlLock.release()
+            ${superclass}.releaseObject(self)
 
         ######################################################################
         # PORTS
@@ -211,21 +149,8 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
         # DO NOT ADD NEW PROPERTIES HERE.  You can add properties in your derived class, in the PRF xml file
         # or by using the IDE.
 #{% import "base/properties.py" as properties with context %}
-#{% for prop in component.properties if prop is simple %}
-        ${properties.simple(prop)|indent(8)}
-#{% endfor %}
-#{% for prop in component.properties if prop is simplesequence %}
-        ${properties.simplesequence(prop)|indent(8)}
-#{% endfor %}
-#{% for prop in component.properties if prop is struct %}
-        ${properties.structdef(prop)|indent(8)}
-
-        ${properties.struct(prop)|indent(8)}
-#{% endfor %}
-#{% for prop in component.properties if prop is structsequence %}
-        ${properties.structdef(prop.structdef,False)|indent(8)}
-
-        ${properties.structsequence(prop)|indent(8)}
+#{% for prop in component.properties %}
+        ${properties.create(prop)|indent(8)}
 #{% endfor %}
 #{% for portgen in component.portgenerators if portgen is provides and portgen.hasImplementation() %}
 

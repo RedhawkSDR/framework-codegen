@@ -17,288 +17,96 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  #*/
-//% set className = component.userclass.name
-//% set baseClass = component.baseclass.name
-//% set artifactType = component.artifacttype
-/**************************************************************************
+//% extends "pull/resource.cpp"
 
-    This is the ${artifactType} code. This file contains the child class where
-    custom functionality can be added to the ${artifactType}. Custom
-    functionality to the base class can be extended here. Access to
-    the ports can also be done from this class
-
-**************************************************************************/
-
-#include "${component.userclass.header}"
-
-PREPARE_LOGGING(${className})
-
-/*{% if component is device %}*/
-${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl) :
-    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl)
-{
+/*{% block ctorBody %}*/
     construct();
-}
+/*{% endblock %}*/
 
-${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, char *compDev) :
-    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, compDev)
-{
-    construct();
-}
+/*{% block updateUsageState %}*/
+/*{%   if component is device and baseClass == Device_impl %}*/
+${super()}
+/*{%-  endif %}*/
+/*{% endblock %}*/
 
-${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, CF::Properties capacities) :
-    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, capacities)
-{
-    construct();
-}
-
-${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, CF::Properties capacities, char *compDev) :
-    ${baseClass}(devMgr_ior, id, lbl, sftwrPrfl, capacities, compDev)
-{
-    construct();
-}
-/*{% else %}*/
-${className}::${className}(const char *uuid, const char *label) :
-    ${baseClass}(uuid, label)
-{
-    construct();
-}
-/*{% endif %}*/
-
-${className}::~${className}()
-{
-}
-
-/*{% if component is device and baseClass == Device_impl %}*/
-/**************************************************************************
-
-    This is called automatically after allocateCapacity or deallocateCapacity are called.
-    Your implementation should determine the current state of the device:
-
-       setUsageState(CF::Device::IDLE);   // not in use
-       setUsageState(CF::Device::ACTIVE); // in use, with capacity remaining for allocation
-       setUsageState(CF::Device::BUSY);   // in use, with no capacity remaining for allocation
-
-**************************************************************************/
-void ${className}::updateUsageState()
-{
-}
-/*{% endif %}*/
-
-/***********************************************************************************************
-
-    Basic functionality:
-
-        The service function is called by the serviceThread object (of type ProcessThread).
-        This call happens immediately after the previous call if the return value for
-        the previous call was NORMAL.
-        If the return value for the previous call was NOOP, then the serviceThread waits
-        an amount of time defined in the serviceThread's constructor.
-        
-    SRI:
-        To create a StreamSRI object, use the following code:
-                std::string stream_id = "testStream";
-                BULKIO::StreamSRI sri = bulkio::sri::create(stream_id);
-
-    Time:
-        To create a PrecisionUTCTime object, use the following code:
-                BULKIO::PrecisionUTCTime tstamp = bulkio::time::utils::now();
-
-        
-    Ports:
-
-        Data is passed to the serviceFunction through the getPacket call (BULKIO only).
-        The dataTransfer class is a port-specific class, so each port implementing the
-        BULKIO interface will have its own type-specific dataTransfer.
-
-        The argument to the getPacket function is a floating point number that specifies
-        the time to wait in seconds. A zero value is non-blocking. A negative value
-        is blocking.  Constants have been defined for these values, bulkio::Const::BLOCKING and
-        bulkio::Const::NON_BLOCKING.
-
-        Each received dataTransfer is owned by serviceFunction and *MUST* be
-        explicitly deallocated.
-
-        To send data using a BULKIO interface, a convenience interface has been added 
-        that takes a std::vector as the data input
-
-        NOTE: If you have a BULKIO dataSDDS port, you must manually call 
-              "port->updateStats()" to update the port statistics when appropriate.
-
-        Example:
-            // this example assumes that the ${artifactType} has two ports:
-            //  A provides (input) port of type bulkio::InShortPort called short_in
-            //  A uses (output) port of type bulkio::OutFloatPort called float_out
-            // The mapping between the port and the class is found
-            // in the ${artifactType} base class header file
-
-            bulkio::InShortPort::dataTransfer *tmp = short_in->getPacket(bulkio::Const::BLOCKING);
-            if (not tmp) { // No data is available
-                return NOOP;
-            }
-
-            std::vector<float> outputData;
-            outputData.resize(tmp->dataBuffer.size());
-            for (unsigned int i=0; i<tmp->dataBuffer.size(); i++) {
-                outputData[i] = (float)tmp->dataBuffer[i];
-            }
-
-            // NOTE: You must make at least one valid pushSRI call
-            if (tmp->sriChanged) {
-                float_out->pushSRI(tmp->SRI);
-            }
-            float_out->pushPacket(outputData, tmp->T, tmp->EOS, tmp->streamID);
-
-            delete tmp; // IMPORTANT: MUST RELEASE THE RECEIVED DATA BLOCK
-            return NORMAL;
-
-        If working with complex data (i.e., the "mode" on the SRI is set to
-        true), the std::vector passed from/to BulkIO can be typecast to/from
-        std::vector< std::complex<dataType> >.  For example, for short data:
-
-            bulkio::InShortPort::dataTransfer *tmp = myInput->getPacket(bulkio::Const::BLOCKING);
-            std::vector<std::complex<short> >* intermediate = (std::vector<std::complex<short> >*) &(tmp->dataBuffer);
-            // do work here
-            std::vector<short>* output = (std::vector<short>*) intermediate;
-            myOutput->pushPacket(*output, tmp->T, tmp->EOS, tmp->streamID);
-
-        Interactions with non-BULKIO ports are left up to the ${artifactType} developer's discretion
-
-    Properties:
-        
-        Properties are accessed directly as member variables. For example, if the
-        property name is "baudRate", it may be accessed within member functions as
-        "baudRate". Unnamed properties are given a generated name of the form
-        "prop_n", where "n" is the ordinal number of the property in the PRF file.
-        Property types are mapped to the nearest C++ type, (e.g. "string" becomes
-        "std::string"). All generated properties are declared in the base class
-        (${baseClass}).
-    
-        Simple sequence properties are mapped to "std::vector" of the simple type.
-        Struct properties, if used, are mapped to C++ structs defined in the
-        generated file "struct_props.h". Field names are taken from the name in
-        the properties file; if no name is given, a generated name of the form
-        "field_n" is used, where "n" is the ordinal number of the field.
-        
-        Example:
-            // This example makes use of the following Properties:
-            //  - A float value called scaleValue
-            //  - A boolean called scaleInput
-              
-            if (scaleInput) {
-                dataOut[i] = dataIn[i] * scaleValue;
-            } else {
-                dataOut[i] = dataIn[i];
-            }
-            
-        Callback methods can be associated with a property so that the methods are
-        called each time the property value changes.  This is done by calling 
-        addPropertyChangeListener(<property name>, this, &${className}::<callback method>)
-        in the constructor.
-
-        Callback methods should take two arguments, both const pointers to the value
-        type (e.g., "const float *"), and return void.
-
-        Example:
-            // This example makes use of the following Properties:
-            //  - A float value called scaleValue
-            
-        //Add to ${component.userclass.file}
-        ${className}::${className}(const char *uuid, const char *label) :
-            ${baseClass}(uuid, label)
-        {
-            addPropertyChangeListener("scaleValue", this, &${className}::scaleChanged);
-        }
-
-        void ${className}::scaleChanged(const float *oldValue, const float *newValue)
-        {
-            std::cout << "scaleValue changed from" << *oldValue << " to " << *newValue
-                      << std::endl;
-        }
-            
-        //Add to ${component.userclass.header}
-        void scaleChanged(const float* oldValue, const float* newValue);
-        
-        
-************************************************************************************************/
-int ${className}::serviceFunction()
-{
-    LOG_DEBUG(${className}, "serviceFunction() example log message");
-    
-    return NOOP;
-}
+/*{% block extensions %}*/
 
 void ${className}::construct()
 {
-    ${baseClass}::construct();
     /***********************************************************************************
      this function is invoked in the constructor
     ***********************************************************************************/
 }
+/*{% if 'FrontendTuner' in component.implements %}*/
 
-//% if component.isafrontendtuner
-////////////////////////////////////////
-//// Required device specific functions // -- implemented by device developer
-//////////////////////////////////////////
-bool ${className}::deviceEnable(size_t tuner_id){
-    #warning deviceEnable(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
-    return BOOL_VALUE_HERE;
-}
-bool ${className}::deviceDisable(size_t tuner_id){
-    #warning deviceDisable(): DEVELOPER MUST IMPLEMENT THIS METHOD  *********
-    return BOOL_VALUE_HERE;
-}
-bool ${className}::deviceSetTuning(frontend::frontend_tuner_allocation_struct &request, size_t tuner_id){
+/*************************************************************
+Functions supporting tuning allocation
+*************************************************************/
+void ${className}::deviceEnable(frontend_tuner_status_struct_struct &fts, size_t tuner_id){
     /************************************************************
-    modify this->frontend_tuner_status[tuner_id]
-
-    This data structure is the vector of structures
-    that is referenced by the base class to determine whether
-    or not tuners are available
+    modify fts, which corresponds to this->frontend_tuner_status[tuner_id]
+    Make sure to set the 'enabled' member of fts to indicate that tuner as enabled
+    ************************************************************/
+    #warning deviceEnable(): Enable the given tuner  *********
+    return;
+}
+void ${className}::deviceDisable(frontend_tuner_status_struct_struct &fts, size_t tuner_id){
+    /************************************************************
+    modify fts, which corresponds to this->frontend_tuner_status[tuner_id]
+    Make sure to reset the 'enabled' member of fts to indicate that tuner as disabled
+    ************************************************************/
+    #warning deviceDisable(): Disable the given tuner  *********
+    return;
+}
+bool ${className}::deviceSetTuning(const frontend::frontend_tuner_allocation_struct &request, frontend_tuner_status_struct_struct &fts, size_t tuner_id){
+    /************************************************************
+    modify fts, which corresponds to this->frontend_tuner_status[tuner_id]
+    return true if the tuning succeeded, and false if it failed
     ************************************************************/
     #warning deviceSetTuning(): Evaluate whether or not a tuner is added  *********
     return BOOL_VALUE_HERE;
 }
-bool ${className}::deviceDeleteTuning(size_t tuner_id) {
+bool ${className}::deviceDeleteTuning(frontend_tuner_status_struct_struct &fts, size_t tuner_id) {
+    /************************************************************
+    modify fts, which corresponds to this->frontend_tuner_status[tuner_id]
+    return true if the tune deletion succeeded, and false if it failed
+    ************************************************************/
     #warning deviceDeleteTuning(): Deallocate an allocated tuner  *********
     return BOOL_VALUE_HERE;
 }
 
-/*{% for port in component.ports if port is provides %}*/
-/*{%     if port.cpptype == "frontend::InDigitalTunerPort" or
-port.cpptype == "frontend::InAnalogTunerPort" or
-port.cpptype == "frontend::InFrontendTunerPort" %}*/
 /*************************************************************
 Functions servicing the tuner control port
 *************************************************************/
-std::string ${className}::getTunerType(std::string& allocation_id) {
+std::string ${className}::getTunerType(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     return frontend_tuner_status[idx].tuner_type;
 }
-bool ${className}::getTunerDeviceControl(std::string& allocation_id) {
+
+bool ${className}::getTunerDeviceControl(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (getControlAllocationId(idx) == allocation_id)
         return true;
     return false;
 }
-std::string ${className}::getTunerGroupId(std::string& allocation_id) {
+
+std::string ${className}::getTunerGroupId(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     return frontend_tuner_status[idx].group_id;
 }
-std::string ${className}::getTunerRfFlowId(std::string& allocation_id) {
+
+std::string ${className}::getTunerRfFlowId(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     return frontend_tuner_status[idx].rf_flow_id;
 }
+/*{% endif %}*/
+/*{% if 'AnalogTuner' in component.implements %}*/
 
-/*{%-     endif %}*/
-/*{%     if port.cpptype == "frontend::InDigitalTunerPort" or
-port.cpptype == "frontend::InAnalogTunerPort" %}*/
-
-void ${className}::setTunerCenterFrequency(std::string& allocation_id, double freq) {
+void ${className}::setTunerCenterFrequency(const std::string& allocation_id, double freq) {
     long idx = getTunerMapping(allocation_id);
     if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
@@ -307,12 +115,14 @@ void ${className}::setTunerCenterFrequency(std::string& allocation_id, double fr
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].center_frequency = freq;
 }
-double ${className}::getTunerCenterFrequency(std::string& allocation_id) {
+
+double ${className}::getTunerCenterFrequency(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     return frontend_tuner_status[idx].center_frequency;
 }
-void ${className}::setTunerBandwidth(std::string& allocation_id, double bw) {
+
+void ${className}::setTunerBandwidth(const std::string& allocation_id, double bw) {
     long idx = getTunerMapping(allocation_id);
     if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
@@ -321,18 +131,44 @@ void ${className}::setTunerBandwidth(std::string& allocation_id, double bw) {
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].bandwidth = bw;
 }
-double ${className}::getTunerBandwidth(std::string& allocation_id) {
+
+double ${className}::getTunerBandwidth(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     return frontend_tuner_status[idx].bandwidth;
 }
-void ${className}::setTunerAgcEnable(std::string& allocation_id, bool enable){throw FRONTEND::NotSupportedException("setTunerAgcEnable not supported");}
-bool ${className}::getTunerAgcEnable(std::string& allocation_id){throw FRONTEND::NotSupportedException("getTunerAgcEnable not supported");return false;}
-void ${className}::setTunerGain(std::string& allocation_id, float gain){throw FRONTEND::NotSupportedException("setTunerGain not supported");}
-float ${className}::getTunerGain(std::string& allocation_id){throw FRONTEND::NotSupportedException("getTunerGain not supported");return 0.0;}
-void ${className}::setTunerReferenceSource(std::string& allocation_id, long source){throw FRONTEND::NotSupportedException("setTunerReferenceSource not supported");}
-long ${className}::getTunerReferenceSource(std::string& allocation_id){throw FRONTEND::NotSupportedException("getTunerReferenceSource not supported");return 0;}
-void ${className}::setTunerEnable(std::string& allocation_id, bool enable) {
+
+void ${className}::setTunerAgcEnable(const std::string& allocation_id, bool enable)
+{
+    throw FRONTEND::NotSupportedException("setTunerAgcEnable not supported");
+}
+
+bool ${className}::getTunerAgcEnable(const std::string& allocation_id)
+{
+    throw FRONTEND::NotSupportedException("getTunerAgcEnable not supported");
+}
+
+void ${className}::setTunerGain(const std::string& allocation_id, float gain)
+{
+    throw FRONTEND::NotSupportedException("setTunerGain not supported");
+}
+
+float ${className}::getTunerGain(const std::string& allocation_id)
+{
+    throw FRONTEND::NotSupportedException("getTunerGain not supported");
+}
+
+void ${className}::setTunerReferenceSource(const std::string& allocation_id, long source)
+{
+    throw FRONTEND::NotSupportedException("setTunerReferenceSource not supported");
+}
+
+long ${className}::getTunerReferenceSource(const std::string& allocation_id)
+{
+    throw FRONTEND::NotSupportedException("getTunerReferenceSource not supported");
+}
+
+void ${className}::setTunerEnable(const std::string& allocation_id, bool enable) {
     long idx = getTunerMapping(allocation_id);
     if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
@@ -340,15 +176,16 @@ void ${className}::setTunerEnable(std::string& allocation_id, bool enable) {
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].enabled = enable;
 }
-bool ${className}::getTunerEnable(std::string& allocation_id) {
+
+bool ${className}::getTunerEnable(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     return frontend_tuner_status[idx].enabled;
 }
+/*{% endif %}*/
+/*{% if 'DigitalTuner' in component.implements %}*/
 
-/*{%     endif %}*/
-/*{%     if port.cpptype == "frontend::InDigitalTunerPort" %}*/
-void ${className}::setTunerOutputSampleRate(std::string& allocation_id, double sr) {
+void ${className}::setTunerOutputSampleRate(const std::string& allocation_id, double sr) {
     long idx = getTunerMapping(allocation_id);
     if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
@@ -357,38 +194,92 @@ void ${className}::setTunerOutputSampleRate(std::string& allocation_id, double s
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].sample_rate = sr;
 }
-double ${className}::getTunerOutputSampleRate(std::string& allocation_id){
+
+double ${className}::getTunerOutputSampleRate(const std::string& allocation_id){
     long idx = getTunerMapping(allocation_id);
     if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     return frontend_tuner_status[idx].sample_rate;
 }
-/*{%     endif %}*/
-/*{%     if port.cpptype == "frontend::InGPSPort" %}*/
-frontend::GPSInfo ${className}::get_gps_info(std::string& port_name){frontend::GPSInfo tmp;return tmp;};
-void ${className}::set_gps_info(std::string& port_name, const frontend::GPSInfo &gps_info){};
-frontend::GpsTimePos ${className}::get_gps_time_pos(std::string& port_name){frontend::GpsTimePos tmp;return tmp;};
-void ${className}::set_gps_time_pos(std::string& port_name, const frontend::GpsTimePos &gps_time_pos){};
-/*{%     endif %}*/
-/*{%     if port.cpptype == "frontend::InNavDataPort" %}*/
-frontend::NavigationPacket ${className}::get_nav_packet(std::string& port_name){frontend::NavigationPacket tmp;return tmp;};
-void ${className}::set_nav_packet(std::string& port_name, const frontend::NavigationPacket &nav_info){};
-/*{%     endif %}*/
-/*{%     if port.cpptype == "frontend::InRFInfoPort" %}*/
+/*{% endif %}*/
+/*{% if 'GPS' in component.implements %}*/
+
+frontend::GPSInfo ${className}::get_gps_info(const std::string& port_name)
+{
+    frontend::GPSInfo gps_info;
+    return gps_info;
+}
+
+void ${className}::set_gps_info(const std::string& port_name, const frontend::GPSInfo &gps_info)
+{
+}
+
+frontend::GpsTimePos ${className}::get_gps_time_pos(const std::string& port_name)
+{
+    frontend::GpsTimePos gps_time_pos;
+    return gps_time_pos;
+}
+
+void ${className}::set_gps_time_pos(const std::string& port_name, const frontend::GpsTimePos &gps_time_pos)
+{
+}
+/*{% endif %}*/
+/*{% if 'NavData' in component.implements %}*/
+
+frontend::NavigationPacket ${className}::get_nav_packet(const std::string& port_name)
+{
+    frontend::NavigationPacket nav_info;
+    return nav_info;
+}
+
+void ${className}::set_nav_packet(const std::string& port_name, const frontend::NavigationPacket &nav_info)
+{
+}
+/*{% endif %}*/
+/*{% if 'RFInfo' in component.implements %}*/
+
 /*************************************************************
 Functions servicing the RFInfo port(s)
 - port_name is the port over which the call was received
 *************************************************************/
-std::string ${className}::get_rf_flow_id(std::string& port_name){return std::string("none");}
-void ${className}::set_rf_flow_id(std::string& port_name, const std::string& id){}
-frontend::RFInfoPkt ${className}::get_rfinfo_pkt(std::string& port_name){frontend::RFInfoPkt tmp;return tmp;}
-void ${className}::set_rfinfo_pkt(std::string& port_name, const frontend::RFInfoPkt &pkt){}
-/*{%     endif %}*/
-/*{%     if port.cpptype == "frontend::InRFSourcePort" %}*/
-std::vector<frontend::RFInfoPkt> ${className}::get_available_rf_inputs(std::string& port_name){std::vector<frontend::RFInfoPkt> tmp; return tmp;}
-void ${className}::set_available_rf_inputs(std::string& port_name, std::vector<frontend::RFInfoPkt> &inputs){}
-frontend::RFInfoPkt ${className}::get_current_rf_input(std::string& port_name){frontend::RFInfoPkt tmp;return tmp;}
-void ${className}::set_current_rf_input(std::string& port_name, const frontend::RFInfoPkt &pkt){}
-/*{%     endif %}*/
-/*{% endfor %}*/
+std::string ${className}::get_rf_flow_id(const std::string& port_name)
+{
+    return std::string("none");
+}
 
-//% endif 
+void ${className}::set_rf_flow_id(const std::string& port_name, const std::string& id)
+{
+}
+
+frontend::RFInfoPkt ${className}::get_rfinfo_pkt(const std::string& port_name)
+{
+    frontend::RFInfoPkt pkt;
+    return pkt;
+}
+
+void ${className}::set_rfinfo_pkt(const std::string& port_name, const frontend::RFInfoPkt &pkt)
+{
+}
+/*{% endif %}*/
+/*{% if 'RFSource' in component.implements %}*/
+
+std::vector<frontend::RFInfoPkt> ${className}::get_available_rf_inputs(const std::string& port_name)
+{
+    std::vector<frontend::RFInfoPkt> inputs;
+    return inputs;
+}
+
+void ${className}::set_available_rf_inputs(const std::string& port_name, const std::vector<frontend::RFInfoPkt> &inputs)
+{
+}
+
+frontend::RFInfoPkt ${className}::get_current_rf_input(const std::string& port_name)
+{
+    frontend::RFInfoPkt pkt;
+    return pkt;
+}
+
+void ${className}::set_current_rf_input(const std::string& port_name, const frontend::RFInfoPkt &pkt)
+{
+}
+/*{% endif %}*/
+/*{% endblock %}*/

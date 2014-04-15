@@ -71,19 +71,21 @@ class PullComponentGenerator(CppCodeGenerator):
             CppTemplate('resource_base.h', component['baseclass']['header'])
         ]
 
-        has_port_impl_h = False
-        has_port_impl_cpp = False
-        for generator in component['portgenerators']:
-            if generator.hasDeclaration():
-                generator.setHeader('"port_impl.h"')
-                if not has_port_impl_h:
-                    templates.append(CppTemplate('port_impl.h'))
-                    has_port_impl_h = True
-            if generator.hasImplementation() and not has_port_impl_cpp:
-                templates.append(CppTemplate('port_impl.cpp'))
-                has_port_impl_cpp = True
+        # Add port implementations if required
+        templates.extend(CppTemplate(fn) for fn in self.getPortTemplates(component))
 
         if component['structdefs']:
             templates.append(CppTemplate('struct_props.h'))
 
         return templates
+
+    def getPortTemplates(self, component):
+        templates = set()
+        for generator in component['portgenerators']:
+            if generator.hasDeclaration():
+                generator.setHeader('"port_impl.h"')
+                templates.add('port_impl.h')
+            if generator.hasImplementation():
+                templates.add('port_impl.cpp')
+        return templates
+        

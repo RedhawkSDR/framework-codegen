@@ -42,8 +42,8 @@ License:        None
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:  redhawk-devel >= 1.9
-Requires:       redhawk >= 1.9
+BuildRequires:  redhawk-devel >= {{versions.redhawk}}
+Requires:       redhawk >= {{versions.redhawk}}
 #{$ block requireExtensions $}
 #{$ endblock $}
 

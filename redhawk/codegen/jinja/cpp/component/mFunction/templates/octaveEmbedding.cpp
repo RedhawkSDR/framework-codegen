@@ -173,7 +173,7 @@ ${addInputArguments(component, functionInput, loop.index0)}
 ${addInputArguments(component, vararginName, component.mFunction.numInputs+loop.index0-1)}
 /*{% endfor %}*/
 
-setDiary("${component.name}");
+setDiary();
 
 // make the call to Octave
 try {

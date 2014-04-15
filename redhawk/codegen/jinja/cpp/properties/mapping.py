@@ -55,10 +55,13 @@ class CppPropertyMapper(PropertyMapper):
 
     def mapStructProperty(self, prop, fields):
         cppprop = self.mapProperty(prop)
-        typename = prop.name()+'_struct'
+        typename = self.getStructPropertyType(prop)
         cppprop['cpptype'] = typename
         cppprop['cppvalue'] = typename + '()'
         return cppprop
+
+    def getStructPropertyType(self, prop):
+        return prop.name() + '_struct'
 
     def mapStructSequenceProperty(self, prop, structdef):
         cppprop = self.mapProperty(prop)

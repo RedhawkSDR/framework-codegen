@@ -104,7 +104,8 @@ def sequenceValue(values, typename, complex=False):
 
 def idlModule(namespace):
     if namespace.startswith('omg.org/'):
-        return namespace[8:]
+        package = 'omniORB.COS'
+        namespace = namespace[8:]
     else:
         if namespace in ('CF', 'ExtendedCF'):
             package = 'ossie.cf'
@@ -112,7 +113,10 @@ def idlModule(namespace):
             package = 'bulkio.bulkioInterfaces'
         else:
             package = 'redhawk.' + namespace.lower() + 'Interfaces'
-        return '%s.%s' % (package, namespace)
+    return '%s.%s' % (package, namespace)
+
+def poaModule(namespace):
+    return idlModule(namespace) + '__POA'
 
 def importModule(module):
     if not '.' in module:

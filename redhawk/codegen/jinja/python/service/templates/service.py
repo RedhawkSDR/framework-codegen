@@ -18,9 +18,6 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #% set className = component.userclass.name
-#% set interface = component.interface
-#% set namespace = component.namespace
-#% set imports = component.imports
 
 #!/usr/bin/env python
 #
@@ -35,9 +32,11 @@ from ossie.cf import CF, CF__POA #@UnusedImport
 from ossie.service import start_service
 from omniORB import CORBA, URI, PortableServer
 
-from ${imports} import ${namespace}, ${namespace}__POA
+#{% for module in component.imports %}
+${python.importModule(module)}
+#{% endfor %}
 
-class ${className}(${namespace}__POA.${interface}):
+class ${className}(${component.baseclass}):
 
     def __init__(self, name="${className}", execparams={}):
         self.name = name

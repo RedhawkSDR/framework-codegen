@@ -48,7 +48,7 @@ ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrf
 /*{% if component is aggregatedevice %}*/
     AggregateDevice_impl(),
 /*{% endif %}*/
-    serviceThread(0)
+    ThreadedComponent()
 {
     construct();
 }
@@ -58,7 +58,7 @@ ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrf
 /*{% if component is aggregatedevice %}*/
     AggregateDevice_impl(),
 /*{% endif %}*/
-    serviceThread(0)
+    ThreadedComponent()
 {
     construct();
 }
@@ -68,7 +68,7 @@ ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrf
 /*{% if component is aggregatedevice %}*/
     AggregateDevice_impl(),
 /*{% endif %}*/
-    serviceThread(0)
+    ThreadedComponent()
 {
     construct();
 }
@@ -78,7 +78,7 @@ ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrf
 /*{% if component is aggregatedevice %}*/
     AggregateDevice_impl(),
 /*{% endif %}*/
-    serviceThread(0)
+    ThreadedComponent()
 {
     construct();
 }
@@ -86,122 +86,73 @@ ${className}::${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrf
 /*{% block componentConstructor %}*/
 ${className}::${className}(const char *uuid, const char *label) :
     ${baseClass}(uuid, label),
-    serviceThread(0)
+    ThreadedComponent()
 {
-    construct();
-}
-/*{% endblock %}*/
-/*{% endif %}*/
-
-/*{% block construct %}*/
-void ${className}::construct()
-{
-    Resource_impl::_started = false;
+/*{% block constructorBody %}*/
     loadProperties();
-    serviceThread = 0;
-    
-    PortableServer::ObjectId_var oid;
 /*{% for port in component.ports %}*/
+/*{%   if loop.first %}*/
+
+/*{%   endif %}*/
     ${port.cppname} = new ${port.constructor};
-    oid = ossie::corba::RootPOA()->activate_object(${port.name});
+    addPort("${port.name}", ${port.cppname});
 /*{%   if port.name == 'propEvent' %}*/
 /*{%     for property in component.events %}*/
     ${port.cppname}->registerProperty(this->_identifier, this->naming_service_name, this->getPropertyFromId("${property.identifier}"));
 /*{%     endfor %}*/
     this->registerPropertyChangePort(${port.cppname});
 /*{%   endif %}*/
-/*{%   if loop.last %}*/
-
-/*{%   endif %}*/
-/*{% endfor %}*/
-/*{% for port in component.ports if port is provides %}*/
-    registerInPort(${port.cppname});
-/*{% endfor %}*/
-/*{% for port in component.ports if port is uses %}*/
-    registerOutPort(${port.cppname}, ${port.cppname}->_this());
 /*{% endfor %}*/
 /*{% if component.hasmultioutport %}*/
-    this->addPropertyChangeListener("connectionTable",this,&${className}::connectionTableChanged);
+
+    this->addPropertyChangeListener("connectionTable", this, &${className}::connectionTableChanged);
 /*{% endif %}*/
+/*{% endblock %}*/
 }
 /*{% endblock %}*/
+/*{% endif %}*/
 
+${className}::~${className}()
+{
+/*{% block destructorBody %}*/
+/*{% for port in component.ports %}*/
+    delete ${port.cppname};
+    ${port.cppname} = 0;
+/*{% endfor %}*/
+/*{% endblock %}*/
+}
+
+/*{% if component is device %}*/
+void ${className}::construct()
+{
+/*# Devices have multiple constructors; rather than duplicate the code, the
+ *# constructor body is placed in the construct() method. #*/
+${self.constructorBody()}
+}
+
+/*{% endif %}*/
 /*******************************************************************************************
     Framework-level functions
     These functions are generally called by the framework to perform housekeeping.
 *******************************************************************************************/
-/*{% block initialize %}*/
-void ${className}::initialize() throw (CF::LifeCycle::InitializeError, CORBA::SystemException)
-{
-}
-/*{% endblock %}*/
-
 /*{% block start %}*/
 void ${className}::start() throw (CORBA::SystemException, CF::Resource::StartError)
 {
-    boost::mutex::scoped_lock lock(serviceThreadLock);
-    if (serviceThread == 0) {
-/*{% for port in component.ports if port.start %}*/
-        ${port.cppname}->${port.start};
-/*{% endfor %}*/
-        serviceThread = new ProcessThread<${className}>(this, 0.1);
-        serviceThread->start();
-    }
-    
-    if (!Resource_impl::started()) {
-    	Resource_impl::start();
-    }
+    Resource_impl::start();
+    ThreadedComponent::startThread();
 }
 /*{% endblock %}*/
 
 /*{% block stop %}*/
 void ${className}::stop() throw (CORBA::SystemException, CF::Resource::StopError)
 {
-    boost::mutex::scoped_lock lock(serviceThreadLock);
-    // release the child thread (if it exists)
-    if (serviceThread != 0) {
-/*{% for port in component.ports if port.stop %}*/
-        ${port.cppname}->${port.stop};
-/*{% endfor %}*/
-        if (!serviceThread->release(2)) {
-            throw CF::Resource::StopError(CF::CF_NOTSET, "Processing thread did not die");
-        }
-        serviceThread = 0;
-    }
-    
-    if (Resource_impl::started()) {
-    	Resource_impl::stop();
+    Resource_impl::stop();
+    if (!ThreadedComponent::stopThread()) {
+        throw CF::Resource::StopError(CF::CF_NOTSET, "Processing thread did not die");
     }
 }
 /*{% endblock %}*/
 
-/*{% block getPort %}*/
-/*{% if component.ports %}*/
-CORBA::Object_ptr ${className}::getPort(const char* _id) throw (CORBA::SystemException, CF::PortSupplier::UnknownPort)
-{
-
-    std::map<std::string, Port_Provides_base_impl *>::iterator p_in = inPorts.find(std::string(_id));
-    if (p_in != inPorts.end()) {
-/*{% for port in component.ports if port is provides %}*/
-        if (!strcmp(_id,"${port.name}")) {
-            ${port.cpptype} *ptr = dynamic_cast<${port.cpptype} *>(p_in->second);
-            if (ptr) {
-                return ptr->_this();
-            }
-        }
-/*{% endfor %}*/
-    }
-
-    std::map<std::string, CF::Port_var>::iterator p_out = outPorts_var.find(std::string(_id));
-    if (p_out != outPorts_var.end()) {
-        return CF::Port::_duplicate(p_out->second);
-    }
-
-    throw (CF::PortSupplier::UnknownPort());
-}
-
-/*{% endif %}*/
-/*{% endblock %}*/
 /*{% block releaseObject %}*/
 void ${className}::releaseObject() throw (CORBA::SystemException, CF::LifeCycle::ReleaseError)
 {
@@ -212,14 +163,6 @@ void ${className}::releaseObject() throw (CORBA::SystemException, CF::LifeCycle:
         // TODO - this should probably be logged instead of ignored
     }
 
-    // deactivate ports
-    releaseInPorts();
-    releaseOutPorts();
-
-/*{% for port in component.ports %}*/
-    delete(${port.cppname});
-/*{% endfor %}*/
-
     ${baseClass}::releaseObject();
 }
 /*{% endblock %}*/
@@ -227,35 +170,9 @@ void ${className}::releaseObject() throw (CORBA::SystemException, CF::LifeCycle:
 /*{% if component.hasmultioutport %}*/
 void ${className}::connectionTableChanged(const std::vector<connection_descriptor_struct>* oldValue, const std::vector<connection_descriptor_struct>* newValue)
 {
-    /*{% for port in component.ports %}*/
-    /*{%     if port.cpptype == "bulkio::OutShortPort" or
-    port.cpptype == "bulkio::OutFloatPort" or
-    port.cpptype == "bulkio::OutDoublePort" or
-    port.cpptype == "bulkio::OutCharPort" or
-    port.cpptype == "bulkio::OutOctetPort" or
-    port.cpptype == "bulkio::OutUShortPort" or
-    port.cpptype == "bulkio::OutLongPort" or
-    port.cpptype == "bulkio::OutULongPort" or
-    port.cpptype == "bulkio::OutLongLongPort" or
-    port.cpptype == "bulkio::OutULongLongPort" or
-    port.cpptype == "bulkio::OutURLPort" or
-    port.cpptype == "bulkio::OutXMLPort" or
-    port.cpptype == "bulkio::OutSDDSPort" %}*/
-    // Check to see if port "${port.cppname}" is on connectionTable (old or new)
-    for (std::vector<connection_descriptor_struct>::const_iterator prop_itr = oldValue->begin(); prop_itr != oldValue->end(); prop_itr++) {
-        if (prop_itr->port_name == "${port.cppname}") {
-            ${port.cppname}->updateConnectionFilter(*newValue);
-            break;
-        }
-    }
-    for (std::vector<connection_descriptor_struct>::const_iterator prop_itr = newValue->begin(); prop_itr != newValue->end(); prop_itr++) {
-        if (prop_itr->port_name == "${port.cppname}") {
-            ${port.cppname}->updateConnectionFilter(*newValue);
-            break;
-        }
-    }
-    /*{%     endif %}*/
-/*{% endfor %}*/
+/*{%   for port in component.ports if port.multiout %}*/
+    ${port.cppname}->updateConnectionFilter(*newValue);
+/*{%   endfor %}*/
 }
 
 /*{% endif %}*/
@@ -264,11 +181,15 @@ void ${className}::connectionTableChanged(const std::vector<connection_descripto
 void ${className}::loadProperties()
 {
 /*{% for prop in component.properties %}*/
-//% if prop.cppvalues
+//%    if prop.cppvalues
     ${initsequence(prop)|indent(4)}
-//% endif
+//%    endif
+/*{%   if not prop.inherited %}*/
     ${addproperty(prop)|indent(4)}
 
+/*{%   elif prop.cppvalue %}*/
+    ${prop.cppname} = ${prop.cppvalue};
+/*{%   endif %}*/
 /*{% endfor %}*/
 }
 /*{% endblock %}*/

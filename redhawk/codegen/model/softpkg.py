@@ -158,11 +158,17 @@ def parseMFile(filename):
     """
     # Get the contents of the file as a single string
     file  = open(filename)
-    fileString = file.read()
+    fileLines = file.readlines()
     file.close()
 
+    fileStringNoComments = ""
+    for line in fileLines:
+        if line.find("#") != 0 and line.find("%") != 0:
+            # get a copy of the m file with no comments
+            fileStringNoComments += line
+
     # the declaration consists of all content up to the first ")"
-    declaration  = fileString[0:fileString.find(")")+1]
+    declaration  = fileStringNoComments[0:fileStringNoComments.find(")")+1]
 
     # get output arguments
     bracket1 = declaration.find("[")

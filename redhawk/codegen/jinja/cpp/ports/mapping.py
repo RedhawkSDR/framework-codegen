@@ -26,9 +26,6 @@ class CppPortMapper(PortMapper):
         cppport = {}
         cppport['cppname'] = cpp.identifier(port.name())
         cppport['cpptype'] = generator.className()
-        if generator.hasStart():
-            cppport['start'] = generator.start()
-        if generator.hasStop():
-            cppport['stop'] = generator.stop()
         cppport['constructor'] = generator.constructor(port.name())
+        cppport['multiout'] = generator.supportsMultiOut()
         return cppport

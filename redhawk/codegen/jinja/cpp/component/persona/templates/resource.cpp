@@ -105,7 +105,7 @@ ${className}::~${className}()
         To send data using a BULKIO interface, a convenience interface has been added 
         that takes a std::vector as the data input
 
-        NOTE: If you have a BULKIO dataSDDS port, you must manually call 
+        NOTE: If you have a BULKIO dataSDDS or dataVITA49 port, you must manually call 
               "port->updateStats()" to update the port statistics when appropriate.
 
         Example:

@@ -103,23 +103,6 @@ class FrontendComponentMapper(PullComponentMapper):
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
 
-    def getInterfaceDependencies(self, softpkg):
-        for namespace in self.getInterfaceNamespaces(softpkg):
-            name = namespace.lower() + 'Interfaces'
-            if namespace == 'BULKIO':
-                package = 'bulkio'
-                version = ' >= 1.8'
-            elif namespace == 'REDHAWK':
-                package = 'redhawk'
-                version = ' >= 1.2'
-            elif namespace == 'FRONTEND':
-                package = 'redhawk'
-                version = ' >= 2.1'
-            else:
-                package = 'redhawk'
-                version = ''
-            yield {'name': name, 'module': package+'.'+name, 'version': version}
-
     def hasFrontendPorts(self, softpkg):
         for port in softpkg.ports():
             if 'FRONTEND' in port.repid():

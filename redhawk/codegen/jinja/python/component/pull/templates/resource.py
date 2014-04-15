@@ -31,7 +31,7 @@
 #{% if component is device %}
 from ossie.device import start_device
 #{% else %}
-from ossie.resource import Resource, start_component
+from ossie.resource import start_component
 #{% endif %}
 import logging
 
@@ -101,6 +101,15 @@ class ${className}(${baseClass}):
         
             Properties are accessed directly as member variables. If the property name is baudRate,
             then accessing it (for reading or writing) is achieved in the following way: self.baudRate.
+
+            To implement a change callback for a property, add the following member to the class:
+
+            def onconfigure_prop_baudRate(self, old_value, new_value):
+                self.baudRate = new_value
+
+            where old_value is the previous value, and new_value is the updated value.
+
+            Note: the value of the property (i.e.: self.baudRate) must be manually updated
             
         Example:
         

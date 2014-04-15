@@ -37,18 +37,6 @@ class BulkioPortGenerator(CppPortGenerator):
     def header(self):
         return '<bulkio/bulkio.h>'
 
-    def start(self):
-        if self.direction == 'provides' and not 'SDDS' in self.interface:
-            return 'unblock()'
-        else:
-            return None
-
-    def stop(self):
-        if self.direction == 'provides' and not 'SDDS' in self.interface:
-            return 'block()'
-        else:
-            return None
-
     def className(self):
         # Trim 'data' from front of interface to get data type
         datatype = self.interface.lstrip('data')
@@ -61,6 +49,9 @@ class BulkioPortGenerator(CppPortGenerator):
         else:
             direction = 'Out'
         return 'bulkio::' + direction + datatype + 'Port'
+
+    def supportsMultiOut(self):
+        return (self.direction == 'uses')
 
     def _ctorArgs(self, name):
         return (cpp.stringLiteral(name),)

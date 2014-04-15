@@ -39,4 +39,4 @@ class ${className} : public ${baseClass}
 /*{% endfor %}*/
 };
 
-#endif
+#endif // ${includeGuard}

@@ -26,8 +26,8 @@
 //% set artifactType = component.artifacttype
 package ${component.package};
 
-/*{% if component is device %}*/
-import java.util.HashMap;
+/*{% if component.hasmultioutport %}*/
+import java.util.List;
 /*{% endif %}*/
 import java.util.Properties;
 
@@ -76,13 +76,8 @@ import ${portgen.package}.${portgen.className()};
 
 /*{%   endfor %}*/
 /*{% endfilter %}*/
-/*{% for struct in component.structdefs %}*/
-/*{%     if (struct.javaname == "connection_descriptor" ) %}*/
-import bulkio.connection_descriptor_struct;
-/*{%     endif %}*/
-/*{% endfor %}*/
 /*{% if component.hasmultioutport %}*/
-import java.util.List;
+import bulkio.connection_descriptor_struct;
 /*{% endif %}*/
 
 /**
@@ -94,125 +89,73 @@ import java.util.List;
  *
  * @generated
  */
-public abstract class ${classname} extends ${superClass} implements Runnable {
+public abstract class ${classname} extends ${superClass} {
     /**
      * @generated
      */
     public final static Logger logger = Logger.getLogger(${classname}.class.getName());
 
-    /**
-     * Return values for service function.
-     */
-    public final static int FINISH = -1;
-    public final static int NOOP   = 0;
-    public final static int NORMAL = 1;
-
 /*{% import "base/properties.java" as properties with context %}*/
 /*{% for prop in component.properties %}*/
-/*{%   if prop is simple %}*/
-    ${properties.simple(prop)|indent(4)}
-/*{%   elif prop is simplesequence %}*/
-    ${properties.simplesequence(prop)|indent(4)}
-/*{%   elif prop is struct %}*/
-    ${properties.struct(prop)|indent(4)}
-/*{%   elif prop is structsequence %}*/
-    ${properties.structsequence(prop)|indent(4)}
-/*{%   endif %}*/
-
+    ${properties.create(prop)|indent(4)}
 /*{% endfor %}*/
-    // Provides/inputs
 /*{% for port in component.ports if port is provides %}*/
+/*{%   if loop.first %}*/
+    // Provides/inputs
+/*{%   endif %}*/
     /**
      * @generated
      */
     public ${port.javatype} ${port.javaname};
 
 /*{% endfor %}*/
+/*{% for port in component.ports if port is uses %}*/
+/*{%   if loop.first %}*/
     // Uses/outputs
-/*{% for port in component.ports if port is uses %}*/
+/*{%   endif %}*/
     /**
      * @generated
      */
     public ${port.javatype} ${port.javaname};
 
 /*{% endfor %}*/
-
-/*{% if component.hasmultioutport %}*/
-    /**
-     * @generated
-     */
-    public class connectionTableListener implements PropertyListener<List<connection_descriptor_struct> > {
-        protected ${classname} parent;
-        public connectionTableListener(${classname} _parent)
-        {
-            parent = _parent;
-        }
-        public void valueChanged (List<connection_descriptor_struct> oldValue, List<connection_descriptor_struct> newValue)
-        {
-/*{% for port in component.ports if port is uses %}*/
-/*{%     if port.javatype == "bulkio.OutShortPort" or
-    port.javatype == "bulkio.OutFloatPort" or
-    port.javatype == "bulkio.OutDoublePort" or
-    port.javatype == "bulkio.OutCharPort" or
-    port.javatype == "bulkio.OutOctetPort" or
-    port.javatype == "bulkio.OutUShortPort" or
-    port.javatype == "bulkio.OutLongPort" or
-    port.javatype == "bulkio.OutULongPort" or
-    port.javatype == "bulkio.OutLongLongPort" or
-    port.javatype == "bulkio.OutULongLongPort" or
-    port.javatype == "bulkio.OutURLPort" or
-    port.javatype == "bulkio.OutXMLPort" or
-    port.javatype == "bulkio.OutSDDSPort" %}*/
-            for (connection_descriptor_struct val : oldValue) {
-                if (val.port_name.equals(this.parent.${port.javaname}.getName())) {
-                    this.parent.${port.javaname}.updateConnectionFilter(newValue);
-                }
-            }
-            for (connection_descriptor_struct val : newValue) {
-                if (val.port_name.equals(this.parent.${port.javaname}.getName())) {
-                    this.parent.${port.javaname}.updateConnectionFilter(newValue);
-                }
-            }
-/*{% endif %}*/
-/*{% endfor %}*/
-        }
-    }
-    public connectionTableListener cTl;
-/*{% endif %}*/
-
     /**
      * @generated
      */
     public ${classname}()
     {
         super();
-/*{% if component is device %}*/
-        this.usageState = UsageType.IDLE;
-        this.operationState = OperationalType.ENABLED;
-        this.adminState = AdminType.UNLOCKED;
-        this.callbacks = new HashMap<String, AllocCapacity>();
-/*{% endif %}*/
-/*{% for prop in component.properties if prop is structsequence %}*/
-        ${properties.structsequence_init(prop)|indent(8)}
-/*{% endfor %}*/
 /*{% for prop in component.properties %}*/
+/*{%   if loop.first %}*/
+
+        // Properties
+/*{%   endif %}*/
         addProperty(${prop.javaname});
 /*{% endfor %}*/
-
-        // Provides/input
 /*{% for port in component.ports if port is provides %}*/
+/*{%   if loop.first %}*/
+
+        // Provides/inputs
+/*{%   endif %}*/
         this.${port.javaname} = new ${port.constructor};
         this.addPort("${port.name}", this.${port.javaname});
 /*{% endfor %}*/
-
-        // Uses/output
 /*{% for port in component.ports if port is uses %}*/
+/*{%   if loop.first %}*/
+
+        // Uses/outputs
+/*{%   endif %}*/
         this.${port.javaname} = new ${port.constructor};
         this.addPort("${port.name}", this.${port.javaname});
 /*{% endfor %}*/
 /*{% if component.hasmultioutport %}*/
-        this.cTl = new connectionTableListener(this);
-        this.connectionTable.addChangeListener(this.cTl);
+
+        this.connectionTable.addChangeListener(new PropertyListener<List<connection_descriptor_struct>>() {
+            public void valueChanged (List<connection_descriptor_struct> oldValue, List<connection_descriptor_struct> newValue)
+            {
+                ${classname}.this.connectionTableChanged(oldValue, newValue);
+            }
+        });
 /*{% endif %}*/
     }
 
@@ -249,25 +192,15 @@ public abstract class ${classname} extends ${superClass} implements Runnable {
 /*{% endfor %}*/
         super.stop();
     }
+/*{% if component.hasmultioutport %}*/
 
-    public void run() 
+    protected void connectionTableChanged (List<connection_descriptor_struct> oldValue, List<connection_descriptor_struct> newValue)
     {
-        while(this.started())
-        {
-            int state = this.serviceFunction();
-            if (state == NOOP) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    break;
-                }
-            } else if (state == FINISH) {
-                return;
-            }
-        }
+/*{% for port in component.ports if port.multiout %}*/
+        this.${port.javaname}.updateConnectionFilter(newValue);
+/*{% endfor %}*/
     }
-
-    protected abstract int serviceFunction();
+/*{% endif %}*/
 
     /**
      * The main function of your ${artifactType}.  If no args are provided, then the

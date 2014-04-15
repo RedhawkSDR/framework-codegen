@@ -40,7 +40,8 @@ class ResourcePackage(object):
             spdTemplateFile = OSSIEHOME+"/lib/python/redhawk/packagegen/templates/resourceTemplate.spd.xml",
             scdTemplateFile = OSSIEHOME+"/lib/python/redhawk/packagegen/templates/resourceTemplate.scd.xml",
             prfTemplateFile = OSSIEHOME+"/lib/python/redhawk/packagegen/templates/resourceTemplate.prf.xml",
-            mFiles = []):
+            mFiles = [],
+            loggingConfigUri = None):
 
         self.name = name
         self.outputDir = outputDir
@@ -54,6 +55,14 @@ class ResourcePackage(object):
         self.mFiles = mFiles
 
         self._createWavedevContent(generator=generator)
+
+        if loggingConfigUri:
+            self.addSimpleProperty(
+                id="LOGGING_CONFIG_URI",
+                value=loggingConfigUri,
+                type="string",
+                complex=False,
+                kindtypes=["configure", "execparam"])
 
     def _setNameInSpd(self):
         self.spd.id_ = self.name
@@ -90,12 +99,15 @@ class ResourcePackage(object):
             mode="readwrite",
             kindtypes=["configure"]):
 
+        complexStr = "false"
+
         if complex:
             # convert from Octave complex to BulkIO complex
             value = standardizeComplexFormat(value)
+            complexStr = "true"
 
         simple = prf.simple(
-            complex=complex,
+            complex=complexStr,
             type_=type,
             id_=id,
             mode=mode,
@@ -114,13 +126,16 @@ class ResourcePackage(object):
             mode="readwrite",
             kindtypes=["configure"]):
 
+        complexStr = "false"
+
         if complex:
             # convert from Octave complex to BulkIO complex
             for index in range(len(values)):
                 values[index] = standardizeComplexFormat(values[index])
+            complexStr = "true"
 
         simplesequence = prf.simpleSequence(
-            complex=complex,
+            complex=complexStr,
             type_=type,
             id_=id,
             mode=mode,
@@ -216,19 +231,22 @@ class ResourcePackage(object):
         self.writePRF()
         self.writeWavedev()
 
-    def _writeXMLwithHeader(self, xmlObject, fileType, dtdName):
+    def _writeXMLwithHeader(self, xmlObject, fileType, dtdName, name_=None):
         outFile = open(self.outputDir+"/"+self.name+"/"+self.name+"."+fileType+".xml", 'w')
         outFile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         outFile.write('<!DOCTYPE _DTDNAME_ PUBLIC "-//JTRS//DTD SCA V2.2.2 SPD//EN" "_DTDNAME_.dtd">\n'.replace("_DTDNAME_", dtdName))
+        if name_ == None:
+            name_ = dtdName
         xmlObject.export(
             outfile      = outFile,
             level        = 0,
-            pretty_print = True)
+            pretty_print = True,
+            name_        = name_)
         outFile.close()
 
     def writeSPD(self):
         self.createOutputDirIfNeeded()
-        self._writeXMLwithHeader(self.spd, "spd", "softpkg")
+        self._writeXMLwithHeader(self.spd, "spd", "softpkg", name_="softpkg")
 
     def writeSCD(self):
         self.createOutputDirIfNeeded()

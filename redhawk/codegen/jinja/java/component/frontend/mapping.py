@@ -49,12 +49,6 @@ class FrontendComponentMapper(PullComponentMapper):
         javacomp['softpkgcp'] = self.softPkgDeps(softpkg, format='cp')
         return javacomp
 
-    def getInterfaceJars(self, softpkg):
-        jars = [ns+'Interfaces.jar' for ns in self.getInterfaceNamespaces(softpkg)]
-        jars.append('bulkio.jar')
-        jars.append('frontend.jar')
-        return jars
-
     def superclass(self, softpkg):
         if softpkg.type() == ComponentTypes.RESOURCE:
             name = 'Resource'

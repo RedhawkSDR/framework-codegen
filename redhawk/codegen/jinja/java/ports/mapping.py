@@ -30,4 +30,5 @@ class JavaPortMapper(PortMapper):
         javaport['constructor'] = generator.constructor(port.name())
         javaport['start'] = generator.start()
         javaport['stop'] = generator.stop()
+        javaport['multiout'] = generator.supportsMultiOut()
         return javaport

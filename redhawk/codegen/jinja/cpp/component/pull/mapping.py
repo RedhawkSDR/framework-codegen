@@ -68,23 +68,3 @@ class PullComponentMapper(BaseComponentMapper):
             classes.append({'name': aggregate, 'header': '<CF/AggregateDevices.h>'})
             classes.append({'name': 'AggregateDevice_impl', 'header': '<ossie/AggregateDevice_impl.h>'})
         return classes
-
-    def hasMultioutPort(self, softpkg):
-        for prop in softpkg.getStructSequenceProperties():
-            if prop.name() == "connectionTable" and  \
-               prop.struct().name() == "connection_descriptor":
-                foundConnectionName = False
-                foundStreamId = False
-                foundPortName = False
-                for field in prop.struct().fields():
-                    if field.name() == "connection_id":
-                        foundConnectionName = True 
-                    elif field.name() == "stream_id":
-                        foundStreamId = True 
-                    elif field.name() == "port_name":
-                        foundPortName = True 
-                if foundConnectionName == True and \
-                   foundStreamId == True and \
-                   foundPortName == True:
-                    return True
-        return False

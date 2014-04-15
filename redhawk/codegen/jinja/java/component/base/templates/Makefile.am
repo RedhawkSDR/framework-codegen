@@ -18,10 +18,12 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #% set target = automake.canonicalName(component.jarfile)
-#% set classpath = ['CFInterfaces.jar', 'log4j-1.2.15.jar', 'ossie.jar'] + component.interfacejars
+#% set classpath = ['CFInterfaces.jar', 'log4j-'+versions.log4j+'.jar', 'ossie.jar'] + component.interfacejars
+{{target}}_CLASSPATH = $(CLASSPATH_SOFTPKG_DEP){{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}}
+
 {{component.jarfile}}: $({{target}}_SOURCES)
 	mkdir -p bin
-	$(JAVAC) -cp $(CLASSPATH_SOFTPKG_DEP){{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}} -d bin $({{target}}_SOURCES)
+	$(JAVAC) -cp $({{target}}_CLASSPATH) -d bin $({{target}}_SOURCES)
 	$(JAR) cf ./{{component.jarfile}} -C bin .
 
 clean-local:

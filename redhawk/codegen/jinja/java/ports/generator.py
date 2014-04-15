@@ -62,6 +62,9 @@ class JavaPortGenerator(PortGenerator):
     def constructor(self, name):
         return '%s(%s)' % (self.className(), ', '.join(self._ctorArgs(name)))
 
+    def supportsMultiOut(self):
+        return False
+
 class BuiltinJavaPort(JavaPortGenerator):
     def __init__(self, javaclass, port):
         JavaPortGenerator.__init__(self, port)

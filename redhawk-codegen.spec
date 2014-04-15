@@ -24,7 +24,7 @@ Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
 Version:        1.10.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Redhawk Code Generators
 
 Group:          Applications/Engineering
@@ -37,7 +37,7 @@ Vendor:         REDHAWK
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 Requires:       python
-Requires:       redhawk >= 1.9
+Requires:       redhawk >= 1.10
 Requires:       python-jinja2-26
 
 BuildRequires:  python-devel >= 2.4

@@ -50,10 +50,10 @@ addProperty(${prop.cppname},
 /*{%- endmacro %}*/
 
 /*{% macro structdef(struct) %}*/
-struct ${struct.cpptype} {
-    ${struct.cpptype} ()
+struct ${struct.cpptype}${' : public '+struct.baseclass if struct.baseclass} {
+    ${struct.cpptype} ()${' : '+struct.baseclass+'()' if struct.baseclass}
     {
-/*{% for field in struct.fields if field.cppvalue %}*/
+/*{% for field in struct.fields if not field.inherited and field.cppvalue %}*/
         ${field.cppname} = ${field.cppvalue};
 /*{% endfor %}*/
     };
@@ -61,8 +61,10 @@ struct ${struct.cpptype} {
     static std::string getId() {
         return std::string("${struct.identifier}");
     };
+/*{% for field in struct.fields if not field.inherited %}*/
+/*{%   if loop.first %}*/
 
-/*{% for field in struct.fields %}*/
+/*{%   endif %}*/
     ${field.cpptype} ${field.cppname};
 /*{% endfor %}*/
 };

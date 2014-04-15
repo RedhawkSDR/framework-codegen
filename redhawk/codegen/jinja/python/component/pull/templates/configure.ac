@@ -25,15 +25,15 @@ AC_PROG_INSTALL
 AC_CORBA_ORB
 OSSIE_CHECK_OSSIE
 OSSIE_SDRROOT_AS_PREFIX
-AM_PATH_PYTHON([2.4])
+AM_PATH_PYTHON([{{versions.python}}])
 
-PKG_CHECK_MODULES([OSSIE], [ossie >= 1.9])
+PKG_CHECK_MODULES([OSSIE], [ossie >= {{versions.redhawk}}])
 AC_CHECK_PYMODULE(ossie, [], [AC_MSG_ERROR([the python ossie module is required])])
-PKG_CHECK_MODULES([OMNIORB], [omniORB4 >= 4.1.0])
+PKG_CHECK_MODULES([OMNIORB], [omniORB4 >= {{versions.omniORB4}}])
 AC_CHECK_PYMODULE(omniORB, [], [AC_MSG_ERROR([the python omniORB module is required])])
 
 #{% for interface in component.interfacedeps %}
-PKG_CHECK_MODULES({{interface.name}}, {{interface.name}}{{interface.version}}) 
+PKG_CHECK_MODULES({{interface.name}}, {{interface.requires}}) 
 AC_CHECK_PYMODULE({{interface.module}}, [], [AC_MSG_ERROR([the python {{interface.module}} module is required])])
 #{% endfor %}
 

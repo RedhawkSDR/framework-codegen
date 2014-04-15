@@ -50,8 +50,11 @@ class BulkioPortGenerator(PythonPortGenerator):
             datatype = datatype[0] + datatype[1].upper() + datatype[2:]
         return 'bulkio.' + direction + datatype + 'Port'
 
+    def supportsMultiOut(self):
+        return (self.direction == 'uses')
+
     def _ctorArgs(self, port):
         args = [python.stringLiteral(port.name())]
-        if self.direction == 'provides' and 'SDDS' not in self.interface:
+        if self.direction == 'provides' and 'SDDS' not in self.interface and 'VITA' not in self.interface:
             args.append('maxsize=self.DEFAULT_QUEUE_SIZE')
         return args

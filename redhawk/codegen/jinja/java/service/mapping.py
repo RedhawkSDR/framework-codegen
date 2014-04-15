@@ -23,6 +23,7 @@ from redhawk.codegen.lang.idl import IDLInterface
 from redhawk.codegen.jinja.mapping import ComponentMapper
 from redhawk.codegen.jinja.java.ports.generic import *
 from redhawk.codegen.model.softwarecomponent import ComponentTypes
+from redhawk.codegen import libraries
 
 class ServiceMapper(ComponentMapper):
     def __init__(self, package):
@@ -52,16 +53,13 @@ class ServiceMapper(ComponentMapper):
 
     def getInterfaceDependencies(self, softpkg):
         for namespace in self.getInterfaceNamespaces(softpkg):
-            if namespace == 'BULKIO':
-                yield 'bulkio >= 1.0 bulkioInterfaces >= 1.9'
-            elif namespace == 'REDHAWK':
-                yield 'redhawkInterfaces >= 1.2.0'
-            else:
-                yield namespace.lower()+'Interfaces'
+            yield libraries.getPackageRequires(namespace)
 
     def getInterfaceJars(self, softpkg):
-        jars = [ns+'Interfaces.jar' for ns in self.getInterfaceNamespaces(softpkg)]
-        jars.append('bulkio.jar')
+        jars = []
+        for namespace in self.getInterfaceNamespaces(softpkg):
+            library = libraries.getInterfaceLibrary(namespace)
+            jars.extend(library['jarfiles'])
         return jars
 
     def superclass(self, softpkg):

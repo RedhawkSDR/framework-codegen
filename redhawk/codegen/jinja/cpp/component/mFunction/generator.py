@@ -5,6 +5,10 @@ from redhawk.codegen.jinja.template import TemplateFile
 from redhawk.codegen.jinja.cpp import CppTemplate
 from mapping import MFunctionMapper
 
+if not '__package__' in locals():
+    # Python 2.4 compatibility
+    __package__ = __name__.rsplit('.', 1)[0]
+
 loader = CodegenLoader(__package__,
                        {'pull'       : 'redhawk.codegen.jinja.cpp.component.pull',
                         'mFunction'  : 'redhawk.codegen.jinja.cpp.component.mFunction',
@@ -37,7 +41,7 @@ class OctaveComponentGenerator(PullComponentGenerator):
             AutomakeTemplate('base/Makefile.am'),
             AutomakeTemplate('base/Makefile.am.ide',
                              userfile=True),
-            AutoconfTemplate('base/configure.ac'),
+            AutoconfTemplate('configure.ac'),
             ShellTemplate('base/build.sh'),
             ShellTemplate('common/reconf'),
             CppTemplate('octaveResource_base.cpp',
@@ -53,12 +57,8 @@ class OctaveComponentGenerator(PullComponentGenerator):
             TemplateFile('COPYING')
         ]
 
-        for gen in component['portgenerators']:
-            # Need to include port_impl if a non-bulkio port exists
-            if str(type(gen)).find("BulkioPortGenerator") == -1:
-                templates.append(CppTemplate('pull/port_impl.cpp'))
-                templates.append(CppTemplate('pull/port_impl.h'))
-                break
+        # Add port implementations if required
+        templates.extend(CppTemplate('pull/'+fn) for fn in self.getPortTemplates(component))
 
         if component['structdefs']:
             templates.append(CppTemplate('pull/struct_props.h'))

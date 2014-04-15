@@ -68,4 +68,4 @@ class ${className} : public ${baseClass}_type
 //% endif
 };
 
-#endif
+#endif // ${includeGuard}

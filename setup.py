@@ -22,6 +22,8 @@ import os
 from distutils.core import setup
 from distutils.command.install_lib import install_lib
 
+from redhawk.codegen import versions
+
 class filtered_install_lib(install_lib):
     def byte_compile(self, files):
         # The default 'install_lib' implementation will attempt to compile all
@@ -45,7 +47,7 @@ if not homeSys and ossiehome != None and not buildArg:
     sys.argv.append('--home='+ossiehome)
 
 setup(name='redhawk-codegen',
-      version='1.10.0',
+      version=versions.codegen,
       scripts=['redhawk-codegen','codegen_version','update_project','createPackageDependency','createOctaveComponent'],
       cmdclass={'install_lib':filtered_install_lib},
       packages=['redhawk',
@@ -56,13 +58,13 @@ setup(name='redhawk-codegen',
                 'redhawk.codegen.jinja.common',
                 'redhawk.codegen.jinja.project',
                 'redhawk.codegen.jinja.project.component',
+                'redhawk.codegen.jinja.project.octaveComponent',
                 'redhawk.codegen.jinja.unitTests',
                 'redhawk.codegen.jinja.unitTests.resource',
                 'redhawk.codegen.jinja.unitTests.resource.sca',
                 'redhawk.codegen.jinja.java',
                 'redhawk.codegen.jinja.java.component',
                 'redhawk.codegen.jinja.java.component.base',
-                'redhawk.codegen.jinja.java.component.jmerge',
                 'redhawk.codegen.jinja.java.component.pull',
                 'redhawk.codegen.jinja.java.component.frontend',
                 'redhawk.codegen.jinja.java.ports',
@@ -89,9 +91,9 @@ setup(name='redhawk-codegen',
                 'redhawk.packagegen.templates'],
       package_data={'redhawk.codegen.jinja.common':['templates/*'],
                     'redhawk.codegen.jinja.project.component':['templates/*'],
+                    'redhawk.codegen.jinja.project.octaveComponent':['templates/*'],
                     'redhawk.codegen.jinja.unitTests.resource.sca':['templates/*'],
                     'redhawk.codegen.jinja.java.component.base':['templates/*'],
-                    'redhawk.codegen.jinja.java.component.jmerge':['templates/*'],
                     'redhawk.codegen.jinja.java.component.pull':['templates/*'],
                     'redhawk.codegen.jinja.java.component.frontend':['templates/*'],
                     'redhawk.codegen.jinja.java.ports':['templates/*.java'],

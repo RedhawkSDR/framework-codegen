@@ -18,6 +18,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
+from redhawk.codegen.lang import python
 from redhawk.codegen.lang.idl import IDLInterface
 from redhawk.codegen.jinja.mapping import ComponentMapper
 
@@ -29,7 +30,10 @@ class ServiceMapper(ComponentMapper):
         pycomp['interface'] = idl.interface()
         pycomp['operations'] = idl.operations()
         pycomp['attributes'] = idl.attributes()
-        pycomp.update(self.getNamespace(idl))
+        module = python.idlModule(idl.namespace())
+        poamod = python.poaModule(idl.namespace())
+        pycomp['imports'] = (module, poamod)
+        pycomp['baseclass'] = poamod.split('.')[-1] + '.' + idl.interface()
         
         return pycomp
 
@@ -37,19 +41,4 @@ class ServiceMapper(ComponentMapper):
     def userClass(softpkg):
         return {'name'  : softpkg.name(),
                 'file'  : softpkg.name()+'.py'}
-
-    def getNamespace(self, idl):
-        if idl.namespace().startswith('omg.org'):
-            return {'imports': 'omniORB.COS',
-                    'namespace': idl.namespace().split('/')[1] }
-        elif idl.namespace().startswith('BULKIO'):
-            return {'imports': 'bulkio.bulkioInterfaces',
-                    'namespace': idl.namespace() }
-        elif idl.namespace().startswith('CF'):
-            return {'imports': 'ossie.cf',
-                    'namespace': idl.namespace() }
-        else:
-            # Assume custom IDL
-            return {'imports': 'redhawk.' + idl.namespace().lower() + 'Interfaces',
-                    'namespace': idl.namespace() }
         

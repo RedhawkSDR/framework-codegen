@@ -29,9 +29,10 @@ PREPARE_LOGGING(${className})
 /**
  * Constructor.  Makes the initial call to set up the Octave interpreter.
  */
-${className}::${className}(const char *uuid, const char *label):
-    ${baseClass}(uuid, label)
-{
+${ super() -}
+/*{% endblock %}*/
+
+/*{% block constructorBody %}*/
     // start up octave
     const char * argvv [] = {"",  /* program name*/
                              "--silent"};
@@ -44,13 +45,11 @@ ${className}::${className}(const char *uuid, const char *label):
 
     _sriPort = "";
 
-    construct();
-}
+${ super() -}
 /*{% endblock %}*/
 
-/*{%block extensions%}*/
-${className}::~${className}()
-{
+/*{% block destructorBody %}*/
+${ super() }
 /*{%if component.ports%}*/
     // Deallocate the allocated DataTransferType objects for the output packets
     std::map<std::string, bulkio::InDoublePort::DataTransferType*>::iterator iter;
@@ -61,8 +60,9 @@ ${className}::~${className}()
 /*{%endif%}*/
     // Prevent octave from leaving around temporary files after shutdown.
     do_octave_atexit();
-}
+/*{% endblock %}*/
 
+/*{%block extensions%}*/
 /**
  * Wrapper to Octave's feval method that monitors the Octave error state.
  * If an error is detected, it is logged and an exception (invalid_argument)
@@ -110,44 +110,79 @@ void ${className}::setCurrentWorkingDirectory(std::string& cwd)
 }
 
 /**
- * Turn the diary on or off based on the value of the class data field
- * (property) diaryEnabled.  If turning the diary on, set the output
- * directory for the diary to $SDRROOT/dev/logs/{componentName}/logSubDir.
+ * Get logs/@@@WAVEFORM.NAME@@@/@@@COMPONENT.NAME@@@
+ * from the log4j.appender.__octave.File=logs/@@@WAVEFORM.NAME@@@/@@@COMPONENT.NAME@@@/__log
+ * line of the log configuration string.
+ *
+ * This approach will be replaced by getting the file name through the
+ * appropriate log API once it is available.
  */
-void ${className}::setDiary(const std::string logSubDir)
+std::string ${className}::getLogDir()
 {
-    octave_value_list functionArguments; // pass to octave
-    if (diaryEnabled) {
-        // determine the absolute path of the log file
-        std::string sdrroot    = getenv("SDRROOT");
-        std::string logdir     = std::string("/dev/logs/");
-        std::string file       = "/${component.name}.diary";
-        _diaryFile             = sdrroot + logdir + logSubDir + file;
-        std::string target_dir = sdrroot + logdir + logSubDir;
+    std::string logConfig = this->getLogConfig();
+    std::string tag1 = "log4j.appender.__octave.File=";
+    std::string tag2 = "__log";
+    std::string logDir = getCurrentWorkingDirectory();
+    if (std::string::npos != logConfig.find(tag1)) {
+        unsigned int start = logConfig.find(tag1) + tag1.length();
+        unsigned int end = logConfig.find(tag2,start);
+        logDir += "/../../../" + logConfig.substr(start,end-start);
+    }
+    return logDir;
+}
 
-        boost::filesystem::path dirPath(target_dir);
-        boost::filesystem::path currentPath;
+/**
+ * Recursively create a directory.
+ */
+void ${className}::createDirectoryTree(std::string target_dir) {
+    boost::filesystem::path dirPath(target_dir);
+    boost::filesystem::path currentPath;
 
-        // recursively create the directory for the diary file (in case it
-        // does not exist)
-        for (boost::filesystem::path::iterator walkPath = dirPath.begin();
-             walkPath != dirPath.end();
-             ++walkPath) {
-            currentPath /= *walkPath;
-            if (!boost::filesystem::exists(currentPath)) {
-                boost::filesystem::create_directory(currentPath);
-            }
+    // recursively create the directory for the diary file (in case it
+    // does not exist)
+    for (boost::filesystem::path::iterator walkPath = dirPath.begin();
+         walkPath != dirPath.end();
+         ++walkPath) {
+
+        currentPath /= *walkPath;
+        if (!boost::filesystem::exists(currentPath)) {
+            boost::filesystem::create_directory(currentPath);
         }
+    }
+}
 
-        // call the diary method with a location for the diary file
-        functionArguments(0) = octave_value(_diaryFile);
-        _feval("diary", functionArguments);
-        functionArguments(0) = octave_value("on");
+/**
+ * Turn the diary on or off based on the value of the class data field
+ * (property) diaryEnabled.
+ *
+ * Change directories to the log directory so that all files (e.g., the diary)
+ * get written to the same location.  This allows the output files to be
+ * written to a persistent directory that is unique to the waveform and
+ * component instances.
+ */
+void ${className}::setDiary()
+{
+    // Change directory into log directory (if log directory is available).
+    std::string logDir = getLogDir();
+    _diaryFile = logDir;
+
+    // In many cases the directory will have already been created.  However, it
+    // is possible that the log directory might not exist (e.g., if thie file
+    // appender exists but it is not enabled).
+    if (!boost::filesystem::exists(logDir)) {
+        createDirectoryTree(logDir);
+    }
+
+    octave_value_list functionArguments; // pass to octave
+    functionArguments(0) = octave_value(logDir);
+    _feval("cd", functionArguments);
+
+    // call the diary function to turn the diary on or off
+    if (diaryEnabled) {
+        functionArguments(0) = octave_value("${component.name}.diary");
     } else {
         functionArguments(0) = octave_value("off");
     }
-
-    // call the diary function to turn the diary on or off
     _feval("diary", functionArguments);
 }
 

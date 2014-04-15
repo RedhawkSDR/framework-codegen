@@ -99,13 +99,18 @@ def do_append(values, suffix):
     """
     return [v+suffix for v in values]
 
-def do_unique(values):
+def do_unique(values, keep_blank_lines=False):
     """
-    Filters out repeated occurrences of items in the given sequence.
+    Filters out repeated occurrences of items in the given sequence. If
+    'keep_blank_lines' is True, lines containing only whitespace will always
+    be returned.
     """
     seen = set()
     for value in values:
-        if not value in seen:
+        if keep_blank_lines and not value.strip():
+            # Line contains no non-whitespace characters
+            yield value
+        elif not value in seen:
             yield value
             seen.add(value)
 

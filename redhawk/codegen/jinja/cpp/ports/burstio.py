@@ -37,12 +37,6 @@ class BurstioPortGenerator(CppPortGenerator):
     def header(self):
         return '<burstio/burstio.h>'
 
-    def start(self):
-        return 'start()'
-
-    def stop(self):
-        return 'stop()'
-
     def className(self):
         # The port class is the interface name (first character capitalized),
         # plus the direction, e.g., "BurstByteIn" for "burstByte" provides port
@@ -52,6 +46,9 @@ class BurstioPortGenerator(CppPortGenerator):
         else:
             porttype += 'In'
         return 'burstio::' + porttype
+
+    def supportsMultiOut(self):
+        return (self.direction == 'uses')
 
     def _ctorArgs(self, name):
         return (cpp.stringLiteral(name),)

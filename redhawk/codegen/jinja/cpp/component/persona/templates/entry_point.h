@@ -43,4 +43,4 @@
 //
 typedef Resource_impl* (*ConstructorPtr)(int, char*[], Device_impl* parentDevice);
 
-#endif
+#endif // ${includeGuard}

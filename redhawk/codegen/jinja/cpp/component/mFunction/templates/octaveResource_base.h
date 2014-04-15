@@ -34,9 +34,7 @@ ${gplHeader(component)}
 #include <boost/filesystem.hpp>
 /*{% endblock %}*/
 
-/*{% block basePublicFunctions %}*/
-        ~${className}();
-        void loadProperties();
+/*{% block extendedPublic %}*/
         int serviceFunction();
         void setCurrentWorkingDirectory(std::string& cwd);
         const octave_value_list _feval(const std::string function, const octave_value_list &functionArguments);
@@ -52,7 +50,9 @@ ${gplHeader(component)}
             const octave_value_list&                result,
             const int                               resultIndex);
 /*{%endif%}*/
-        void setDiary(const std::string diaryFolder);
+        std::string getLogDir();
+        void createDirectoryTree(std::string target_dir);
+        void setDiary();
         void flushDiary();
         std::string _diaryFile;
 /*{% endblock %}*/

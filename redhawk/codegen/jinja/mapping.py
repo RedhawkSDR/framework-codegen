@@ -68,6 +68,8 @@ class PropertyMapper(object):
     def _mapStructSequence(self, prop):
         propdict = self._mapProperty(prop, 'structsequence')
         structdef = self._mapStruct(prop.struct())
+        if self.isConnectionTable(prop):
+            structdef['builtin'] = True
         propdict['structdef'] = structdef
         propdict.update(self.mapStructSequenceProperty(prop, structdef))
         return propdict
@@ -90,6 +92,21 @@ class PropertyMapper(object):
                 'structdefs': structdefs,
                 'events':     events,
                 'messages':   messages}
+
+    @staticmethod
+    def isConnectionTable(prop):
+        if prop.name() != 'connectionTable':
+            return False
+        if prop.struct().name() != 'connection_descriptor':
+            return False
+        fields = set(field.name() for field in prop.struct().fields())
+        if 'connection_id' not in fields:
+            return False
+        if 'stream_id' not in fields:
+            return False
+        if 'port_name' not in fields:
+            return False
+        return True
 
 
 class PortMapper(object):
@@ -190,3 +207,9 @@ class ComponentMapper(object):
                 if 'BULKIO' not in seen:
                     seen.add('BULKIO')
                     yield 'BULKIO'
+
+    def hasMultioutPort(self, softpkg):
+        for prop in softpkg.getStructSequenceProperties():
+            if PropertyMapper.isConnectionTable(prop):
+                return True
+        return False

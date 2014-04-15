@@ -111,4 +111,4 @@ class ${className} : public ${baseClass}
         virtual void formatRequestProps(const CF::Properties& requestProps, CF::Properties& formattedProps);
 };
 
-#endif
+#endif // ${includeGuard}

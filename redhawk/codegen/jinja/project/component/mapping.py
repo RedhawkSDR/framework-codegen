@@ -20,6 +20,7 @@
 
 import os
 
+from redhawk.codegen import libraries
 from redhawk.codegen.lang.idl import IDLInterface
 from redhawk.codegen.model.softwarecomponent import ComponentTypes
 from redhawk.codegen.jinja.mapping import ComponentMapper
@@ -44,7 +45,7 @@ class ProjectMapper(ComponentMapper):
     def _mapComponent(self, softpkg):
         component = {}
         component['type'] = _projectTypes[softpkg.type()]
-        component['interfaces'] = [name.lower()+'Interfaces' for name in self.getInterfaceNamespaces(softpkg)]
+        component['interfaces'] = [libraries.getRPMDependency(name) for name in self.getInterfaceNamespaces(softpkg)]
         return component
 
     def mapProject(self, softpkg):

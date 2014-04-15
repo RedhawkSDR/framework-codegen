@@ -30,6 +30,10 @@ class SoftwareComponent(object):
     def __init__(self, scdFile):
         self.__scd = ossie.parsers.scd.parse(scdFile)
 
+        if not self.__scd.componentfeatures.ports:
+            self.__ports = []
+            return
+
         # Start with the provides ports.
         self.__ports = [ProvidesPort(p) for p in self.__scd.componentfeatures.ports.provides]
 

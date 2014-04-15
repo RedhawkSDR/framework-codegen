@@ -24,6 +24,7 @@ import stat
 
 from redhawk.codegen.lang.idl import IDLInterface
 from redhawk.codegen import utils
+from redhawk.codegen import versions
 
 from environment import CodegenEnvironment
 
@@ -186,6 +187,7 @@ class Generator(object):
                 context = template.context()
                 context['component'] = component
                 context['generator'] = self
+                context['versions'] = versions
 
                 # Evaluate the template in streaming mode (rather than all at
                 # once), dumping to the output file.

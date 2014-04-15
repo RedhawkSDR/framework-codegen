@@ -54,18 +54,6 @@ class CppPortGenerator(PortGenerator):
     def _ctorArgs(self, name):
         return tuple()
 
-    def hasStart(self):
-        return self.start() is not None
-
-    def start(self):
-        return None
-
-    def hasStop(self):
-        return self.stop() is not None
-
-    def stop(self):
-        return None
-
     def constructor(self, name):
         return '%s(%s)' % (self.className(), ', '.join(self._ctorArgs(name)))
 
@@ -78,3 +66,6 @@ class CppPortGenerator(PortGenerator):
     def declaration(self):
         template = self._declaration()
         return self.get_template(template)
+
+    def supportsMultiOut(self):
+        return False

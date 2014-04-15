@@ -1,20 +1,7 @@
 from redhawk.codegen.model import softpkg
 from redhawk.packagegen.resourcePackage import ResourcePackage
 
-def ambiguousArgumentException(argument, validTags):
-    '''
-    Print an error and raise an exception indicating that an ambiguous
-    argument has been encountered.
-
-    '''
-
-    errString = 'ERROR: Ambiguous argument: ' + argument
-    errString += '\nMust prepend one of:'
-    for tag in validTags:
-        errString += '\n    ' + str(tag)
-    raise SystemExit(errString)
-
-def getMFunctionParameters(function, mFiles):
+def _getMFunctionParameters(function, mFiles):
     mFunctionParameters = None
 
     # find the master m file and parse its m function
@@ -28,12 +15,32 @@ def getMFunctionParameters(function, mFiles):
     return mFunctionParameters
 
 def _cleanQuotes(value):
+    '''
+    Strip out quotation marks within the input string
+
+    '''
     if len(value) == 0:
         return
     if value[0] == "'":
         return value.replace("'","")
     if value[0] == '"':
         return value.replace('"',"")
+
+def _isStringProp(value):
+    '''
+    Search for quotes in order to determine if the property is a string.
+
+    '''
+    if type(value) == type([]):
+        # simple sequence
+        if len(value) > 0:
+            return value[0].find('"') != -1 or value[0].find("'") != -1
+        else:
+            # if empty, assume not a string
+            return False
+    else:
+        # simple
+        return value.find('"') != -1 or value.find("'") != -1
 
 class OctavePackage(ResourcePackage):
 
@@ -44,7 +51,8 @@ class OctavePackage(ResourcePackage):
             outputDir        = ".",
             sharedLibraries  = None,
             diaryEnabled     = False,
-            bufferingEnabled = False):
+            bufferingEnabled = False,
+            loggingConfigUri = None):
         '''
         Create an octave component using tags in the function arguments.
 
@@ -55,42 +63,32 @@ class OctavePackage(ResourcePackage):
 
         '''
 
-        mFunctionParameters = getMFunctionParameters(function, mFiles)
+        mFunctionParameters = _getMFunctionParameters(function, mFiles)
 
-        self.diaryEnabledStr = str(diaryEnabled).lower()
-        self.bufferingEnabledStr= str(bufferingEnabled).lower()
+        self.diaryEnabled = diaryEnabled
+        self.bufferingEnabled = bufferingEnabled
 
         ResourcePackage.__init__(
             self,
             name = function,
             outputDir = outputDir,
             generator = "octave",
-            mFiles = mFiles)
+            mFiles = mFiles,
+            loggingConfigUri = loggingConfigUri)
 
         self._addDefaultProps()
 
         propArgs = ["__sampleRate"]
 
-        def isStringProp(value):
-            if type(value) == type([]):
-                # simple sequence
-                if len(value) > 0:
-                    return value[0].find('"') != -1 or value[0].find("'") != -1
-                else:
-                    # if empty, assume not a string
-                    return False
-            else:
-                # simple
-                return value.find('"') != -1 or value.find("'") != -1
-
+        # Add properties
         for propName in mFunctionParameters.defaults.keys():
             value = mFunctionParameters.defaults[propName]
             if type(value) == type([]):
                 # simple sequence
-                if isStringProp(value):
+                if _isStringProp(value):
                     # string
-                    for index in range(len(values)):
-                        values[index]=_cleanQuotes(values[index])
+                    for index in range(len(value)):
+                        value[index]=_cleanQuotes(value[index])
                     self.addSimpleSequencProperty(
                         id=propName,
                         values=value,
@@ -103,7 +101,7 @@ class OctavePackage(ResourcePackage):
                         values=value)
             else:
                 # simple
-                if isStringProp(value):
+                if _isStringProp(value):
                     # string
                     value=_cleanQuotes(value)
                     self.addSimpleProperty(
@@ -118,10 +116,12 @@ class OctavePackage(ResourcePackage):
                         value=value)
             propArgs.append(propName)
 
+        # Add input ports
         for input in mFunctionParameters.inputs:
             if propArgs.count(input) == 0:
                 self.addProvidesPort(input, "IDL:BULKIO/dataDouble:1.0")
 
+        # Add output ports
         for output in mFunctionParameters.outputs:
             if propArgs.count(output) == 0:
                 self.addUsesPort(output, "IDL:BULKIO/dataDouble:1.0")
@@ -130,17 +130,20 @@ class OctavePackage(ResourcePackage):
             self.addSoftPackageDependency(sharedLibrary)
 
     def _addDefaultProps(self):
+        diaryEnabledStr = str(self.diaryEnabled).lower()
+        bufferingEnabledStr = str(self.bufferingEnabled).lower()
+
         self.addSimpleProperty(
             complex=False,
             type="boolean",
             id="diaryEnabled",
-            value=self.diaryEnabledStr)
+            value=diaryEnabledStr)
 
         self.addSimpleProperty(
             complex=False,
             type="boolean",
             id="bufferingEnabled",
-            value=self.bufferingEnabledStr)
+            value=bufferingEnabledStr)
 
         self.addSimpleProperty(
             complex=False,
