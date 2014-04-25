@@ -61,7 +61,7 @@ class PythonPropertyMapper(PropertyMapper):
 
     def getStructPropertyType(self, prop):
         if prop.identifier() == 'connectionTable::connection_descriptor':
-            return 'bulkio.connection_descriptor'
+            return 'bulkio.connection_descriptor_struct'
         else:
             return self._structName(prop.name())
 

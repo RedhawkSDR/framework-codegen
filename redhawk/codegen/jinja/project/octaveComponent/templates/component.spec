@@ -20,8 +20,8 @@
 #{$ extends "component/component.spec" $}
 
 #{$ block requireExtensions $}
-BuildRequires:  {{octave >= versions.octave}}
-Requires:       {{octave >= versions.octave}}
-BuildRequires:  {{octave-devel >= versions.octave}}
-Requires:       {{octave-devel >= versions.octave}}
+BuildRequires:  octave >= {{versions.octave}}
+Requires:       octave >= {{versions.octave}}
+BuildRequires:  octave-devel >= {{versions.octave}}
+Requires:       octave-devel >= {{versions.octave}}
 #{$ endblock $}

@@ -138,7 +138,7 @@ ${self.constructorBody()}
 /*{% block start %}*/
 void ${className}::start() throw (CORBA::SystemException, CF::Resource::StartError)
 {
-    Resource_impl::start();
+    ${baseClass}::start();
     ThreadedComponent::startThread();
 }
 /*{% endblock %}*/
@@ -146,7 +146,7 @@ void ${className}::start() throw (CORBA::SystemException, CF::Resource::StartErr
 /*{% block stop %}*/
 void ${className}::stop() throw (CORBA::SystemException, CF::Resource::StopError)
 {
-    Resource_impl::stop();
+    ${baseClass}::stop();
     if (!ThreadedComponent::stopThread()) {
         throw CF::Resource::StopError(CF::CF_NOTSET, "Processing thread did not die");
     }

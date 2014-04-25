@@ -23,14 +23,13 @@
 //% set className = component.reprogclass.name
 //% set baseClass = component.baseclass.name
 //% set includeGuard = component.name.upper() + '_IMPL_REPROG_H'
-//% set isExecutable = component.superclasses[0].name == "ExecutableDevice_impl"
 #ifndef ${includeGuard}
 #define ${includeGuard}
 
 #include "${component.baseclass.header}"
 //% if component is device
 #include "ossie/Device_impl.h"
-//% if isExecutable == True
+//% if component is executabledevice
 #include "ossie/ExecutableDevice_impl.h"
 #include "ossie/prop_helpers.h"
 #include "entry_point.h"
@@ -65,7 +64,7 @@ class ${className} : public ${baseClass}
 //% if component is device
         virtual void adminState(CF::Device::AdminType adminState) 
             throw (CORBA::SystemException);
-//% if isExecutable == True
+//% if component is executabledevice
         virtual CF::ExecutableDevice::ProcessID_Type execute (const char* name, const CF::Properties& options, const CF::Properties& parameters)
             throw ( CF::ExecutableDevice::ExecuteFail, CF::InvalidFileName, CF::ExecutableDevice::InvalidOptions, 
                     CF::ExecutableDevice::InvalidParameters, CF::ExecutableDevice::InvalidFunction, CF::Device::InvalidState, 
@@ -91,7 +90,7 @@ class ${className} : public ${baseClass}
         virtual void beforeHardwareUnprogrammed() {};
         virtual void afterHardwareUnprogrammed() {};
 
-//% if isExecutable == True
+//% if component is executabledevice
         virtual bool hasRunningResources();
         virtual Resource_impl* generateResource(int argc, char* argv[], ConstructorPtr fnptr, const char* libraryName)=0;
 //% endif
@@ -100,7 +99,7 @@ class ${className} : public ${baseClass}
         Device_impl*            _parentDevice;
         bool                    _parentAllocated;
         CF::Properties          _previousRequestProps;
-//% if isExecutable == True
+//% if component is executabledevice
         ResourceMap             _resourceMap;
         ProcessMap              _processMap;
         unsigned int            _processIdIncrement;

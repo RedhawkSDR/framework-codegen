@@ -23,7 +23,6 @@
 //% set className = component.userclass.name
 //% set baseClass = component.reprogclass.name if component is device else component.baseclass.name
 //% set artifactType = component.artifacttype
-//% set isExecutable = component.superclasses[0].name == "ExecutableDevice_impl"
 /**************************************************************************
 
     This is the ${artifactType} code. This file contains the child class where
@@ -239,7 +238,7 @@ void ${className}::deallocateCapacity(const CF::Properties& capacities)
      */
 
 
-/*{% if isExecutable == True %}*/
+/*{% if component is executabledevice %}*/
     if (!hasRunningResources()) {
         attemptToUnprogramParent();
     }
@@ -263,7 +262,7 @@ void ${className}::hwLoadRequest(CF::Properties& request) {
 */
 }
 
-/*{% if isExecutable == True %}*/
+/*{% if component is executabledevice %}*/
 Resource_impl* ${className}::generateResource(int argc, char* argv[], ConstructorPtr resourceEntryPoint, const char* libName) 
 {
     return resourceEntryPoint(argc, argv, this/*, customArg1, customArg2*/);

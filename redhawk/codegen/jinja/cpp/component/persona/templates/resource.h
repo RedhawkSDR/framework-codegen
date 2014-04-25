@@ -23,7 +23,6 @@
 //% set className = component.userclass.name 
 //% set baseClass = component.reprogclass.name if component is device else component.baseclass.name
 //% set includeGuard = component.name.upper() + '_IMPL_H'
-//% set isExecutable = component.superclasses[0].name == "ExecutableDevice_impl"
 #ifndef ${includeGuard}
 #define ${includeGuard}
 
@@ -68,7 +67,7 @@ class ${className} : public ${baseClass}
         Device_impl* _parentDevice;
 //% endif
 
-//% if isExecutable == True
+//% if component is executabledevice
     private:
         Resource_impl* generateResource(int argc, char* argv[], ConstructorPtr fnptr, const char* libName);
 //% endif

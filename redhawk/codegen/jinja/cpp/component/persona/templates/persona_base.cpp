@@ -23,7 +23,6 @@
 //% set className = component.reprogclass.name
 //% set baseClass = component.baseclass.name
 //% set artifactType = component.artifacttype
-//% set isExecutable = component.superclasses[0].name == "ExecutableDevice_impl"
 /**************************************************************************
 
     This is the ${artifactType} code. This file contains the child class where
@@ -106,7 +105,7 @@ void ${className}::construct()
     // Initialize state to safe defaults
     _parentDevice = NULL;
     _parentAllocated = false;
-//% if isExecutable == True
+//% if component is executabledevice
     _processIdIncrement = 0;
 //% endif 
 }
@@ -136,47 +135,14 @@ void ${className}::releaseObject()
         CF::LifeCycle::ReleaseError, 
         CORBA::SystemException ) 
 {
-/*{% if isExecutable == True %}*/
+/*{% if component is executabledevice %}*/
     // Terminate all children that were executed
     ProcessMapIter iter;
     for (iter = _processMap.begin(); iter != _processMap.end(); iter++) {
         this->terminate(iter->first);
     }
 /*{% endif %}*/
-
-    // This function clears the component running condition so main shuts down everything
-    try {
-        stop();
-    } catch (CF::Resource::StopError& ex) {
-        // TODO - this should probably be logged instead of ignored
-    }
-
-    // deactivate ports
-    releaseInPorts();
-    releaseOutPorts();
-
-/*{% for port in component.ports %}*/
-    if (${port.cppname}) delete(${port.cppname});
-    ${port.cppname} = NULL;
-/*{% endfor %}*/
-
-    // SR:419
-    LOG_DEBUG(${className}, __FUNCTION__ << ": Receive releaseObject call");
-    if (_adminState == CF::Device::UNLOCKED) {
-        LOG_DEBUG(${className}, __FUNCTION__ << ": Releasing Device")
-        setAdminState(CF::Device::SHUTTING_DOWN);
-
-        // SR:418
-        // TODO Release aggregate devices if more than one exists
-        if (!CORBA::is_nil(_aggregateDevice)) {
-            try {
-                _aggregateDevice->removeDevice(this->_this());
-            } catch (...) {
-            }
-        }
-
-        LOG_DEBUG(${className}, __FUNCTION__ << ": Done Releasing Device")
-    }
+    ${baseClass}::releaseObject();
 }
 
 
@@ -239,7 +205,7 @@ CORBA::Boolean ${className}::attemptToUnprogramParent()
     return !_parentAllocated;
 }
 
-/*{% if isExecutable == True %}*/
+/*{% if component is executabledevice %}*/
 CF::ExecutableDevice::ProcessID_Type ${className}::execute (
                         const char*                 name, 
                         const CF::Properties&       options, 
