@@ -22,7 +22,7 @@ import ossie.parsers.scd
 
 from redhawk.codegen.utils import strenum
 
-ComponentTypes = strenum('resource', 'device', 'loadabledevice', 'executabledevice', 'service')
+ComponentTypes = strenum('resource', 'device', 'loadabledevice', 'executabledevice', 'service', 'sharedpackage')
 PortTypes = strenum('data', 'control', 'responses', 'test', 'virtual')
 
 

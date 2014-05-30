@@ -20,26 +20,42 @@
 
 import jinja2
 
-from redhawk.codegen.jinja.generator import TopLevelGenerator
 from redhawk.codegen.jinja.common import ShellTemplate, SpecfileTemplate
+from redhawk.codegen.jinja.project.component.generator import ComponentProjectGenerator
+from redhawk.codegen.jinja.loader import CodegenLoader
 
-from mapping import ProjectMapper
+from redhawk.codegen.jinja.cpp import CppCodeGenerator
+from mapping import DependencyDirectoryProjectMapper
+
+from redhawk.codegen.jinja.common import ShellTemplate, AutomakeTemplate, AutoconfTemplate
 
 if not '__package__' in locals():
     # Python 2.4 compatibility
     __package__ = __name__.rsplit('.', 1)[0]
 
-loader = jinja2.PackageLoader(__package__)
+loader = CodegenLoader(__package__,
+                       {'common'     : 'redhawk.codegen.jinja.common',
+                        'base'       : 'redhawk.codegen.jinja.cpp.component.base'})
 
-class ComponentProjectGenerator(TopLevelGenerator):
-    def projectMapper(self):
-        return ProjectMapper()
+class DependencyDirectoryProjectGenerator(CppCodeGenerator):
 
     def loader(self, project):
         return loader
 
     def templates(self, project):
         return [
-            ShellTemplate('build.sh'),
-            SpecfileTemplate('component.spec', project['name']+'.spec')
+            AutomakeTemplate('Makefile.am'),
+            AutoconfTemplate('configure.ac'),
+            ShellTemplate('base/build.sh'),
+            ShellTemplate('common/reconf')
             ]
+
+    def componentMapper(self):
+        return DependencyDirectoryProjectMapper()
+
+    def propertyMapper(self):
+        return None
+
+    def portMapper(self):
+        return None
+

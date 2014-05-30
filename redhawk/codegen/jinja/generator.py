@@ -29,9 +29,19 @@ from redhawk.codegen import versions
 from environment import CodegenEnvironment
 
 class Generator(object):
-    def __init__(self, outputdir, overwrite=False, crcs={}, **options):
+    def __init__(
+            self,
+            outputdir,
+            overwrite=False,
+            crcs={},
+            variant="",
+            **options):
+
         self.outputdir = outputdir
         self.overwrite = overwrite
+        if variant != "":
+            variant = "-" + variant
+        self.variant = variant
         self.parseopts(**options)
 
         # Read MD5 sums for testing file changes.
@@ -130,9 +140,9 @@ class Generator(object):
                          'new':      False,
                          'remove':   True}
                 files.append(info)
-        
+
         return files
-            
+
     def generate(self, softpkg, *filenames):
         if not os.path.exists(self.outputdir):
             os.mkdir(self.outputdir)
@@ -265,12 +275,12 @@ class CodeGenerator(Generator):
 
     def portFactory(self):
         raise NotImplementedError, 'CodeGenerator.portFactory'
-    
+
     def map(self, softpkg):
         # Apply template-specific mapping for component.
         impl = softpkg.getImplementation(self.implId)
         compmapper = self.componentMapper()
-        compmapper.setImplementation( impl)
+        compmapper.setImplementation(impl)
         component = compmapper.mapComponent(softpkg)
         component['impl'] = compmapper.mapImplementation(impl)
 

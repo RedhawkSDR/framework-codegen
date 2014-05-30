@@ -86,6 +86,9 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{% for port in component.ports %}
             self.${port.pyname} = ${port.constructor}
 #{% endfor %}
+#{% if component.hasmultioutport %}
+            self.addPropertyChangeListener('connectionTable',self.updated_connectionTable)
+#{% endif %}
 
         def start(self):
 #{% for port in component.ports if port.start%}
@@ -95,8 +98,7 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
             ThreadedComponent.startThread(self, pause=self.PAUSE)
 
 #{% if component.hasmultioutport %}
-        def onconfigure_prop_connectionTable(self, oldval, newval):
-            self.connectionTable = newval
+        def updated_connectionTable(self, id, oldval, newval):
 #{% for port in component.ports if port.multiout %}
             self.${port.pyname}.updateConnectionFilter(newval)
 #{% endfor %}

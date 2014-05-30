@@ -22,6 +22,7 @@
 import os
 import shutil
 import sys
+import subprocess
 from getopt import getopt
 
 from redhawk.codegen.model.softpkg import SoftPkg
@@ -79,7 +80,8 @@ Options:
     -f                  Overwrite existing files even if modified
     -C <dir>            Put output files in directory <dir>
     --impl <id>         Generate implementation <id> [default: all]
-    -m <mfile>          Provide .m file to be copied into the component cpp directory 
+    -m <mfile>          Provide .m file to be copied into the component cpp directory
+    --variant           Variant tag to be appended to the directory name
 
 Options only valid with a single implementation (if a component contains
 multiple implementations, must use --impl to specify which):
@@ -92,11 +94,43 @@ Select from one of the following resource types when generating output:
 %s
 """ % (os.path.basename(sys.argv[0]), "\n".join( [ "    --" + x[0]+"\t\t"+x[1][1] for x in TemplateSetup.items() ] ) )
 
+def determineProjectType(implList):
+    projectType = "component"
+
+    for implId in implList:
+        implSettings = settings.get(implId, ImplementationSettings())
+        implTemplate = implSettings.template
+        if implTemplate.find("softPackageDependency") != -1:
+            projectType = "softPackageDependency"
+        elif implTemplate.find("octave") != -1:
+            projectType = "octaveComponent"
+
+    return projectType
+
+def copyMFiles(mFiles, outputdir):
+    ''' 
+    Copy over m files
+    code generators will need to parse the m file that is in the cpp dir
+
+    '''
+    for mFile in mFiles:
+        if not os.path.isdir(outputdir+"/cpp"):
+            os.makedirs(outputdir+"/cpp")
+        else:
+            # touch the localfile directory (cpp), so that the device will see an
+            # updated timestamp when loading.
+            subprocess.call(['touch', outputdir+"/cpp"])
+
+        mFileName = mFile.split("/")
+        mFileName = mFileName[-1]
+        shutil.copyfile(mFile, outputdir + "/cpp/" + mFileName)
+
+
 Function = strenum('list', 'generate')
 
 if __name__ == '__main__':
     # add predefined template settings a full word options
-    topts = ['help', 'template=', 'impl=', 'impldir=', 'lang='] + [ x for x in TemplateSetup.keys() ]
+    topts = ['help', 'template=', 'impl=', 'impldir=', 'lang=', 'variant='] + [ x for x in TemplateSetup.keys() ]
     opts, args = getopt(sys.argv[1:], 'filC:B:m:', topts )
     outputdir = None
     action = Function.GENERATE
@@ -106,6 +140,7 @@ if __name__ == '__main__':
     ignoreWavedev=False
     resource_type=None
     language=None
+    variant=""
     mFiles = []
     for key, value in opts:
         if key == '--help':
@@ -126,6 +161,8 @@ if __name__ == '__main__':
             overrides.outputDir = value
         elif key == '--lang':
             language = value
+        elif key == '--variant':
+            variant = value
         elif key == '-l':
             action = Function.LIST
         elif key == '-f':
@@ -140,8 +177,8 @@ if __name__ == '__main__':
     try:
         spdFile = args[0]
     except:
-        raise SystemExit(usage)       
-    
+        raise SystemExit(usage)
+
     if resource_type and overrides.template:
         raise SystemExit, '--template cannot be selected with a predefined resource type.'
 
@@ -166,14 +203,7 @@ if __name__ == '__main__':
         # Default to the same location as the SPD unless told otherwise.
         outputdir = os.path.dirname(spdFile)
  
-    # Copy over m files
-    # code generators will need to parse the m file that is in the cpp dir
-    for mFile in mFiles:
-        mFileName = mFile.split("/")
-        mFileName = mFileName[-1]
-        if not os.path.isdir(outputdir+"/cpp"):
-            os.makedirs(outputdir+"/cpp")
-        shutil.copyfile(mFile, outputdir + "/cpp/" + mFileName)
+    copyMFiles(mFiles, outputdir)
 
     # Parse the component profile
     softpkg = SoftPkg(spdFile)
@@ -207,7 +237,7 @@ if __name__ == '__main__':
             raise SystemExit, 'Cannot override template-specific options for multiple implementations'
 
     # Change to the output directory; all XML should have been processed, so
-    # there are no wories about relative paths.
+    # there are no worries about relative paths.
     if outputdir:
         os.chdir(outputdir)
 
@@ -228,17 +258,28 @@ if __name__ == '__main__':
 
     # Top-level code generation
     # TODO: Allow disabling, explicit file list, template selection
-    if len(mFiles) == 0:
+    projectType = determineProjectType(implList)
+    if projectType == "octaveComponent":
+        from redhawk.codegen.jinja.project import octaveComponent as component
+    elif projectType == "softPackageDependency":
+        from redhawk.codegen.jinja.project import softPackageDependency as component
+    elif projectType == "component":
         from redhawk.codegen.jinja.project import component
     else:
-        from redhawk.codegen.jinja.project import octaveComponent as component
-    generator = component.factory(outputdir='.', overwrite=overwrite, crcs=toplevelCRCs)
+        SystemExit("Fatal Error: Unsupported project type.  This should never happen")
+
+    generator = component.factory(
+        outputdir='.',
+        overwrite=overwrite,
+        crcs=toplevelCRCs,
+        variant=variant)
     generators.append(('Component '+softpkg.name(), '', generator))
 
-    # Generate unit tests
-    from redhawk.codegen.jinja.unitTests.resource import sca
-    generator = sca.factory(outputdir='tests', overwrite=overwrite)
-    generators.append(('Tests '+softpkg.name(), 'tests', generator))
+    if projectType != "softPackageDependency":
+        # Generate unit tests
+        from redhawk.codegen.jinja.unitTests.resource import sca
+        generator = sca.factory(outputdir='tests', overwrite=overwrite)
+        generators.append(('Tests '+softpkg.name(), 'tests', generator))
 
     # Set up generation for each requested implementation.
     for implId in implList:
@@ -298,9 +339,13 @@ if __name__ == '__main__':
         package = __import__(implTemplate)
         for name in implTemplate.split('.')[1:]:
             package = getattr(package, name)
-        generator = package.factory(implId=implId, outputdir=implOutputDir,
-                                    overwrite=overwrite, crcs=implSettings.generatedFileCRCs,
-                                    **implSettings.properties)
+        generator = package.factory(
+            implId = implId,
+            outputdir = implOutputDir,
+            overwrite = overwrite,
+            crcs = implSettings.generatedFileCRCs,
+            variant = variant,
+            **implSettings.properties)
 
         # Display the implementation; pre-1.8 projects use UUIDs for the identifier
         # and have a separate symbolic name in the project settings.

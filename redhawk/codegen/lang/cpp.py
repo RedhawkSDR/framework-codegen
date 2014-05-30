@@ -156,6 +156,12 @@ def idlNamespace(idl):
     # Never include the omg.org from COS modules in C++ namespaces
     return idl.namespace().replace('omg.org/', '').replace('/', '::')
 
+def idlClass(idl):
+    interface = idl.interface()
+    if idl.namespace():
+        interface = idlNamespace(idl) + '::' + interface
+    return interface
+
 def idlHeader(idl):
     if idl.namespace().startswith('omg.org/'):
         # By convention, COS headers use '.hh'

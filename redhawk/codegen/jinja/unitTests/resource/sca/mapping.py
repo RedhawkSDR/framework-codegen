@@ -29,7 +29,8 @@ _projectTypes = {
     ComponentTypes.DEVICE:   'Device',
     ComponentTypes.LOADABLEDEVICE: 'LoadableDevice',
     ComponentTypes.EXECUTABLEDEVICE: 'ExecutableDevice',
-    ComponentTypes.SERVICE:  'Service'
+    ComponentTypes.SERVICE:  'Service',
+    ComponentTypes.SHAREDPACKAGE: 'SharedPackage'
 }
 
 class ProjectMapper(ComponentMapper):

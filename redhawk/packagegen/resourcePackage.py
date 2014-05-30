@@ -1,9 +1,12 @@
 import subprocess
 import os
-import ossie.parsers
 from ossie.parsers import spd, scd, prf
+from redhawk.packagegen.softPackage import SoftPackage
 
 OSSIEHOME=os.environ["OSSIEHOME"]
+DEFAULT_SPD_TEMPLATE="/lib/python/redhawk/packagegen/templates/resourceTemplate.spd.xml"
+DEFAULT_SCD_TEMPLATE="/lib/python/redhawk/packagegen/templates/resourceTemplate.scd.xml"
+DEFAULT_PRF_TEMPLATE="/lib/python/redhawk/packagegen/templates/resourceTemplate.prf.xml"
 
 def standardizeComplexFormat(input):
     """
@@ -17,6 +20,7 @@ def standardizeComplexFormat(input):
 
     """
 
+    # Standardize everything to use "j" for sqrt(-1)
     input = input.replace("i", "j")
 
     try:
@@ -30,27 +34,43 @@ def standardizeComplexFormat(input):
         # Assume input is already in A+jB form
         return input
 
-class ResourcePackage(object):
+class ResourcePackage(SoftPackage):
+    '''
+    Class for creating a set of XML models representing the resource.  To
+    create a new resource type, inherit from this class.  See
+    octaveComponent.py for an example of how to use this class.
+
+    '''
 
     def __init__(
             self,
             name,
+            implementation,
             outputDir=".",
-            generator="pull",
-            spdTemplateFile = OSSIEHOME+"/lib/python/redhawk/packagegen/templates/resourceTemplate.spd.xml",
-            scdTemplateFile = OSSIEHOME+"/lib/python/redhawk/packagegen/templates/resourceTemplate.scd.xml",
-            prfTemplateFile = OSSIEHOME+"/lib/python/redhawk/packagegen/templates/resourceTemplate.prf.xml",
+            generator="cpp.component.pull",
+            spdTemplateFile = OSSIEHOME+DEFAULT_SPD_TEMPLATE,
+            scdTemplateFile = OSSIEHOME+DEFAULT_SCD_TEMPLATE,
+            prfTemplateFile = OSSIEHOME+DEFAULT_PRF_TEMPLATE,
             mFiles = [],
             loggingConfigUri = None):
+        '''
+        Create a resource with no ports/properties.  Use helper methods to add
+        additional elements.
 
-        self.name = name
-        self.outputDir = outputDir
+        Note, "implementation" argument must be "cpp", "java", or "python"
+
+        '''
+
+        SoftPackage.__init__(self, name, implementation, outputDir)
 
         self.spd = spd.parse(spdTemplateFile)
         self.scd = scd.parse(scdTemplateFile)
         self.prf = prf.parse(prfTemplateFile)
 
+        self._setImplementation()
         self._setNameInSpd()
+        self._setPropertyFileInSpd()
+        self._setDescriptorInSpd()
 
         self.mFiles = mFiles
 
@@ -64,13 +84,79 @@ class ResourcePackage(object):
                 complex=False,
                 kindtypes=["configure", "execparam"])
 
-    def _setNameInSpd(self):
-        self.spd.id_ = self.name
-        self.spd.name = self.name
-        self.spd.propertyfile.localfile.name = self.name + ".prf.xml"
-        self.spd.descriptor.localfile.name = self.name + ".scd.xml"
-        for index in range(len(self.spd.implementation)):
-            self.spd.implementation[index].code.entrypoint = self.spd.implementation[index].code.entrypoint.replace("template", self.name)
+    def _setPropertyFileInSpd(self):
+        localfile = spd.localFile(name = self.name + ".prf.xml")
+        propertyfile = spd.propertyFile(localfile = localfile)
+        self.spd.propertyfile = propertyfile
+
+    def _setDescriptorInSpd(self):
+        localfile = spd.localFile(name = self.name + ".scd.xml")
+        descriptor = spd.descriptor(localfile = localfile)
+        self.spd.descriptor = descriptor
+
+    def _setImplementation(self):
+        if self.implementation == "cpp":
+            self._setCppImplementation()
+        elif self.implementation == "java":
+            self._setJavaImplementation()
+        elif self.implementation == "python":
+            self._setPythonImplementation()
+
+    def _setCppImplementation(self):
+        localfile = spd.localFile(name=self.implementation)
+        code = spd.code(
+            type_="Executable",
+            localfile = localfile,
+            entrypoint=self.implementation+"/"+self.name)
+        compiler = spd.compiler(version="4.1.2", name="/usr/bin/gcc")
+        implementation = spd.implementation(
+            id_ = self.implementation,
+            code=code,
+            compiler=compiler,
+            programminglanguage = spd.programmingLanguage(name="C++"),
+            humanlanguage = spd.humanLanguage(name="EN"))
+        os = spd.os(name="Linux")
+        implementation.add_os(value=os)
+        implementation.add_processor(spd.processor(name="x86"))
+        implementation.add_processor(spd.processor(name="x86_64"))
+        self.spd.add_implementation(value = implementation)
+
+    def _setJavaImplementation(self):
+        localfile = spd.localFile(name=self.implementation)
+        code = spd.code(
+            type_="Executable",
+            localfile = localfile,
+            entrypoint="java/startJava.sh")
+
+        implementation = spd.implementation(
+            id_ = self.implementation,
+            code = code,
+            compiler = spd.compiler(version="1.5", name="/usr/bin/javac"),
+            programminglanguage = spd.programmingLanguage(name = "Java"),
+            humanlanguage = spd.humanLanguage(name="EN"),
+            runtime = spd.runtime(name = "/usr/bin/java", version="1.5"))
+        os = spd.os(name="Linux")
+        implementation.add_os(value=os)
+
+        self.spd.add_implementation(value = implementation)
+
+    def _setPythonImplementation(self):
+        localfile = spd.localFile(name=self.implementation)
+        code = spd.code(
+            type_="Executable",
+            localfile = localfile,
+            entrypoint="python/" + self.name + ".py")
+
+        implementation = spd.implementation(
+            id_ = self.implementation,
+            code = code,
+            programminglanguage = spd.programmingLanguage(name="Python"),
+            humanlanguage = spd.humanLanguage(name = "EN"),
+            runtime = spd.runtime(version="2.4.4", name="python"))
+        os = spd.os(name="Linux")
+        implementation.add_os(value=os)
+
+        self.spd.add_implementation(value = implementation)
 
     def addUsesPort(self, name, type):
         ports = self.scd.componentfeatures.get_ports()
@@ -153,106 +239,23 @@ class ResourcePackage(object):
             simplesequence.add_kind(value=prf.kind(kindtype=kindtype))
         self.prf.add_simplesequence(simplesequence)
 
-    def runCompileRpm(self):
-        process = subprocess.Popen(
-            './build.sh rpm',
-            shell=True,
-            cwd=self.outputDir+'/'+self.name)
-        process.wait()
+    def addStructSequencProperty(
+            self,
+            id,
+            values={},
+            struct_id="",
+            type={},
+            mode="readwrite",
+            kindtypes=["configure"]):
 
-    def callCodegen(self, force = False):
-        """
-        Format command line arguments and call redhawk-codegen.
+        structseq = prf.structSequence(
+            id_=id,
+            mode=mode)
 
-        For example:
-
-            $ redhawk-codegen -m foo1.m -m foo2.m -f /home/user/bar.spd.xml
-
-        """
-
-        codegenArgs = ["redhawk-codegen"]
-        for mFile in self.mFiles:
-            codegenArgs.append("-m")
-            codegenArgs.append(mFile)
-
-        if force:
-            codegenArgs.append("-f")
-
-        codegenArgs.append(self.outputDir+"/"+self.name+"/"+self.name+".spd.xml")
-        subprocess.call(codegenArgs)
-
-    def runInstall(self):
-        process = subprocess.Popen(
-            './reconf',
-            shell=True,
-            cwd=self.outputDir+'/'+self.name+'/cpp')
-        process.wait()
-        process = subprocess.Popen(
-            './configure',
-            shell=True,
-            cwd=self.outputDir+'/'+self.name+'/cpp')
-        process.wait()
-        process = subprocess.Popen(
-            'make install',
-            shell=True,
-            cwd=self.outputDir+'/'+self.name+'/cpp')
-        process.wait()
-
-    def addSoftPackageDependency(self, dep, arch="noarch"):
-        softpkgref = spd.softPkgRef(localfile=spd.localFile(name=dep),
-                                    implref=spd.implRef(refid="default_impl_" + arch))
-        dependency = spd.dependency(type_="runtime_requirements",
-                                    softpkgref=softpkgref)
-        for index in range(len(self.spd.implementation)):
-            self.spd.implementation[index].add_dependency(dependency)
-
-    def _createWavedevContent(self, generator):
-        self.wavedevContent='<?xml version="1.0" encoding="ASCII"?>\n'
-        self.wavedevContent+='<codegen:WaveDevSettings xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:codegen="http://www.redhawk.gov/model/codegen">\n'
-        self.wavedevContent+='<implSettings key="cpp">\n'
-        self.wavedevContent+='<value outputDir="cpp" template="redhawk.codegen.jinja.cpp.component.__GENERATOR" generatorId="redhawk.codegen.jinja.cpp.component.__GENERATOR" primary="true"/>\n'
-        self.wavedevContent+='</implSettings>\n'
-        self.wavedevContent+='</codegen:WaveDevSettings>\n'
-        self.wavedevContent = self.wavedevContent.replace("__GENERATOR", generator)
-
-    def writeWavedev(self, outputDir="."):
-        self.createOutputDirIfNeeded()
-        outfile=open(self.outputDir+"/"+self.name+"/."+ self.name+".wavedev", 'w')
-        outfile.write(self.wavedevContent)
-        outfile.close()
-
-    def createOutputDirIfNeeded(self):
-        if not os.path.exists(self.outputDir + "/" + self.name):
-            os.makedirs(self.outputDir + "/" + self.name)
-
-    def writeXML(self):
-        self.writeSPD()
-        self.writeSCD()
-        self.writePRF()
-        self.writeWavedev()
-
-    def _writeXMLwithHeader(self, xmlObject, fileType, dtdName, name_=None):
-        outFile = open(self.outputDir+"/"+self.name+"/"+self.name+"."+fileType+".xml", 'w')
-        outFile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        outFile.write('<!DOCTYPE _DTDNAME_ PUBLIC "-//JTRS//DTD SCA V2.2.2 SPD//EN" "_DTDNAME_.dtd">\n'.replace("_DTDNAME_", dtdName))
-        if name_ == None:
-            name_ = dtdName
-        xmlObject.export(
-            outfile      = outFile,
-            level        = 0,
-            pretty_print = True,
-            name_        = name_)
-        outFile.close()
-
-    def writeSPD(self):
-        self.createOutputDirIfNeeded()
-        self._writeXMLwithHeader(self.spd, "spd", "softpkg", name_="softpkg")
-
-    def writeSCD(self):
-        self.createOutputDirIfNeeded()
-        self._writeXMLwithHeader(self.scd, "scd", "softwarecomponent")
-
-    def writePRF(self):
-        self.createOutputDirIfNeeded()
-        self._writeXMLwithHeader(self.prf, "prf", "properties")
+        struct = prf.struct(id_=struct_id,mode=None)
+        for name in type:
+            simp = prf.simple(id_=name,type_=type[name],complex=None,mode=None)
+            struct.add_simple(simp)
+        structseq.set_struct(struct)
+        self.prf.add_structsequence(structseq)
 

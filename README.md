@@ -20,3 +20,14 @@ This work is protected by Copyright. Please refer to the [Copyright File](COPYRI
 
 The REDHAWK Code Generators are licensed under the GNU Lesser General Public License (LGPL).
 
+## Installing
+
+To install the REDHAWK Code Generators:
+
+    $ python setup.py install
+
+This will automatically install the Code Generators to $OSSIEHOME.
+
+If you are installing with the 'sudo' command, note that environment variables are not inherited. You will need to specify the install location manually:
+
+    $ sudo python setup.py install --home=$OSSIEHOME

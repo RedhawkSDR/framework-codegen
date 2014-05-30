@@ -1,4 +1,5 @@
-#
+# vim: noet: softtabstop=0
+#{#
 # This file is protected by Copyright. Please refer to the COPYRIGHT file
 # distributed with this source distribution.
 #
@@ -16,30 +17,23 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
-#
+#}
 
-import jinja2
+xmldir = $(prefix)/{{component.sdrpath}}/{{component.name}}{{generator.variant}}/
+dist_xml_DATA = ../{{component.name}}.spd.xml
 
-from redhawk.codegen.jinja.generator import TopLevelGenerator
-from redhawk.codegen.jinja.common import ShellTemplate, SpecfileTemplate
+mdir = $(prefix)/{{component.sdrpath}}/{{component.name}}{{generator.variant}}/{{component.impl.id}}/share/
+dist_m_DATA = share/*
 
-from mapping import ProjectMapper
-
-if not '__package__' in locals():
-    # Python 2.4 compatibility
-    __package__ = __name__.rsplit('.', 1)[0]
-
-loader = jinja2.PackageLoader(__package__)
-
-class ComponentProjectGenerator(TopLevelGenerator):
-    def projectMapper(self):
-        return ProjectMapper()
-
-    def loader(self, project):
-        return loader
-
-    def templates(self, project):
-        return [
-            ShellTemplate('build.sh'),
-            SpecfileTemplate('component.spec', project['name']+'.spec')
-            ]
+distclean-local:
+	rm -f config.*
+	rm -rf autom4te.cache
+	rm -f acinclude.m4
+	rm -f aclocal.m4
+	rm -f configure
+	rm -f depcomp
+	rm -f install-sh
+	rm -f ltmain.sh
+	rm -f Makefile.in
+	rm -f missing
+	rm -rf .deps

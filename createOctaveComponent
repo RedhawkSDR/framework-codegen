@@ -22,7 +22,7 @@ E.g.,
 
     {0}\\
         --function=foo \\
-        --sharedLibraries=/sharedPkgs/foo/foo.spd.xml \\
+        --sharedLibraries=/deps/foo/foo.spd.xml \\
         foo.m /home/user1/bar.m
 
 Arguments:
@@ -42,7 +42,7 @@ Options:
                         as a Soft Package Dependency. Points to an spd.xml file
                         whose path is relative to $SDRROOT/dom.
 
-                            e.g., --sharedLibraries=/sharedPkgs/foo/foo.spd.xml
+                            e.g., --sharedLibraries=/deps/foo/foo.spd.xml
 
                         When listing multiple files, the filenames must be
                         comma-separated, with no spaces.
@@ -92,6 +92,7 @@ if __name__ == "__main__":
     bufferingEnabled = False
     loggingConfigUri = None
 
+    # Set option variables based on option flags set on the command line
     for key, value in opts:
         if key == '--help' or key == '-h':
             print usage
@@ -104,7 +105,7 @@ if __name__ == "__main__":
             sharedLibraries = value.split(',')
         elif key == '--mFiles':
             mFiles = value.split(',')
-        elif key == '--buildRpm':
+        elif key.lower() == '--buildrpm':
             buildRpm = True
         elif key == '--install':
             install = True
@@ -118,9 +119,11 @@ if __name__ == "__main__":
             force = True
 
     if len(args) == 0:
+        # No m files have been provided, print usage and quit
         print usage
         raise SystemExit
     elif len(args) == 1:
+        # If there is only 1 m file, use it as the main function
         dirs = args[0].split('/')
         filename = dirs[-1]
         function = filename[0:-2]
@@ -128,9 +131,12 @@ if __name__ == "__main__":
     mFiles = args
 
     if function is None:
+        # if multiple m files have been provided, but no function was
+        # specified, print usage and quit
         print usage
         raise SystemExit
 
+    # Create XML model
     myOctavePackage = OctavePackage(
         mFiles           = mFiles,
         function         = function,

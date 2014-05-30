@@ -2,6 +2,12 @@ from redhawk.codegen.model import softpkg
 from redhawk.packagegen.resourcePackage import ResourcePackage
 
 def _getMFunctionParameters(function, mFiles):
+    '''
+    Parse the function declaration of the primary m file to get the input
+    and output parameters.
+
+    '''
+
     mFunctionParameters = None
 
     # find the master m file and parse its m function
@@ -48,9 +54,9 @@ class OctavePackage(ResourcePackage):
             self,
             mFiles,
             function,
-            outputDir        = ".",
-            sharedLibraries  = None,
-            diaryEnabled     = False,
+            outputDir = ".",
+            sharedLibraries  = [],
+            diaryEnabled = False,
             bufferingEnabled = False,
             loggingConfigUri = None):
         '''
@@ -71,8 +77,9 @@ class OctavePackage(ResourcePackage):
         ResourcePackage.__init__(
             self,
             name = function,
+            implementation = "cpp",
             outputDir = outputDir,
-            generator = "octave",
+            generator = "cpp.component.octave",
             mFiles = mFiles,
             loggingConfigUri = loggingConfigUri)
 
@@ -130,6 +137,12 @@ class OctavePackage(ResourcePackage):
             self.addSoftPackageDependency(sharedLibrary)
 
     def _addDefaultProps(self):
+        '''
+        Add the diaryEnabled, bufferingEnabled, and __mFunction properties to
+        the PRF.
+
+        '''
+
         diaryEnabledStr = str(self.diaryEnabled).lower()
         bufferingEnabledStr = str(self.bufferingEnabled).lower()
 

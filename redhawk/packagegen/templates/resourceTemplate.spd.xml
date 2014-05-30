@@ -5,23 +5,4 @@
     <author>
         <name>null</name>
     </author>
-    <propertyfile>
-        <localfile name="template.prf.xml"/>
-    </propertyfile>
-    <descriptor>
-        <localfile name="template.scd.xml"/>
-    </descriptor>
-    <implementation id="cpp" aepcompliance="aep_compliant">
-        <description></description>
-        <code type="Executable">
-            <localfile name="cpp"/>
-            <entrypoint>cpp/template</entrypoint>
-        </code>
-        <compiler version="4.1.2" name="/usr/bin/gcc"/>
-        <programminglanguage name="C++"/>
-        <humanlanguage name="EN"/>
-        <os name="Linux"/>
-        <processor name="x86"/>
-        <processor name="x86_64"/>
-    </implementation>
 </softpkg>

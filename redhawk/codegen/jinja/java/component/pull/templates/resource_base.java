@@ -53,13 +53,6 @@ import CF.DevicePackage.OperationalType;
 import CF.DevicePackage.UsageType;
 /*{% endif %}*/
 import CF.InvalidObjectReference;
-/*{% filter lines|unique|join('\n') %}*/
-/*{%    for prop in component.properties %}*/
-/*{%        if prop.CFType %}*/
-import CF.${prop.CFType};
-/*{%        endif %}*/
-/*{%    endfor %}*/
-/*{% endfilter %}*/
 
 import org.ossie.component.*;
 /*{% if component.properties %}*/

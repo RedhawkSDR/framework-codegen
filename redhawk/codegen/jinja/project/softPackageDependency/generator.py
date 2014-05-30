@@ -20,20 +20,18 @@
 
 import jinja2
 
-from redhawk.codegen.jinja.generator import TopLevelGenerator
 from redhawk.codegen.jinja.common import ShellTemplate, SpecfileTemplate
-
-from mapping import ProjectMapper
+from redhawk.codegen.jinja.project.component.generator import ComponentProjectGenerator
+from redhawk.codegen.jinja.loader import CodegenLoader
+from mapping import DependencyProjectMapper
 
 if not '__package__' in locals():
     # Python 2.4 compatibility
     __package__ = __name__.rsplit('.', 1)[0]
 
-loader = jinja2.PackageLoader(__package__)
+loader = CodegenLoader(__package__)
 
-class ComponentProjectGenerator(TopLevelGenerator):
-    def projectMapper(self):
-        return ProjectMapper()
+class DependencyProjectGenerator(ComponentProjectGenerator):
 
     def loader(self, project):
         return loader
@@ -41,5 +39,9 @@ class ComponentProjectGenerator(TopLevelGenerator):
     def templates(self, project):
         return [
             ShellTemplate('build.sh'),
-            SpecfileTemplate('component.spec', project['name']+'.spec')
+            SpecfileTemplate('dependency.spec', project['name']+'.spec')
             ]
+
+    def projectMapper(self):
+        return DependencyProjectMapper()
+

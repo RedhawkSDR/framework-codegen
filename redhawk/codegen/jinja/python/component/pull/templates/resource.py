@@ -102,14 +102,15 @@ class ${className}(${baseClass}):
             Properties are accessed directly as member variables. If the property name is baudRate,
             then accessing it (for reading or writing) is achieved in the following way: self.baudRate.
 
-            To implement a change callback for a property, add the following member to the class:
+            To implement a change callback notification for a property, create a callback function with the following form:
 
-            def onconfigure_prop_baudRate(self, old_value, new_value):
-                self.baudRate = new_value
+            def mycallback(self, id, old_value, new_value):
+                pass
 
-            where old_value is the previous value, and new_value is the updated value.
-
-            Note: the value of the property (i.e.: self.baudRate) must be manually updated
+            where id is the property id, old_value is the previous value, and new_value is the updated value.
+            
+            The callback is then registered on the component as:
+            self.addPropertyChangeListener('baudRate', self.mycallback)
             
         Example:
         

@@ -40,6 +40,8 @@ class Implementation(object):
         return self.__impl.id_
 
     def entrypoint(self):
+        if not self.__impl.code.entrypoint:
+            return self.__impl.code.localfile.name
         return self.__impl.code.entrypoint
 
     def programminglanguage(self):
@@ -211,8 +213,12 @@ class SoftPkg(object):
 
         self.__path = os.path.dirname(spdFile)
 
-        self.__scdFile = self.__spd.descriptor.localfile.name
-        self.__desc = SoftwareComponent(os.path.join(self.__path, self.__scdFile))
+        if self.__spd.get_descriptor():
+            self.__scdFile = self.__spd.descriptor.localfile.name
+            self.__desc = SoftwareComponent(os.path.join(self.__path, self.__scdFile))
+        else:
+            self.__scdFile = None
+            self.__desc = None
 
         if self.__spd.get_propertyfile():
             self.__prfFile = self.__spd.propertyfile.localfile.name
@@ -253,7 +259,10 @@ class SoftPkg(object):
         return self.__scdFile
 
     def type(self):
-        return self.__desc.type()
+        if self.__desc:
+            return self.__desc.type()
+        else:
+            return ComponentTypes.SHAREDPACKAGE
 
     def isDevice(self):
         return self.type() == ComponentTypes.DEVICE
@@ -277,13 +286,22 @@ class SoftPkg(object):
         return self.__spd.description
 
     def usesPorts(self):
-        return self.__desc.uses()
+        if self.__desc:
+            return self.__desc.uses()
+        else:
+            return None
 
     def providesPorts(self):
-        return self.__desc.provides()
+        if self.__desc:
+            return self.__desc.provides()
+        else:
+            return None
 
     def ports(self):
-        return self.__desc.ports()
+        if self.__desc:
+            return self.__desc.ports()
+        else:
+            return None
 
     def properties(self):
         return self.__props
@@ -337,7 +355,10 @@ class SoftPkg(object):
         if comptype == ComponentTypes.RESOURCE:
             return 'dom/components'
         elif comptype == ComponentTypes.DEVICE or comptype == ComponentTypes.LOADABLEDEVICE or comptype == ComponentTypes.EXECUTABLEDEVICE:
-            return 'dev/devices'            
+            return 'dev/devices'
         elif comptype == ComponentTypes.SERVICE:
             return 'dev/services'
+        elif comptype == ComponentTypes.SHAREDPACKAGE:
+            return 'dom/deps'
         raise ValueError, 'Unsupported software component type', comptype
+

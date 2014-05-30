@@ -509,13 +509,15 @@ void ${className}::populateOutputPacket(
         outputPacket->dataBuffer.clear();
      }
 
-    outputPacket->SRI          = inputPackets[_sriPort]->SRI;
-    outputPacket->SRI.xdelta   = inputPackets[_sriPort]->SRI.xdelta;
-    outputPacket->SRI.streamID = inputPackets[_sriPort]->streamID.c_str();
-    outputPacket->T            = bulkio::time::utils::now();
-    outputPacket->streamID     = inputPackets[_sriPort]->streamID.c_str();
-    outputPacket->EOS          = inputPackets[_sriPort]->EOS;
-    outputPacket->sriChanged   = inputPackets[_sriPort]->sriChanged;
+    if (inputPackets.count(_sriPort) > 0) {
+        outputPacket->SRI          = inputPackets[_sriPort]->SRI;
+        outputPacket->SRI.xdelta   = inputPackets[_sriPort]->SRI.xdelta;
+        outputPacket->SRI.streamID = inputPackets[_sriPort]->streamID.c_str();
+        outputPacket->T            = bulkio::time::utils::now();
+        outputPacket->streamID     = inputPackets[_sriPort]->streamID.c_str();
+        outputPacket->EOS          = inputPackets[_sriPort]->EOS;
+        outputPacket->sriChanged   = inputPackets[_sriPort]->sriChanged;
+    }
 }
 /*# end bulkio conditional #*/
 /*{%endif%}*/

@@ -43,6 +43,7 @@ class PythonPropertyMapper(PropertyMapper):
             pyprop['pyvalue'] = python.literal(simple.value(), 
                                                simple.type(), 
                                                simple.isComplex())
+            pyprop['value'] = simple.value()
         return pyprop
 
     def mapSimpleSequenceProperty(self, simplesequence):

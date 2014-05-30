@@ -1,4 +1,4 @@
-#
+#{#
 # This file is protected by Copyright. Please refer to the COPYRIGHT file
 # distributed with this source distribution.
 #
@@ -16,30 +16,27 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
-#
+#}
+AC_INIT({{component.name}}, {{component.version}})
+AM_INIT_AUTOMAKE(nostdinc)
 
-import jinja2
+AC_PROG_INSTALL
 
-from redhawk.codegen.jinja.generator import TopLevelGenerator
-from redhawk.codegen.jinja.common import ShellTemplate, SpecfileTemplate
+AC_CORBA_ORB
+OSSIE_CHECK_OSSIE
+OSSIE_SDRROOT_AS_PREFIX
+AM_PATH_PYTHON([2.4])
 
-from mapping import ProjectMapper
+PKG_CHECK_MODULES([OSSIE], [ossie >= 1.9])
+AC_CHECK_PYMODULE(ossie, [], [AC_MSG_ERROR([the python ossie module is required])])
+PKG_CHECK_MODULES([OMNIORB], [omniORB4 >= 4.1.0])
+AC_CHECK_PYMODULE(omniORB, [], [AC_MSG_ERROR([the python omniORB module is required])])
 
-if not '__package__' in locals():
-    # Python 2.4 compatibility
-    __package__ = __name__.rsplit('.', 1)[0]
+#{% for interface in component.interfacedeps %}
+PKG_CHECK_MODULES({{interface.name}}, {{interface.name}}{{interface.version}}) 
+AC_CHECK_PYMODULE({{interface.module}}, [], [AC_MSG_ERROR([the python {{interface.module}} module is required])])
+#{% endfor %}
 
-loader = jinja2.PackageLoader(__package__)
+AC_CONFIG_FILES(Makefile)
 
-class ComponentProjectGenerator(TopLevelGenerator):
-    def projectMapper(self):
-        return ProjectMapper()
-
-    def loader(self, project):
-        return loader
-
-    def templates(self, project):
-        return [
-            ShellTemplate('build.sh'),
-            SpecfileTemplate('component.spec', project['name']+'.spec')
-            ]
+AC_OUTPUT

@@ -80,13 +80,13 @@ Functions servicing the tuner control port
 *************************************************************/
 std::string ${className}::getTunerType(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     return frontend_tuner_status[idx].tuner_type;
 }
 
 bool ${className}::getTunerDeviceControl(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     if (getControlAllocationId(idx) == allocation_id)
         return true;
     return false;
@@ -94,13 +94,13 @@ bool ${className}::getTunerDeviceControl(const std::string& allocation_id) {
 
 std::string ${className}::getTunerGroupId(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     return frontend_tuner_status[idx].group_id;
 }
 
 std::string ${className}::getTunerRfFlowId(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     return frontend_tuner_status[idx].rf_flow_id;
 }
 /*{% endif %}*/
@@ -108,9 +108,9 @@ std::string ${className}::getTunerRfFlowId(const std::string& allocation_id) {
 
 void ${className}::setTunerCenterFrequency(const std::string& allocation_id, double freq) {
     long idx = getTunerMapping(allocation_id);
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (freq<0) throw FRONTEND::BadParameterException();
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].center_frequency = freq;
@@ -118,15 +118,15 @@ void ${className}::setTunerCenterFrequency(const std::string& allocation_id, dou
 
 double ${className}::getTunerCenterFrequency(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     return frontend_tuner_status[idx].center_frequency;
 }
 
 void ${className}::setTunerBandwidth(const std::string& allocation_id, double bw) {
     long idx = getTunerMapping(allocation_id);
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (bw<0) throw FRONTEND::BadParameterException();
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].bandwidth = bw;
@@ -134,7 +134,7 @@ void ${className}::setTunerBandwidth(const std::string& allocation_id, double bw
 
 double ${className}::getTunerBandwidth(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     return frontend_tuner_status[idx].bandwidth;
 }
 
@@ -170,16 +170,16 @@ long ${className}::getTunerReferenceSource(const std::string& allocation_id)
 
 void ${className}::setTunerEnable(const std::string& allocation_id, bool enable) {
     long idx = getTunerMapping(allocation_id);
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].enabled = enable;
 }
 
 bool ${className}::getTunerEnable(const std::string& allocation_id) {
     long idx = getTunerMapping(allocation_id);
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     return frontend_tuner_status[idx].enabled;
 }
 /*{% endif %}*/
@@ -187,9 +187,9 @@ bool ${className}::getTunerEnable(const std::string& allocation_id) {
 
 void ${className}::setTunerOutputSampleRate(const std::string& allocation_id, double sr) {
     long idx = getTunerMapping(allocation_id);
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     if(allocation_id != getControlAllocationId(idx))
         throw FRONTEND::FrontendException(("ID "+allocation_id+" does not have authorization to modify the tuner").c_str());
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
     if (sr<0) throw FRONTEND::BadParameterException();
     // set hardware to new value. Raise an exception if it's not possible
     this->frontend_tuner_status[idx].sample_rate = sr;
@@ -197,7 +197,7 @@ void ${className}::setTunerOutputSampleRate(const std::string& allocation_id, do
 
 double ${className}::getTunerOutputSampleRate(const std::string& allocation_id){
     long idx = getTunerMapping(allocation_id);
-    if (idx < 0) throw FRONTEND::BadParameterException("Invalid allocation id");
+    if (idx < 0) throw FRONTEND::FrontendException("Invalid allocation id");
     return frontend_tuner_status[idx].sample_rate;
 }
 /*{% endif %}*/

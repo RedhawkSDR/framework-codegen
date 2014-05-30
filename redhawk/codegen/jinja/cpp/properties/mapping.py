@@ -61,7 +61,7 @@ class CppPropertyMapper(PropertyMapper):
         return cppprop
 
     def getStructPropertyType(self, prop):
-        return prop.name() + '_struct'
+        return cpp.identifier(prop.name() + '_struct')
 
     def mapStructSequenceProperty(self, prop, structdef):
         cppprop = self.mapProperty(prop)

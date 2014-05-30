@@ -50,7 +50,7 @@ class PropertyMapper(object):
         propdict = self._mapProperty(prop, 'simplesequence')
         propdict['type'] = prop.type()
         propdict.update(self.mapSimpleSequenceProperty(prop))
-        return propdict        
+        return propdict
 
     def mapSimpleSequenceProperty(self, prop):
         return {}
@@ -146,7 +146,7 @@ class ComponentMapper(object):
 
     def setImplementation(self, impl=None ):
         self._impl=impl
-    
+
     def mapImplementation(self, impl):
         impldict = {}
         impldict['id'] = impl.identifier()
@@ -158,7 +158,7 @@ class ComponentMapper(object):
 
     def _mapImplementation(self, implementation):
         return {}
-    
+
     def mapComponent(self, softpkg):
         component = {}
         component['license'] = None
@@ -167,13 +167,15 @@ class ComponentMapper(object):
         component['name'] = softpkg.name()
         component['version'] = softpkg.version()
         component['type'] = softpkg.type()
-        if softpkg.descriptor().supports('IDL:CF/AggregateDevice:1.0'):
-            component['aggregate'] = True
+        if softpkg.descriptor():
+            if softpkg.descriptor().supports('IDL:CF/AggregateDevice:1.0'):
+                component['aggregate'] = True
         component['sdrpath'] = softpkg.getSdrPath()
 
         # XML profile
-        component['profile'] = { 'spd': softpkg.spdFile(),
-                                 'scd': softpkg.scdFile() }
+        component['profile'] = { 'spd': softpkg.spdFile() }
+        if softpkg.scdFile():
+            component['profile']['scd'] = softpkg.scdFile()
         if softpkg.prfFile():
             component['profile']['prf'] = softpkg.prfFile()
 
@@ -190,10 +192,14 @@ class ComponentMapper(object):
             return 'device'
         elif softpkg.type() == ComponentTypes.SERVICE:
             return 'service'
+        elif softpkg.type() == ComponentTypes.SHAREDPACKAGE:
+            return 'sharedpackage'
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
 
     def getInterfaceNamespaces(self, softpkg):
+        if not softpkg.descriptor():
+            return
         # The CF interfaces are already assumed as part of REDHAWK
         seen = set(['CF', 'ExtendedCF', 'ExtendedEvent'])
         for interface in softpkg.descriptor().interfaces():

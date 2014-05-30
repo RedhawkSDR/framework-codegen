@@ -1,4 +1,4 @@
-#
+#{#
 # This file is protected by Copyright. Please refer to the COPYRIGHT file
 # distributed with this source distribution.
 #
@@ -16,30 +16,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
-#
+#}
+AC_INIT({{component.name}}, {{component.version}})
+AM_INIT_AUTOMAKE(nostdinc)
 
-import jinja2
+AC_PROG_INSTALL
 
-from redhawk.codegen.jinja.generator import TopLevelGenerator
-from redhawk.codegen.jinja.common import ShellTemplate, SpecfileTemplate
+OSSIE_SDRROOT_AS_PREFIX
 
-from mapping import ProjectMapper
-
-if not '__package__' in locals():
-    # Python 2.4 compatibility
-    __package__ = __name__.rsplit('.', 1)[0]
-
-loader = jinja2.PackageLoader(__package__)
-
-class ComponentProjectGenerator(TopLevelGenerator):
-    def projectMapper(self):
-        return ProjectMapper()
-
-    def loader(self, project):
-        return loader
-
-    def templates(self, project):
-        return [
-            ShellTemplate('build.sh'),
-            SpecfileTemplate('component.spec', project['name']+'.spec')
-            ]
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

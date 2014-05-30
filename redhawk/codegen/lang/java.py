@@ -119,7 +119,7 @@ def _complexLiteral(value, typename):
         real = '(byte)%d' % int(real)
         imag = '(byte)%d' % int(imag)
 
-    return "new " + typename + "(" + str(real) +  "," + str(imag) + ")"
+    return "new CF." + typename + "(" + str(real) +  "," + str(imag) + ")"
 
 def literal(value, typename, complex=False):
     if complex:
