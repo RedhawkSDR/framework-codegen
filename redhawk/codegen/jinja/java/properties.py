@@ -83,10 +83,9 @@ class JavaPropertyMapper(PropertyMapper):
         javaprop = self.mapProperty(prop)
         javaprop['isComplex'] = prop.isComplex()
         if prop.isComplex():
-            javaprop['javatype'] = properties.mapComplexType(prop.type())
-            javaprop['CFType']   = javaprop['javatype']
+            javatype = properties.mapComplexType(prop.type())
             javaprop['javaclass'] = 'Complex'+self.javaClass(prop.type())
-            javatype             = javaprop['javatype']
+            javaprop['javatype'] = 'CF.' + javatype
         else:
             javatype = self.javaType(prop.type())
             javaprop['javaclass'] = self.javaClass(prop.type())

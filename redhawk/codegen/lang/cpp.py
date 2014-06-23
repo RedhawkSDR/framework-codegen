@@ -110,23 +110,28 @@ def identifier(name):
 def literal(value, typename, complex=False):
 
     if complex:
-        real, imag = parseComplexString(value, 
-                                        typename)
-        return cppType(typename, complex) + "(" + str(real) + "," + str(imag) + ")"
+        # Parse real and imaginary components
+        real, imag = parseComplexString(value, typename)
+        # Convert real and imaginary into type-specific literals
+        real, imag = (literal(str(x), typename) for x in (real, imag))
+        return "%s(%s,%s)" % (cppType(typename, complex), real, imag)
     elif typename == CorbaTypes.STRING:
         return stringLiteral(value)
     elif typename == CorbaTypes.BOOLEAN:
         if parseBoolean(value):
             return TRUE
         else:
-            return FALSE  
+            return FALSE
+    elif typename in (CorbaTypes.LONGLONG, CorbaTypes.ULONGLONG):
+        # Explicitly mark the literal as a 'long long' for 32-bit systems
+        return value + 'LL'
     elif typename == CorbaTypes.CHAR:
         return charLiteral(value)
     else:
         return value
 
 def sequenceType(typename, complex=False):
-    return 'std::vector<%s>' % (cppType(typename, complex),)
+    return 'std::vector<%s >' % (cppType(typename, complex),)
 
 def insert(name, typename, complex=False):
     if typename in (CorbaTypes.CHAR, CorbaTypes.OCTET) and not complex:
@@ -139,3 +144,20 @@ def extract(name, typename, complex=False):
         return 'CORBA::Any::to_%s(%s)' % (typename, name)
     else:
         return name
+
+def idlNamespace(idl):
+    # Never include the omg.org from COS modules in C++ namespaces
+    return idl.namespace().replace('omg.org/', '').replace('/', '::')
+
+def idlHeader(idl):
+    if idl.namespace().startswith('omg.org/'):
+        # By convention, COS headers use '.hh'
+        extension = '.hh'
+    else:
+        # By convention, REDHAWK headers use '.h'
+        extension = '.h'
+    # Assume the relative path for the header is the last two elements of the
+    # full IDL path
+    idlpath = '/'.join(idl.idl().fullpath.split('/')[-2:])
+    header = idlpath.replace('.idl', extension)
+    return '<'+header+'>'

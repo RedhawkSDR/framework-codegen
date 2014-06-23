@@ -55,7 +55,7 @@ class CppPropertyMapper(PropertyMapper):
 
     def mapStructProperty(self, prop, fields):
         cppprop = self.mapProperty(prop)
-        typename = prop.name()+'_struct'
+        typename = cpp.identifier(prop.name()+'_struct')
         cppprop['cpptype'] = typename
         cppprop['cppvalue'] = typename + '()'
         return cppprop

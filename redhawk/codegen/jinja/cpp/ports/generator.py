@@ -18,6 +18,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
+from redhawk.codegen.lang import cpp
 from redhawk.codegen.lang.idl import IDLInterface
 from redhawk.codegen.jinja.ports import PortGenerator
 
@@ -26,7 +27,7 @@ class CppPortGenerator(PortGenerator):
         return self.className() == other.className()
 
     def className(self):
-        porttype = '%s_%s' % (self.namespace, self.interface)
+        porttype = self.interfaceClass().replace('::', '_')
         if self.direction == 'uses':
             porttype += '_Out_i'
         else:
@@ -34,7 +35,7 @@ class CppPortGenerator(PortGenerator):
         return porttype
 
     def interfaceClass(self):
-        return '::'.join((self.namespace, self.interface))
+        return '::'.join((cpp.idlNamespace(self.idl), self.interface))
 
     def headers(self):
         return tuple()

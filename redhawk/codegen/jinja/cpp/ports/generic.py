@@ -119,7 +119,7 @@ class GenericPortGenerator(CppPortGenerator):
         return (cpp.stringLiteral(name), 'this')
 
     def headers(self):
-        return ['<%s/%s.h>' % (self.idl.namespace(), self.idl.filename())]
+        return ['<%s>' % (cpp.idlHeader(self.idl),)]
 
     def loader(self):
         return jinja2.PackageLoader(__package__)
