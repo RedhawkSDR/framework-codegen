@@ -42,6 +42,11 @@ License:        None
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
+BuildRequires:  redhawk
+BuildRequires:  autoconf automake libtool
+
+Requires:       redhawk >= 1.10
+
 #{$ block requireExtensions $}
 #{$ endblock $}
 

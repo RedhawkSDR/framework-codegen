@@ -134,7 +134,7 @@ class ${struct.pyclass}(object):
                                       name="${field.name}",
 #%      endif
                                       type_="${field.type}"
-#%-     if field.pyvalue
+#%-     if field.pyvalue is defined
 ,
                                       defvalue=${field.pyvalue}
 #%-     endif

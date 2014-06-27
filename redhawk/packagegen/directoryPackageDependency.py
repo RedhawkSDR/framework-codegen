@@ -1,5 +1,6 @@
 import subprocess
 import os
+import shutil
 from ossie.parsers import spd
 from redhawk.packagegen.softPackage import SoftPackage
 
@@ -37,7 +38,7 @@ class DirectoryPackageDependency(SoftPackage):
         if not os.path.exists(fullOutputDir + implementation + "/share"):
             if not os.path.isabs(libraryLocation):
                 libraryLocation = os.path.join(os.getcwd(), libraryLocation)
-            os.symlink(libraryLocation, fullOutputDir + implementation + "/share")
+            shutil.copytree(libraryLocation, fullOutputDir + implementation + "/share")
 
         # Add soft package dependencies to the package being created (in the
         # case that the soft package dependency being created has its own

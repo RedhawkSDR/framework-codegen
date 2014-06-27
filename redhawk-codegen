@@ -23,6 +23,7 @@ import os
 import shutil
 import sys
 import subprocess
+import commands
 from getopt import getopt
 
 from redhawk.codegen.model.softpkg import SoftPkg
@@ -39,7 +40,7 @@ if os.path.exists("/usr/lib/python2.6/site-packages/Jinja2-2.6-py2.6.egg"):
 #
 TemplateSetup = {
     "frontend": ( [ {"cpp" : "redhawk.codegen.jinja.cpp.component.frontend"} ], "Generate a frontend compliant device" ),
-    "octave"  : ( [ {"cpp": "redhawk.codegen.jinja.cpp.component.octave"} ], "Generate an octave device" ),
+    "octave"  : ( [ {"cpp": "redhawk.codegen.jinja.cpp.component.octave"} ], "Generate an octave component" ),
     "persona"  : ( [ {"cpp": "redhawk.codegen.jinja.cpp.component.persona"} ], "Generate a persona device" ),
     "pgdevice" : ( [ { "cpp": "redhawk.codegen.jinja.cpp.component.programmable"} ], "Generate programmable device"),
     "component" : ( [ {"cpp": "redhawk.codegen.jinja.cpp.component.pull"}, {"java": "redhawk.codegen.jinja.java.component.pull"}, {"python": "redhawk.codegen.jinja.python.component.pull"} ], "Generate a component or device" ),
@@ -89,10 +90,39 @@ multiple implementations, must use --impl to specify which):
                         (relative to -C if given)
     --template <id>     Use template <id> for generation
     -B <name[=value]>   Pass option 'name' (with optional value) to template
+    --checkSupport      Only check to see if the template is supported.  Will
+                        not generate.
 
 Select from one of the following resource types when generating output:
 %s
 """ % (os.path.basename(sys.argv[0]), "\n".join( [ "    --" + x[0]+"\t\t"+x[1][1] for x in TemplateSetup.items() ] ) )
+
+def performSupportCheck(template):
+    """
+    Performs a check based on the template type to determine if the template
+    is supported.
+
+    If the template is supported, return True.  If the template is not
+    supported, return False.
+
+    If the template is not explicityly unsupported, this function will default
+    to returning True.
+
+    """
+
+    if template == "redhawk.codegen.jinja.cpp.component.octave":
+        # Attempt to determine if octave-devel v3.4 or greater is installed.
+        findCommand = 'find /usr -regextype posix-extended -regex ".*include\/octave\-[3-9]+\.[4-9]+\.[0-9]+$" -print -quit 2>/dev/null'
+        (status,output) = commands.getstatusoutput(findCommand)
+        if output == "":
+            # suitable octave header files were not found
+            print "Could not find suitable Octave installation.  Octave-devel v3.4 or greater is required."
+            return False
+        else:
+            # suitable octave header files were found
+            return True
+    else:
+        return True
 
 def determineProjectType(implList):
     projectType = "component"
@@ -130,7 +160,7 @@ Function = strenum('list', 'generate')
 
 if __name__ == '__main__':
     # add predefined template settings a full word options
-    topts = ['help', 'template=', 'impl=', 'impldir=', 'lang=', 'variant='] + [ x for x in TemplateSetup.keys() ]
+    topts = ['help', 'template=', 'impl=', 'impldir=', 'lang=', 'variant=', 'checkSupport'] + [ x for x in TemplateSetup.keys() ]
     opts, args = getopt(sys.argv[1:], 'filC:B:m:', topts )
     outputdir = None
     action = Function.GENERATE
@@ -142,6 +172,7 @@ if __name__ == '__main__':
     language=None
     variant=""
     mFiles = []
+    checkSupport = False
     for key, value in opts:
         if key == '--help':
             raise SystemExit(usage)
@@ -161,6 +192,8 @@ if __name__ == '__main__':
             overrides.outputDir = value
         elif key == '--lang':
             language = value
+        elif key == '--checkSupport':
+            checkSupport = True
         elif key == '--variant':
             variant = value
         elif key == '-l':
@@ -174,6 +207,14 @@ if __name__ == '__main__':
                 name = value
                 value = True
             overrides.properties[name] = value
+
+    if checkSupport:
+        # performSupportCheck will return True if supported and False if not
+        # supported.  The program exit code will be the inverse of this value
+        # as "0" indicates no error (supported) and "1" indicates an error
+        # (not supported).
+        sys.exit(not performSupportCheck(overrides.template))
+
     try:
         spdFile = args[0]
     except:

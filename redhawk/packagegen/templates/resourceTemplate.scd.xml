@@ -10,6 +10,7 @@
         <supportsinterface supportsname="PortSupplier" repid="IDL:CF/PortSupplier:1.0"/>
         <supportsinterface supportsname="PropertySet" repid="IDL:CF/PropertySet:1.0"/>
         <supportsinterface supportsname="IDL:CF/TestableObject:1.0" repid="TestableObject"/>
+        <ports/>
     </componentfeatures>
     <interfaces>
         <interface name="Resource" repid="IDL:CF/Resource:1.0">

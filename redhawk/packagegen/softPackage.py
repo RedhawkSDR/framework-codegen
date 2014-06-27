@@ -162,7 +162,7 @@ class SoftPackage(object):
 
     def addSoftPackageDependency(self, dep, arch="noarch"):
         softpkgref = spd.softPkgRef(localfile=spd.localFile(name=dep),
-                                    implref=spd.implRef(refid="default_impl_" + arch))
+                                    implref=spd.implRef(refid=arch))
         dependency = spd.dependency(type_="runtime_requirements",
                                     softpkgref=softpkgref)
         for index in range(len(self.spd.implementation)):

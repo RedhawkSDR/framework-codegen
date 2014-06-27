@@ -22,7 +22,6 @@
 //% set helper = portgenerator.helperClass()
 package ${package};
 
-import java.util.HashMap;
 import java.util.Map;
 import org.ossie.component.QueryableUsesPort;
 
@@ -35,7 +34,8 @@ public class ${classname} extends QueryableUsesPort<${interface}> implements ${i
      * Map of connection Ids to port objects
      * @generated
      */
-    protected Map<String, ${interface}> outConnections = new HashMap<String, ${interface}>();
+    @Deprecated
+    protected Map<String, ${interface}> outConnections;
 
     /**
      * @generated
@@ -43,10 +43,7 @@ public class ${classname} extends QueryableUsesPort<${interface}> implements ${i
     public ${classname}(String portName) 
     {
         super(portName);
-
-        this.outConnections = new HashMap<String, ${interface}>();
-        //begin-user-code
-        //end-user-code
+        this.outConnections = this.outPorts;
     }
 
     /**
@@ -54,40 +51,8 @@ public class ${classname} extends QueryableUsesPort<${interface}> implements ${i
      */
     protected ${interface} narrow(org.omg.CORBA.Object connection) 
     {
-        ${interface} ops = ${helper}.narrow(connection);
-        
-        //begin-user-code 
-        //end-user-code 
-        
-        return ops; 
+        return ${helper}.narrow(connection);
     }
-
-//% if interface != "CF.PortOperations" 
-    public void connectPort(final org.omg.CORBA.Object connection, final String connectionId) throws CF.PortPackage.InvalidPort, CF.PortPackage.OccupiedPort
-    {
-        try {
-            // don't want to process while command information is coming in
-            synchronized (this.updatingPortsLock) {
-                super.connectPort(connection, connectionId);
-                final ${interface} port = ${helper}.narrow(connection);
-                this.outConnections.put(connectionId, port);
-                this.active = true;
-            }
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
-
-    }
-
-    public void disconnectPort(final String connectionId) throws CF.PortPackage.InvalidPort{
-        // don't want to process while command information is coming in
-        synchronized (this.updatingPortsLock) {
-            super.disconnectPort(connectionId);
-            this.outConnections.remove(connectionId);
-            this.active = (this.outConnections.size() != 0);
-        }
-    }
-//% endif
 /*{% for operation in portgenerator.operations() %}*/
 
    /**
@@ -105,7 +70,7 @@ public class ${classname} extends QueryableUsesPort<${interface}> implements ${i
                 //begin-user-code
                 //end-user-code
                 
-                for (${interface} p : this.outConnections.values()) {
+                for (${interface} p : this.outPorts.values()) {
                     ${'retval = ' if hasreturn}p.${operation.name}(${operation.argnames|join(', ')});
                 }
             }
