@@ -32,8 +32,11 @@ from redhawk.codegen.settings import ImplementationSettings, importWavedevSettin
 
 # With RHEL 5/6, Jinja2 2.6 is parallel-installed as an egg. We explicitly
 # add it to the path if present to ensure it gets picked up.
-if os.path.exists("/usr/lib/python2.6/site-packages/Jinja2-2.6-py2.6.egg"):
-   sys.path.insert(0, "/usr/lib/python2.6/site-packages/Jinja2-2.6-py2.6.egg")
+for x in [ "2.4","2.6", "2.7" ]:
+  eggfile="/usr/lib/python"+x+"/site-packages/Jinja2-2.6-py"+x+".egg"
+  if os.path.exists(eggfile):
+     sys.path.insert(0, eggfile)
+     break
 
 #
 # dict: for each resource type :  ( [ list of maps: impl:template name ], help text )
@@ -82,6 +85,11 @@ Options:
     -C <dir>            Put output files in directory <dir>
     --impl <id>         Generate implementation <id> [default: all]
     -m <mfile>          Provide .m file to be copied into the component cpp directory
+    -s <srcFile>        Provide the .cpp files for the project
+    -h <hdFile>         Provide the .h files for the project
+    -obj                Provide the .o file for the project
+    -link               Provides optional linking commands 
+    -cflags             Provides optional cflag commands
     --variant           Variant tag to be appended to the directory name
 
 Options only valid with a single implementation (if a component contains
@@ -159,8 +167,10 @@ def copyMFiles(mFiles, outputdir):
 Function = strenum('list', 'generate')
 
 if __name__ == '__main__':
+  
     # add predefined template settings a full word options
     topts = ['help', 'template=', 'impl=', 'impldir=', 'lang=', 'variant=', 'checkSupport'] + [ x for x in TemplateSetup.keys() ]
+#    opts, args = getopt(sys.argv[1:], 'filC:B:m:s:h:obj', topts )
     opts, args = getopt(sys.argv[1:], 'filC:B:m:', topts )
     outputdir = None
     action = Function.GENERATE
@@ -172,6 +182,9 @@ if __name__ == '__main__':
     language=None
     variant=""
     mFiles = []
+    sFiles = []
+    hFiles = []
+    obj = ""
     checkSupport = False
     for key, value in opts:
         if key == '--help':
@@ -180,6 +193,12 @@ if __name__ == '__main__':
             outputdir = value
         elif key == '-m':
             mFiles.append(value)
+#        elif key == '-s':
+#            sFiles.append(value)
+#        elif key == '-h':
+#            hFiles.append(value)
+#        elif key == '-obj':
+#           obj = value
         elif key == '-i':
             ignoreWavedev=True
         elif key == '--impl':
@@ -220,6 +239,7 @@ if __name__ == '__main__':
     except:
         raise SystemExit(usage)
 
+
     if resource_type and overrides.template:
         raise SystemExit, '--template cannot be selected with a predefined resource type.'
 
@@ -240,18 +260,23 @@ if __name__ == '__main__':
             filelist[dirname] = []
         filelist[dirname].append(filename)
 
+
     if not outputdir:
         # Default to the same location as the SPD unless told otherwise.
         outputdir = os.path.dirname(spdFile)
- 
+
+
     copyMFiles(mFiles, outputdir)
 
     # Parse the component profile
     softpkg = SoftPkg(spdFile)
 
     # Read existing WaveDev settings file
-    wavedev = '.' + os.path.basename(spdFile).replace('.spd.xml', '.wavedev')
+    if variant:
+        spdFile = spdFile.replace("_"+str(variant),"")
+    wavedev = '.' + os.path.basename(spdFile).replace('.spd.xml', '.wavedev')     
     wavedev = os.path.join(os.path.dirname(spdFile), wavedev)
+
     if os.path.exists(wavedev) and not ignoreWavedev:
        settings = importWavedevSettings(wavedev)
     else:
@@ -259,6 +284,7 @@ if __name__ == '__main__':
 
     # If an implementation was specified, only generate that; otherwise generate
     # all implementations.
+    
     if implId:
         implList = [implId]
     else:
@@ -315,7 +341,7 @@ if __name__ == '__main__':
         crcs=toplevelCRCs,
         variant=variant)
     generators.append(('Component '+softpkg.name(), '', generator))
-
+    
     if projectType != "softPackageDependency":
         # Generate unit tests
         from redhawk.codegen.jinja.unitTests.resource import sca
@@ -323,8 +349,10 @@ if __name__ == '__main__':
         generators.append(('Tests '+softpkg.name(), 'tests', generator))
 
     # Set up generation for each requested implementation.
+    
     for implId in implList:
         # Make sure the implementation actually exists.
+       
         try:
             impl = softpkg.getImplementation(implId)
         except KeyError:
@@ -349,7 +377,7 @@ if __name__ == '__main__':
                         tkey="java"
 
                      overrides.template = filter( lambda  x: tkey in x.keys(), TemplateSetup[resource_type][0]  )[0][tkey]
-                     print "using template:" + str(overrides.template)
+
               except:
                  raise SystemExit, 'Template override does not exist or --impl missing'
            else :
@@ -377,9 +405,12 @@ if __name__ == '__main__':
         # Find the code generator module from the template argument. Since it
         # probably has dots, get the most specific module (e.g. 'component' from
         # 'template.cpp.component').
+
         package = __import__(implTemplate)
+
         for name in implTemplate.split('.')[1:]:
             package = getattr(package, name)
+
         generator = package.factory(
             implId = implId,
             outputdir = implOutputDir,
@@ -405,7 +436,7 @@ if __name__ == '__main__':
                 implFiles = filelist[path]
             else:
                 implFiles = []
-            print header
+
             generated, skipped = generator.generate(softpkg, *implFiles)
             for filename, verb in skipped:
                 print >>sys.stderr, 'WARNING:', os.path.join(path, filename), 'has been modified, use -f to', verb
