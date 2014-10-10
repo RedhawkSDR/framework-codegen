@@ -362,6 +362,36 @@ int ${className}::buffer(std::string portName, bulkio::InDoublePort* port)
 }
 
 /**
+ * Update the outputPacket->SRI.mode value and set the
+ * outputPacket->sriChanged value appropriately.
+ */
+void setPacketMode(
+    bulkio::InDoublePort::DataTransferType* outputPacket, /* input/output */
+    int                                     newVal)
+{
+    int prevVal = outputPacket->SRI.mode;
+    if(newVal != prevVal) {
+        outputPacket->SRI.mode = newVal;
+        outputPacket->sriChanged = true;
+    }
+}
+
+/**
+ * Update the outputPacket->SRI.subsize value and set the
+ * outputPacket->sriChanged value appropriately.
+ */
+void setPacketSubsize(
+    bulkio::InDoublePort::DataTransferType* outputPacket, /* input/output */
+    int                                     newVal)
+{
+    int prevVal = outputPacket->SRI.subsize;
+    if(newVal != prevVal) {
+        outputPacket->SRI.subsize = newVal;
+        outputPacket->sriChanged = true;
+    }
+}
+
+/**
  * Sub-method of populateOutputPacket.
  */
 void populateComplexOutputPacket(
@@ -398,13 +428,14 @@ void populateComplexOutputPacket(
             outputPacket->dataBuffer[i*2]   = (CORBA::Double)outputVector(i).real();
             outputPacket->dataBuffer[i*2+1] = (CORBA::Double)outputVector(i).imag();
         }
+        setPacketSubsize(outputPacket, 0);
     } // end vector data 
     else if (ndims == 2) 
     { // 2-D matrix
         ComplexMatrix outputMatrix = result(resultIndex).complex_matrix_value();
         outputPacket->dataBuffer.resize(outputMatrix.nelem()*2);
         int numRows = outputMatrix.rows(); 
-        outputPacket->SRI.subsize = outputMatrix.cols();
+        setPacketSubsize(outputPacket, outputMatrix.cols());
         unsigned int dataBufferCount = 0;
         for (int row = 0; row < numRows; row++) {
             for (int elem = row; elem < outputMatrix.nelem(); elem+=numRows) {
@@ -418,7 +449,8 @@ void populateComplexOutputPacket(
     { // more thank 2 dimensions
         throw std::invalid_argument("BULKIO cannot support matricies with more than 2 dimensions.");
     }
-    outputPacket->SRI.mode = true;
+
+    setPacketMode(outputPacket, true);
 }
 
 /**
@@ -456,13 +488,14 @@ void populateScalarOutputPacket(
         for (int i = 0; i <  outputVector.length(); i++) {
             outputPacket->dataBuffer[i] = (CORBA::Double)outputVector(i);
         }
+        setPacketSubsize(outputPacket, 0);
     }
     else if (ndims == 2) 
     { // 2-D matrix
         Matrix outputMatrix = result(resultIndex).matrix_value();
         outputPacket->dataBuffer.resize(outputMatrix.nelem());
         int numRows = outputMatrix.rows(); 
-        outputPacket->SRI.subsize = outputMatrix.cols();
+        setPacketSubsize(outputPacket, outputMatrix.cols());
 
         unsigned int dataBufferCount = 0;
         for (int row = 0; row < numRows; row++) {
@@ -470,13 +503,12 @@ void populateScalarOutputPacket(
                 outputPacket->dataBuffer[dataBufferCount++] = (CORBA::Double)outputMatrix(elem);
             }
         }
-        outputPacket->SRI.subsize = outputMatrix.cols();
     } // end 2-D matrix
     else
     { // more thank 2 dimensions
         throw std::invalid_argument("BULKIO cannot support matricies with more than 2 dimensions.");
     }
-    outputPacket->SRI.mode = false;
+    setPacketMode(outputPacket, false);
 }
 
 /**
@@ -497,6 +529,23 @@ void ${className}::populateOutputPacket(
     const octave_value_list&                result,       /* input  */
     const int                               resultIndex)  /* input  */
 {
+    if (inputPackets.count(_sriPort) > 0) {
+        // We are interested in the previously-outputted subsize and mode
+        // since these values are set dynamically based on the octave output.
+        // Knowing the previous value allows us to set sriChanged appropriately
+        // within the poulate sub-methods.
+        int prevSubsize = outputPacket->SRI.subsize;
+        int prevMode    = outputPacket->SRI.mode;
+
+        outputPacket->SRI          = inputPackets[_sriPort]->SRI;
+        outputPacket->SRI.subsize  = prevSubsize;
+        outputPacket->SRI.mode     = prevMode;
+        outputPacket->T            = bulkio::time::utils::now();
+        outputPacket->streamID     = inputPackets[_sriPort]->streamID.c_str();
+        outputPacket->EOS          = inputPackets[_sriPort]->EOS;
+        outputPacket->sriChanged   = inputPackets[_sriPort]->sriChanged;
+    }
+
     if (resultIndex < result.length()) {
         // Got data for this argument
         if (result(resultIndex).is_complex_type()) {
@@ -508,16 +557,6 @@ void ${className}::populateOutputPacket(
         // Did not get data for this argument.  Send an empty packet.
         outputPacket->dataBuffer.clear();
      }
-
-    if (inputPackets.count(_sriPort) > 0) {
-        outputPacket->SRI          = inputPackets[_sriPort]->SRI;
-        outputPacket->SRI.xdelta   = inputPackets[_sriPort]->SRI.xdelta;
-        outputPacket->SRI.streamID = inputPackets[_sriPort]->streamID.c_str();
-        outputPacket->T            = bulkio::time::utils::now();
-        outputPacket->streamID     = inputPackets[_sriPort]->streamID.c_str();
-        outputPacket->EOS          = inputPackets[_sriPort]->EOS;
-        outputPacket->sriChanged   = inputPackets[_sriPort]->sriChanged;
-    }
 }
 /*# end bulkio conditional #*/
 /*{%endif%}*/

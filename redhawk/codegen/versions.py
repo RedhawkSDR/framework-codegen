@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
-codegen = '1.10.0'
+codegen = '1.10.1'
 redhawk = '1.10'
 boost = '1.41'
 omniORB4 = '4.1.0'

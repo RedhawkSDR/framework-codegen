@@ -26,43 +26,45 @@ E.g.,
         foo.m /home/user1/bar.m
 
 Arguments:
-    <M files>           List of m files to be packaged with the component.
-                        When listing multiple files, the function option
-                        must be used to specify which function should be
-                        called by the component
+    <M files>            List of m files to be packaged with the component.
+                         When listing multiple files, the function option
+                         must be used to specify which function should be
+                         called by the component
 
 Options:
-    --function          Name of function to be called.  Required if more than
-                        one M file is present
+    --function           Name of function to be called.  Required if more than
+                         one M file is present
 
-                            e.g., --function=foo
+                             e.g., --function=foo
 
 
-    --sharedLibraries   Proprietary dependencies that have been installed
-                        as a Soft Package Dependency. Points to an spd.xml file
-                        whose path is relative to $SDRROOT/dom.
+    --sharedLibraries    Proprietary dependencies that have been installed
+                         as a Soft Package Dependency. Points to an spd.xml file
+                         whose path is relative to $SDRROOT/dom.
 
-                            e.g., --sharedLibraries=/deps/foo/foo.spd.xml
+                             e.g., --sharedLibraries=/deps/foo/foo.spd.xml
 
-                        When listing multiple files, the filenames must be
-                        comma-separated, with no spaces.
+                         When listing multiple files, the filenames must be
+                         comma-separated, with no spaces.
 
-    --outputDir         Location of all output files.  Default is ".".
+    --outputDir          Location of all output files.  Default is ".".
 
-    -f                  Forward force flag to redhawk-codegen.
+    -f                   Forward force flag to redhawk-codegen.
 
-    --buildRpm          If set, compile an rpm after generating the code.
+    --buildRpm           If set, compile an rpm after generating the code.
 
-    --install           If set, run "reconf; configure; make install" after
-                        generating the code.
+    --install            If set, run "reconf; configure; make install" after
+                         generating the code.
 
-    --enableDiary       If set, enable the Octave diary.  Diary will be written
-                        to the logging directory (retrieved from log4cxx).
+    --enableDiary        If set, enable the Octave diary.  Diary will be written
+                         to the logging directory (retrieved from log4cxx).
 
-    --enableBuffering   If set, enable buffering.  If enabled, the component
-                        will buffer data at its input until an EOS flag is
-                        encountered. If disabled, packets will be sent
-                        immediately to Octave, even if the EOS flag is not set.
+    --enableBuffering    If set, enable buffering.  If enabled, the component
+                         will buffer data at its input until an EOS flag is
+                         encountered. If disabled, packets will be sent
+                         immediately to Octave, even if the EOS flag is not set.
+
+    --LOGGING_CONFIG_URI Value for the LOGGING_CONFIG_URI property.
 
 """.format(os.path.basename(sys.argv[0]))
 

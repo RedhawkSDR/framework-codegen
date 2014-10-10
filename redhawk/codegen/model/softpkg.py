@@ -133,6 +133,53 @@ def parseDefaults(inputs):
 
     return inputs, defaults
 
+def getInputArguments(inputString):
+    """
+    Get arguments within a string between "(" and ")".  This is a special
+    sub-case of getArguments, as it can handle nested lists (i.e., sequence
+    properties).  Also, it can be assumed that the input arguments are comma-
+    separated.
+
+    See also getArguments.
+
+    """
+    def _splitFirstArg(args):
+        """
+        Given an input "a,b,c", return ["a", "b,c"].  Honors brackets (e.g.,
+        "a=[1,2],b,c" will return ["a=[1,2]","b,c"].
+        """
+
+        openBracket = args.find("[")
+        closeBracket = args.find("]")
+        commaLocation = args.find(",")
+        if commaLocation == -1:
+            # last argument
+            retVal = [args, None]
+        elif commaLocation < openBracket or openBracket == -1:
+            # this is not a sequence
+            retVal = [args[0:commaLocation], args[commaLocation+1:]]
+        else:
+            # this is a sequence
+            retVal = [args[0:closeBracket+1], args[closeBracket+2:]]
+
+        return retVal
+
+    inputString = inputString.replace(" ", "")
+
+    args = inputString[inputString.find("(")+1:
+                       inputString.find(")")]
+
+    args = _splitFirstArg(args)
+    prevLength = -1
+    while args[-1] != None:
+        retVal = _splitFirstArg(args[-1])
+        args = args[:-1] # strip off last val
+        args.extend(retVal)
+
+    args = args[:-1] # strip off last val
+
+    return args
+
 def getArguments(inputString, openDelimiter, closeDelimiter):
     """
     Get arguments within a string.  For example, if openDelimiter="(", 
@@ -140,6 +187,7 @@ def getArguments(inputString, openDelimiter, closeDelimiter):
     this function will return ["b","c","d"].
 
     """
+
     args = inputString[inputString.find(openDelimiter)+1: 
                        inputString.find(closeDelimiter)]
     if args.find(",") != -1:
@@ -187,7 +235,7 @@ def parseMFile(filename):
         outputs = getArguments(declaration, " ", "=")
 
     # get input arguments
-    inputs = getArguments(declaration, "(", ")")
+    inputs = getInputArguments(declaration)
     inputs, defaults = parseDefaults(inputs)
 
     # get function name

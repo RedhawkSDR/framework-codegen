@@ -20,8 +20,8 @@
 //% extends "pull/resource_base.cpp"
 /*{% block extensions %}*/
 /* This sets the number of entries in the frontend_tuner_status struct sequence property
- *  * as well as the tuner_allocation_ids vector. Call this function during initialization
- *   */
+ * as well as the tuner_allocation_ids vector. Call this function during initialization
+ */
 void ${className}::setNumChannels(size_t num)
 {
     frontend_tuner_status.clear();
@@ -74,8 +74,8 @@ void ${className}::assignListener(const std::string& listen_alloc_id, const std:
             new_entries.push_back(tmp);
         }
     }
-    bool foundEntry = false;
     for (std::vector<connection_descriptor_struct>::iterator new_entry=new_entries.begin();new_entry!=new_entries.end();new_entry++) {
+        bool foundEntry = false;
         for (std::vector<connection_descriptor_struct>::iterator entry=connectionTable.begin();entry!=connectionTable.end();entry++) {
             if (entry == new_entry) {
                 foundEntry = true;

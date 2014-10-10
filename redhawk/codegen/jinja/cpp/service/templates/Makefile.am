@@ -26,6 +26,7 @@ bin_PROGRAMS = {{executable}}
 
 xmldir = $(prefix)/{{component.sdrpath}}/{{component.name}}/
 dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
+ACLOCAL_AMFLAGS = -I$(OSSIEHOME)/share/aclocal/ossie
 
 distclean-local:
 	rm -f config.*

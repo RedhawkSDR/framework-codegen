@@ -33,6 +33,7 @@ bin_PROGRAMS = {{executable}}
 xmldir = $(prefix)/{{component.sdrpath}}/{{component.name}}/
 dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
 #{% endblock %}
+ACLOCAL_AMFLAGS = -I$(OSSIEHOME)/share/aclocal/ossie
 
 #{% if component.mFunction != None %}
 mdir = $(prefix)/{{component.sdrpath}}/{{component.name}}/{{outputdir}}/

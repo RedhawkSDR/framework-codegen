@@ -46,6 +46,8 @@ functionArguments.append(octave_value(${prop.cppname}));
 // std::vector -> octave matrix
 /*{% if prop['cpptype'].find("std::complex") != -1 %}*/
 ComplexRowVector ${prop.cppname}_octave(${prop.cppname}.size());
+/*{% elif prop['cpptype'].find("string") != -1 %}*/
+string_vector ${prop.cppname}_octave(${prop.cppname}.size());
 //%  else
 RowVector ${prop.cppname}_octave(${prop.cppname}.size());
 //%  endif
@@ -89,6 +91,16 @@ functionArguments.append(octave_value(__sampleRate));
 /*{% if prop['cpptype'].find("std::complex") != -1 %}*/
 ComplexRowVector ${prop.cppname}_octaveRet(result(${mOutputIndex}).complex_array_value().length());
 ${prop.cppname}_octaveRet = result(${mOutputIndex}).complex_array_value();
+/*{% elif prop['cpptype'].find("string") != -1 %}*/
+string_vector ${prop.cppname}_octaveRet(result(${mOutputIndex}).cellstr_value().length());
+${prop.cppname}_octaveRet = result(${mOutputIndex}).cellstr_value();
+// Octave will add trailing whitespace to strings in the vector such
+// that each element has the same length.  We will strip off this
+// trailing whitespace.
+for (int i = 0; i < ${prop.cppname}_octaveRet.length(); i++) {
+    int end = ${prop.cppname}_octaveRet.elem(i).find_last_not_of(" ")+1;
+    ${prop.cppname}_octaveRet.elem(i) = ${prop.cppname}_octaveRet.elem(i).substr(0, end);
+}
 //%  else
 RowVector ${prop.cppname}_octaveRet(result(${mOutputIndex}).array_value().length());
 ${prop.cppname}_octaveRet = result(${mOutputIndex}).array_value();
@@ -166,12 +178,18 @@ if (retVal != NORMAL) {
     return retVal;
 }
 
+/*{% if component.mFunction.inputs%}*/
+propertySetAccess.lock();
+
 /*{% for functionInput in component.mFunction.inputs%}*/
 ${addInputArguments(component, functionInput, loop.index0)}
 /*{% endfor %}*/
 /*{% for vararginName in component.vararginList %}*/
 ${addInputArguments(component, vararginName, component.mFunction.numInputs+loop.index0-1)}
 /*{% endfor %}*/
+
+propertySetAccess.unlock();
+/*{% endif %}*/
 
 setDiary();
 
@@ -184,9 +202,15 @@ try {
 
 flushDiary();
 
+/*{% if component.mFunction.outputs%}*/
+propertySetAccess.lock();
+
 /*{% for functionOutput in component.mFunction.outputs%}*/
 ${findOutputs(component, functionOutput, loop.index0)}
 /*{% endfor %}*/
+
+propertySetAccess.unlock();
+/*{% endif %}*/
 
 // Call to user-defined code.
 retVal = postProcess();
