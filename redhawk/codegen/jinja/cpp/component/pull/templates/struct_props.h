@@ -33,6 +33,7 @@
 
 /*{% block includes %}*/
 #include <ossie/CorbaUtils.h>
+#include <CF/cf.h>
 /*{% if component['hasmultioutport'] %}*/
 #include <bulkio/bulkio.h>
 typedef bulkio::connection_descriptor_struct connection_descriptor_struct;

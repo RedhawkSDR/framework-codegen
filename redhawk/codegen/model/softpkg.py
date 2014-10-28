@@ -169,6 +169,11 @@ def getInputArguments(inputString):
     args = inputString[inputString.find("(")+1:
                        inputString.find(")")]
 
+    if args == "":
+        # Special case: no input arguments.  This will prevent us from
+        # returning an input argument with a blank name.
+        return []
+
     args = _splitFirstArg(args)
     prevLength = -1
     while args[-1] != None:

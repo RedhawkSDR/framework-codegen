@@ -110,11 +110,19 @@ void ${className}::setCurrentWorkingDirectory(std::string& cwd)
 }
 
 /**
- * Get logs/@@@WAVEFORM.NAME@@@/@@@COMPONENT.NAME@@@
- * from the log4j.appender.__octave.File=logs/@@@WAVEFORM.NAME@@@/@@@COMPONENT.NAME@@@/__log
- * line of the log configuration string.
+ * Get logs/@@@WAVEFORM.NAME@@@/@@@COMPONENT.NAME@@@ from the
+ * log4j.appender.__octave.File=logs/@@@WAVEFORM.NAME@@@/@@@COMPONENT.NAME@@@/__log
+ * line of the log configuration string; then return:
  *
- * This approach will be replaced by getting the file name through the
+ *      ${PWD}/../../../logs/@@@WAVEFORM.NAME@@@/@@@COMPONENT.NAME@@@
+ *
+ * This should facilitate running the component in a logs directory that
+ * resides in the top-level of the device cache.
+ *
+ * The current working directory is returned if a valid log filename is not
+ * found.
+ *
+ * This approach should be replaced by getting the file name through the
  * appropriate log API once it is available.
  */
 std::string ${className}::getLogDir()
@@ -123,10 +131,21 @@ std::string ${className}::getLogDir()
     std::string tag1 = "log4j.appender.__octave.File=";
     std::string tag2 = "__log";
     std::string logDir = getCurrentWorkingDirectory();
-    if (std::string::npos != logConfig.find(tag1)) {
+    if (std::string::npos != logConfig.find(tag1) &&
+        std::string::npos != logConfig.find(tag2)) {
+        // if we found both tags
+
+        // get the substring we are looking for
         unsigned int start = logConfig.find(tag1) + tag1.length();
         unsigned int end = logConfig.find(tag2,start);
         logDir += "/../../../" + logConfig.substr(start,end-start);
+
+        if (std::string::npos != logDir.find("\n")) {
+            // If a newline is present, tag1 and tag2 were not on the same
+            // line.  If this is the case, then we did not actually find the
+            // filename/path that we were looking for
+            logDir = getCurrentWorkingDirectory();
+        }
     }
     return logDir;
 }

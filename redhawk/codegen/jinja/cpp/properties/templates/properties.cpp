@@ -83,7 +83,12 @@ inline bool operator>>= (const CORBA::Any& a, ${struct.cpptype}& s) {
 /*{% else %}*/
 /*{%   set extractName = 's.'+field.cppname %}*/
 /*{% endif %}*/
-            if (!(props[idx].value >>= ${cpp.extract(extractName, field.type, field.iscomplex)})) return false;
+            if (!(props[idx].value >>= ${cpp.extract(extractName, field.type, field.iscomplex)})) {
+                CORBA::TypeCode_var typecode = props[idx].value.type();
+                if (typecode->kind() != CORBA::tk_null) {
+                    return false;
+                }
+            }
 /*{% if field.type == 'char' %}*/
             s.${field.cppname} = temp_char;
 /*{% endif %}*/
