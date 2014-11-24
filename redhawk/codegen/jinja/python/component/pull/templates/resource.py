@@ -112,6 +112,19 @@ class ${className}(${baseClass}):
             The callback is then registered on the component as:
             self.addPropertyChangeListener('baudRate', self.mycallback)
             
+#{% if component is device %}
+        Allocation:
+            
+            Allocation callbacks are available to customize a Device's response to an allocation request. Callbacks
+            are found automatically by the base class through a naming convention. The naming convention used
+            is to prepend "allocate_" to the allocation property's name. For example, if the Device contains an
+            allocation property called "my_alloc", the allocation callback is defined as:
+            
+            def allocate_my_alloc(self, value):
+                # perform logic
+                return True # successful allocation
+#{% endif %}
+            
         Example:
         
             # This example assumes that the ${artifactType} has two ports:

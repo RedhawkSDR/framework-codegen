@@ -150,8 +150,7 @@ ${className}::~${className}()
         
         Properties are accessed directly as member variables. For example, if the
         property name is "baudRate", it may be accessed within member functions as
-        "baudRate". Unnamed properties are given a generated name of the form
-        "prop_n", where "n" is the ordinal number of the property in the PRF file.
+        "baudRate". Unnamed properties are given the property id as its name.
         Property types are mapped to the nearest C++ type, (e.g. "string" becomes
         "std::string"). All generated properties are declared in the base class
         (${baseClass}).

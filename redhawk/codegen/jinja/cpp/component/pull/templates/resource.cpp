@@ -176,8 +176,7 @@ void ${className}::updateUsageState()
         
         Properties are accessed directly as member variables. For example, if the
         property name is "baudRate", it may be accessed within member functions as
-        "baudRate". Unnamed properties are given a generated name of the form
-        "prop_n", where "n" is the ordinal number of the property in the PRF file.
+        "baudRate". Unnamed properties are given the property id as its name.
         Property types are mapped to the nearest C++ type, (e.g. "string" becomes
         "std::string"). All generated properties are declared in the base class
         (${baseClass}).
@@ -227,7 +226,33 @@ void ${className}::updateUsageState()
         //Add to ${component.userclass.header}
         void scaleChanged(const float* oldValue, const float* newValue);
         
+/*{% if component is device %}*/
+    Allocation:
+    
+        Allocation callbacks are available to customize the Device's response to 
+        allocation requests. For example, if the Device contains the allocation 
+        property "my_alloc" of type string, the allocation and deallocation
+        callbacks follow the pattern (with arbitrary function names
+        my_alloc_fn and my_dealloc_fn):
         
+        bool ${className}::my_alloc_fn(const std::string &value)
+        {
+            // perform logic
+            return true; // successful allocation
+        }
+        void ${className}::my_dealloc_fn(const std::string &value)
+        {
+            // perform logic
+        }
+        
+        The allocation and deallocation functions are then registered with the Device
+        base class with the setAllocationImpl call:
+        
+        this->setAllocationImpl("my_alloc", this, &${className}::my_alloc_fn, &${className}::my_dealloc_fn);
+        
+        
+/*{% endif %}*/
+
 ************************************************************************************************/
 int ${className}::serviceFunction()
 {

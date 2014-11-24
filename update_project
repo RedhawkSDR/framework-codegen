@@ -240,6 +240,11 @@ if __name__ == '__main__':
                     outputDir = value
             if isCpp:
                 compCpp = os.path.join(dirname, outputDir, compName+'.cpp')
+                if not dirname or dirname == ".":
+                    cmd = "cd " + outputDir + ";./reconf;./configure;make distclean"
+                else:
+                    cmd = "cd " + dirname + "/" + outputDir + ";./reconf;./configure;make distclean"
+                os.system(cmd)
                 if check_bulkio_input(compCpp):
                     add_bulkio_compat_header(compCpp)
             elif isPython:
