@@ -241,9 +241,9 @@ if __name__ == '__main__':
             if isCpp:
                 compCpp = os.path.join(dirname, outputDir, compName+'.cpp')
                 if not dirname or dirname == ".":
-                    cmd = "cd " + outputDir + ";./reconf;./configure;make distclean"
+                    cmd = "cd " + outputDir + ";rm depcomp ltmain.sh install-sh config.sub missing config.guess;./reconf;./configure;make distclean"
                 else:
-                    cmd = "cd " + dirname + "/" + outputDir + ";./reconf;./configure;make distclean"
+                    cmd = "cd " + dirname + "/" + outputDir + ";rm depcomp ltmain.sh install-sh config.sub missing config.guess;./reconf;./configure;make distclean"
                 os.system(cmd)
                 if check_bulkio_input(compCpp):
                     add_bulkio_compat_header(compCpp)
