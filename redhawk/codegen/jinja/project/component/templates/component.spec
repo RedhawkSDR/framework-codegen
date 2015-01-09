@@ -57,6 +57,13 @@ Requires:       {{component.interfaces|join(' ')}}
 BuildArch: noarch
 
 #{$ endif $}
+#{$ if 'Java' in component.languages and component.languages $}
+# Java requirements
+Requires: java >= 1.6
+BuildRequires: java-devel >= 1.6
+
+#{$ endif $}
+
 %description
 #{$ if component.description $}
 {{component.description}}

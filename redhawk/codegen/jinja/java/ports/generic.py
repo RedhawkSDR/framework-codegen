@@ -83,6 +83,8 @@ def outType(typeobj):
         name = "org.omg.CORBA." + _baseMap[kind].capitalize()
     elif kind == CORBA.tk_alias:
         name = packageName(typeobj.scopedName())
+    elif kind == CORBA.tk_string:
+        name = "org.omg.CORBA.String"
     else:
         name = baseType(typeobj)
     return name + 'Holder'

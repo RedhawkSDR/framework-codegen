@@ -138,7 +138,9 @@ def determineProjectType(implList):
     for implId in implList:
         implSettings = settings.get(implId, ImplementationSettings())
         implTemplate = implSettings.template
-        if implTemplate.find("softPackageDependency") != -1:
+        if not implTemplate:
+            continue
+        elif implTemplate.find("softPackageDependency") != -1:
             projectType = "softPackageDependency"
         elif implTemplate.find("octave") != -1:
             projectType = "octaveComponent"

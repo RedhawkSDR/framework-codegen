@@ -54,7 +54,10 @@ def baseType(typeobj, direction=None):
     elif kind == CORBA.tk_void:
         return 'void'
     elif kind == CORBA.tk_string:
-        return 'char*'
+        if direction == 'out':
+            return 'CORBA::String_out'
+        else:
+            return 'char*'
     elif kind == CORBA.tk_any:
         return 'CORBA::Any'
     elif kind == CORBA.tk_alias and \
@@ -63,8 +66,16 @@ def baseType(typeobj, direction=None):
     
     name = '::'.join(typeobj.scopedName())
     if kind == CORBA.tk_objref:
-        return name + '_ptr'
-    elif direction:
+        if direction == 'out':
+            return name + '_out'
+        else:
+            return name + '_ptr'
+    elif kind == CORBA.tk_alias and isinstance(typeobj.aliasType(), SequenceType):
+        if direction == 'out':
+            return name + '_out'
+        else:
+            return name
+    elif direction and direction != 'in':
         return name + '&'
     else:
         return name 
@@ -101,7 +112,21 @@ def passByValue(argType,direction):
             else:
                 return False
     else:
-        return False
+        kind = argType.kind()
+        if kind == CORBA.tk_alias and isinstance(argType.aliasType(), SequenceType):
+            if direction == 'out':
+                return True
+            elif direction == 'inout':
+                return False
+        elif kind == CORBA.tk_string:
+            if direction == 'out':
+                return True
+            elif direction == 'inout':
+                return False
+        elif kind == CORBA.tk_objref:
+            return True
+        else:
+            return False
 
 def passConst(argType,direction):
     if direction == 'in':
@@ -116,10 +141,10 @@ def passConst(argType,direction):
         return False 
 
 def argumentType(argType, direction):
-    name = baseType(argType)
+    name = baseType(argType,direction)
     if not direction == 'in':
-        # OctetSequence is special case becuase arg is different in C++ than the IDL
-        if name == 'CF::OctetSequence':
+        # sequence is special case because arg is different in C++ than the IDL
+        if argType == 'sequence':
             return name + '_out'
     if passConst(argType,direction):
         name = 'const '+name

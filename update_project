@@ -240,13 +240,14 @@ if __name__ == '__main__':
                     outputDir = value
             if isCpp:
                 compCpp = os.path.join(dirname, outputDir, compName+'.cpp')
+                compH = os.path.join(dirname, outputDir, compName+'.h')
                 if not dirname or dirname == ".":
                     cmd = "cd " + outputDir + ";rm depcomp ltmain.sh install-sh config.sub missing config.guess;./reconf;./configure;make distclean"
                 else:
                     cmd = "cd " + dirname + "/" + outputDir + ";rm depcomp ltmain.sh install-sh config.sub missing config.guess;./reconf;./configure;make distclean"
                 os.system(cmd)
                 if check_bulkio_input(compCpp):
-                    add_bulkio_compat_header(compCpp)
+                    add_bulkio_compat_header(compH)
             elif isPython:
                 # Check the SCD for BULKIO ports
                 scdFile = os.path.join(dirname, compName+'.scd.xml')
