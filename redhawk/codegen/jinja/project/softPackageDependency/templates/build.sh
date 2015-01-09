@@ -39,7 +39,15 @@ else
     for impl in {{ component['subdirs']|join(' ') }} ; do
         cd $impl
         if [ -e build.sh ]; then
-            ./build.sh $*
+            if [ $# == 1 ]; then
+                if [ $1 == 'clean' ]; then
+                    ./build.sh distclean
+                else
+                    ./build.sh $*
+                fi
+            else
+                ./build.sh $*
+            fi
         elif [ -e reconf ]; then
             ./reconf && ./configure && make $*
         else

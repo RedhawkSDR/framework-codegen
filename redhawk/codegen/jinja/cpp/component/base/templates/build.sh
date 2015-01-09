@@ -25,5 +25,12 @@ if [ ! -e Makefile ]; then
   ./configure
 fi
 
-make -j $*
-
+if [ $# == 1 ]; then
+    if [ $1 == 'clean' ]; then
+        make distclean
+    else
+        make -j $*
+    fi
+else
+    make -j $*
+fi
