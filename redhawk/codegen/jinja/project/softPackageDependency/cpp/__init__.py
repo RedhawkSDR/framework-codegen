@@ -18,14 +18,8 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
-from redhawk.codegen.lang import python
+from generator import DependencyCppProjectGenerator
 
-from redhawk.codegen.jinja.mapping import PortMapper
+def factory(**opts):
+    return DependencyCppProjectGenerator(**opts)
 
-class PythonPortMapper(PortMapper):
-    def _mapPort(self, port, generator):
-        pyport = {}
-        pyport['pyname'] = python.identifier('port_'+port.name())
-        pyport['constructor'] = generator.constructor(port)
-        pyport['multiout'] = generator.supportsMultiOut()
-        return pyport

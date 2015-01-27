@@ -58,9 +58,9 @@ class PullComponentMapper(BaseComponentMapper):
             jars.extend(library['jarfiles'])
         return jars
 
-    def superclass(self, softpkg):
+    def superclass(self,softpkg):
         if softpkg.type() == ComponentTypes.RESOURCE:
-            name = 'ThreadedResource'
+            name = 'Component'
         elif softpkg.type() == ComponentTypes.DEVICE:
             name = 'ThreadedDevice'
         elif softpkg.type() == ComponentTypes.LOADABLEDEVICE:

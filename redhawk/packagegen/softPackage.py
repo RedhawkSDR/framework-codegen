@@ -29,16 +29,15 @@ class SoftPackage(object):
             self,
             name,
             implementation,
-            outputDir="."):
+            outputDir=".",
+            ):
 
         self.name = name
         self.implementation = implementation
         self.outputDir = outputDir
-
         self.autotoolsDir = self.outputDir+'/'+self.name+'/'+self.implementation+'/'
-
+        self.type = "";
         self.mFiles = []
-
         # Create empty objects that can be populated by classes inheriting
         # from SoftPackage
         self.spd = None
@@ -92,6 +91,7 @@ class SoftPackage(object):
         """
 
         codegenArgs = ["redhawk-codegen"]
+
         for mFile in self.mFiles:
             codegenArgs.append("-m")
             codegenArgs.append(mFile)
@@ -101,7 +101,6 @@ class SoftPackage(object):
 
         if variant != "":
             codegenArgs.append("--variant=" + variant)
-
         codegenArgs.append(self.outputDir+"/"+self.name+"/"+self.name+".spd.xml")
         subprocess.call(codegenArgs)
 
@@ -121,7 +120,7 @@ class SoftPackage(object):
         Write the hidden .resource.wavedev file.
 
         '''
-
+        print self.name
         self.createOutputDirIfNeeded()
         outfile=open(self.outputDir+"/"+self.name+"/."+ self.name+".wavedev", 'w')
         outfile.write(self.wavedevContent)

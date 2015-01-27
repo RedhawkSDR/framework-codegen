@@ -127,7 +127,7 @@ ${field.pyname}=${field.pyvalue|default(python.defaultValue(field.type))}
 
 #{% macro structdef(struct, initialize=true) %}
 class ${struct.pyclass}(object):
-#{%   for field in struct.fields %}
+#{%   for field in struct.fields if not field.inherited %}
 #{%   filter codealign %}
     ${field.pyname} = simple_property(id_="${field.identifier}",
 #%      if field.name
@@ -156,7 +156,7 @@ class ${struct.pyclass}(object):
             setattr(self,k,v)
 #{%   else %}
     def __init__(self, ${initializer(struct.fields)}):
-#{%     for field in struct.fields %}
+#{%     for field in struct.fields if not field.inherited %}
         self.${field.pyname} = ${field.pyname}
 #{%     endfor %}
 #{%   endif %}

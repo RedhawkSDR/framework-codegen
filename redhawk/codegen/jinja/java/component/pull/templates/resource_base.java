@@ -73,6 +73,10 @@ import ${portgen.package}.${portgen.className()};
 import bulkio.connection_descriptor_struct;
 /*{% endif %}*/
 
+/*{% block baseadditionalimports %}*/
+/*# Allow for child class imports #*/
+/*{% endblock %}*/
+
 /**
  * This is the ${artifactType} code. This file contains all the access points
  * you need to use to be able to access all input and output ports,
@@ -82,7 +86,10 @@ import bulkio.connection_descriptor_struct;
  *
  * @generated
  */
+
+/*{% block classdeclaration %}*/
 public abstract class ${classname} extends ${superClass} {
+/*{% endblock %}*/
     /**
      * @generated
      */
@@ -90,7 +97,9 @@ public abstract class ${classname} extends ${superClass} {
 
 /*{% import "base/properties.java" as properties with context %}*/
 /*{% for prop in component.properties %}*/
+/*{%   if not prop.inherited %}*/
     ${properties.create(prop)|indent(4)}
+//%    endif
 /*{% endfor %}*/
 /*{% for port in component.ports if port is provides %}*/
 /*{%   if loop.first %}*/
@@ -123,7 +132,12 @@ public abstract class ${classname} extends ${superClass} {
 
         // Properties
 /*{%   endif %}*/
+/*{%   if not prop.inherited %}*/
         addProperty(${prop.javaname});
+
+/*{%   elif prop.javavalue and prop.javavalue != "null" %}*/
+        ${prop.javaname}.setValue(${prop.javavalue});
+/*{%   endif %}*/
 /*{% endfor %}*/
 /*{% for port in component.ports if port is provides %}*/
 /*{%   if loop.first %}*/
@@ -195,6 +209,11 @@ public abstract class ${classname} extends ${superClass} {
     }
 /*{% endif %}*/
 
+/*{% block extensions %}*/
+/*# Allow for child class extensions #*/
+/*{% endblock %}*/
+
+/*{% block resourcemain %}*/
     /**
      * The main function of your ${artifactType}.  If no args are provided, then the
      * CORBA object is not bound to an SCA Domain or NamingService and can
@@ -230,4 +249,5 @@ public abstract class ${classname} extends ${superClass} {
             e.printStackTrace();
         }
     }
+/*{% endblock %}*/
 }

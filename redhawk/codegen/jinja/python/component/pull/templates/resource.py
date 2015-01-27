@@ -55,6 +55,7 @@ class ${className}(${baseClass}):
         ${baseClass}.initialize(self)
         # TODO add customization here.
         
+#% block updateUsageState 
 #{% if component is device %}
     def updateUsageState(self):
         """
@@ -67,6 +68,7 @@ class ${className}(${baseClass}):
         return NOOP
 
 #{% endif %}
+#% endblock
 
     def process(self):
         """
@@ -160,7 +162,9 @@ class ${className}(${baseClass}):
         # TODO fill in your code here
         self._log.debug("process() example log message")
         return NOOP
-        
+
+#{% block extensions %}
+#{% endblock %}
   
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)

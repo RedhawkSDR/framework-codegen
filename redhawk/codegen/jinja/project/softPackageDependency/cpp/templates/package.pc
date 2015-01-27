@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+spkg_libdir=@spkg_libdir@
+spkg_includedir=@spkg_includedir@
+
+Name: {{component.name}}{{generator.variant}}
+Description: Libraries for use with component development
+Requires:
+Version: {{component.version}}
+Libs: -L${spkg_libdir} -l{{component.name}}{{generator.variant}}
+Cflags: -I${spkg_includedir} 

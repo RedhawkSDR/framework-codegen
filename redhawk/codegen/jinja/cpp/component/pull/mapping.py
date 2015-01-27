@@ -51,7 +51,7 @@ class PullComponentMapper(BaseComponentMapper):
     @staticmethod
     def superClasses(softpkg):
         if softpkg.type() == ComponentTypes.RESOURCE:
-            name = 'Resource_impl'
+            name = 'Component'
         elif softpkg.type() == ComponentTypes.DEVICE:
             name = 'Device_impl'
             aggregate = 'virtual POA_CF::AggregatePlainDevice'

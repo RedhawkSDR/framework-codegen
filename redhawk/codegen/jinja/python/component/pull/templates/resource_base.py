@@ -57,6 +57,9 @@ ${statement}
 #{%   endfor %}
 #{% endfor %}
 #{% endfilter %}
+#{% block baseadditionalimports %}
+#{# Allow additional child class imports #}
+#{% endblock %}
 
 class ${className}(${component.poaclass}, ${component.superclasses|join(', ', attribute='name')}, ThreadedComponent):
         # These values can be altered in the __init__ of your derived class
@@ -74,7 +77,7 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{% else %}
         def __init__(self, identifier, execparams):
             loggerName = (execparams['NAME_BINDING'].replace('/', '.')).rsplit("_", 1)[0]
-            Resource.__init__(self, identifier, execparams, loggerName=loggerName)
+            Component.__init__(self, identifier, execparams, loggerName=loggerName)
 #{% endif %}
             ThreadedComponent.__init__(self)
 
@@ -91,11 +94,13 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{% endif %}
 
         def start(self):
-#{% for port in component.ports if port.start%}
-            self.${port.pyname}.${port.start}
-#{% endfor %}
             ${superclass}.start(self)
             ThreadedComponent.startThread(self, pause=self.PAUSE)
+
+        def stop(self):
+            ${superclass}.stop(self)
+            if not ThreadedComponent.stopThread(self, self.TIMEOUT):
+                raise CF.Resource.StopError(CF.CF_NOTSET, "Processing thread did not die")
 
 #{% if component.hasmultioutport %}
         def updated_connectionTable(self, id, oldval, newval):
@@ -104,14 +109,6 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{% endfor %}
 
 #{% endif %}
-        def stop(self):
-#{% for port in component.ports if port.stop%}
-            self.${port.pyname}.${port.stop}
-#{% endfor %}
-            if not ThreadedComponent.stopThread(self, self.TIMEOUT):
-                raise CF.Resource.StopError(CF.CF_NOTSET, "Processing thread did not die")
-            ${superclass}.stop(self)
-
         def releaseObject(self):
             try:
                 self.stop()
@@ -152,7 +149,11 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
         # or by using the IDE.
 #{% import "base/properties.py" as properties with context %}
 #{% for prop in component.properties %}
+#{%     if not prop.inherited  %}
         ${properties.create(prop)|indent(8)}
+#{%     elif prop.pyvalue %}
+        ${prop.pyname} = ${prop.pyvalue}
+#{%     endif %}
 #{% endfor %}
 #{% for portgen in component.portgenerators if portgen is provides and portgen.hasImplementation() %}
 
@@ -170,3 +171,7 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{%   endif %}
 #{% include portgen.implementation() %}
 #{% endfor %}
+
+#{% block extensions %}
+#{# Allow for child class extensions #}
+#{% endblock %}

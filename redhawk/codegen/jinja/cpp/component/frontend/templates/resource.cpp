@@ -24,13 +24,12 @@
 /*{% endblock %}*/
 
 /*{% block updateUsageState %}*/
-/*{%   if component is device and baseClass == Device_impl %}*/
+/*{%   for sc in component.superclasses if sc.name == "Device_impl" %}*/
 ${super()}
-/*{%-  endif %}*/
+/*{%-  endfor %}*/
 /*{% endblock %}*/
 
 /*{% block extensions %}*/
-
 void ${className}::construct()
 {
     /***********************************************************************************

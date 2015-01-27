@@ -40,7 +40,7 @@ class Generator(object):
         self.outputdir = outputdir
         self.overwrite = overwrite
         if variant != "":
-            variant = "-" + variant
+            variant = "_" + variant
         self.variant = variant
         self.parseopts(**options)
 

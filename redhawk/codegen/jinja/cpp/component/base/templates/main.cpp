@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     Device_impl::start_device(&devicePtr, sa, argc, argv);
 /*{% else %}*/
     ${component.userclass.name}* ${component.name}_servant;
-    Resource_impl::start_component(${component.name}_servant, argc, argv);
+    Component::start_component(${component.name}_servant, argc, argv);
 /*{% endif %}*/
     return 0;
 }

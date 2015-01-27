@@ -39,8 +39,8 @@ ${field.javatype} ${field.javaname}
 /*{% endfilter -%}*/
 ) {
         this();
-/*{% for field in prop.fields %}*/
-        this.${field.javaname}.setValue(${field.javaname});
+/*{% for field in prop.fields if not field.inherited and field.javavalue %}*/
+        this.${field.javaname}.setValue(${field.javavalue});
 /*{% endfor %}*/
     }
 
@@ -48,7 +48,7 @@ ${field.javatype} ${field.javaname}
      * @generated
      */
     public ${prop.javatype}() {
-/*{% for field in prop.fields %}*/
+/*{% for field in prop.fields if not field.inherited %}*/
         addElement(this.${field.javaname});
 /*{% endfor %}*/
     }

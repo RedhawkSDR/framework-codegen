@@ -26,6 +26,9 @@
 package ${component.package};
 
 import java.util.Properties;
+/*{% block mainadditionalimports %}*/
+/*# Allow for child class imports #*/
+/*{% endblock %}*/
 
 /**
  * This is the ${artifactType} code. This file contains the derived class where custom
@@ -101,9 +104,29 @@ public class ${classname} extends ${baseclass} {
      * device class.
 //% endif
      */
-    public ${classname}() {
+
+    public ${classname}()
+    {
         super();
     }
+
+/*{% if component is device %}*/
+/*{%   block updateUsageState %}*/
+    /**************************************************************************
+
+         This is called automatically after allocateCapacity or deallocateCapacity are called.
+         Your implementation should determine the current state of the device:
+
+            setUsageState(CF.DevicePackage.UsageType.IDLE);   // not in use
+            setUsageState(CF.DevicePackage.UsageType.ACTIVE); // in use, with capacity remaining for allocation
+            setUsageState(CF.DevicePackage.UsageType.BUSY);   // in use, with no capacity remaining for allocation
+
+     ***************************************************************************/
+    protected void updateUsageState()
+    {
+    }
+/*{%   endblock %}*/
+/*{% endif %}*/
 
     /**
      *
@@ -229,4 +252,8 @@ public class ${classname} extends ${baseclass} {
      */
     public static void configureOrb(final Properties orbProps) {
     }
+
+/*{% block extensions %}*/
+/*# Allow for child class extensions #*/
+/*{% endblock %}*/
 }

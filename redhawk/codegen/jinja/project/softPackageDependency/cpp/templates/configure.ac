@@ -1,4 +1,4 @@
-#
+#{#
 # This file is protected by Copyright. Please refer to the COPYRIGHT file
 # distributed with this source distribution.
 #
@@ -16,16 +16,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
-#
+#}
+AC_INIT({{component.name}}, {{component.version}})
+AM_INIT_AUTOMAKE(nostdinc)
 
-from redhawk.codegen.lang import python
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LIBTOOL
+OSSIE_SDRROOT_AS_PREFIX
 
-from redhawk.codegen.jinja.mapping import PortMapper
+AC_PREFIX_DEFAULT(${SDRROOT})
+AC_SUBST([spkg_dir],['${prefix}'/dom/deps/{{component.name}}{{generator.variant}}])
+AC_SUBST([spkg_impl],[{{component.impl.id}}])
+AC_SUBST([spkg_variant],[{{generator.variant}}])
+AC_SUBST([spkg_impldir],['${spkg_dir}/${spkg_impl}'])
+AC_SUBST([spkg_libdir],['${spkg_dir}/${spkg_impl}/lib'])
+AC_SUBST([spkg_pkgconfig_dir],['${spkg_libdir}/pkgconfig'])
+AC_SUBST([spkg_includedir],['${spkg_dir}/${spkg_impl}/include'])
 
-class PythonPortMapper(PortMapper):
-    def _mapPort(self, port, generator):
-        pyport = {}
-        pyport['pyname'] = python.identifier('port_'+port.name())
-        pyport['constructor'] = generator.constructor(port)
-        pyport['multiout'] = generator.supportsMultiOut()
-        return pyport
+AC_CONFIG_FILES([{{component.name}}${spkg_variant}.pc:package.pc])
+AC_CONFIG_FILES([../{{component.name}}${spkg_variant}.spd.xml:../{{component.name}}.spd.xml])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

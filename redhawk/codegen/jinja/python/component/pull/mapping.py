@@ -50,8 +50,8 @@ class PullComponentMapper(ComponentMapper):
     @staticmethod
     def superClasses(softpkg):
         if softpkg.type() == ComponentTypes.RESOURCE:
-            name = 'Resource'
-            package = 'ossie.resource'
+            name = 'Component'
+            package = 'ossie.component'
         elif softpkg.type() == ComponentTypes.DEVICE:
             name = 'Device'
             package = 'ossie.device'

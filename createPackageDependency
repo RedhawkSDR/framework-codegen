@@ -15,23 +15,29 @@ Example usage:
 """
 
 from redhawk.packagegen.directoryPackageDependency import DirectoryPackageDependency
+from redhawk.packagegen.cppPackageDependency import CppPackageDependency
+from redhawk.packagegen.existingPackageDependency import ExistingPackageDependency
+
 from getopt import getopt
 import sys
 import os
 
 usage = """%s [options] <package path>
-
+        Examples: ./createPackageDependency --type=directory --implementation=noarch --outputDir=dict.1 --variant=v1 
+                  ./createPackageDependency --type=cpp --variant=v1 --libName=VITA49
+                  ./createPackageDependency --type=existing --variant=v1 --libName=fftw3 --pkgConfig=fftw3.pc
 Arguments:
-    <library path>
+    <library path>      For directory-type packages list location. For cpp-type leave this blank
 
 Required Flags:
     --type              Soft package dependency type.  Valid types:
 
                             - directory
-
+                            - cpp
+                            - existing
 Options:
     --implementation    Implementation (e.g., noarch, x86_64). Default "noarch"
-                        for directory-type packages.
+                        for directory-type packages. For cpp-type packages default is cpp
 
     --outputDir         Location of all output files.  Default is ".".
 
@@ -54,6 +60,9 @@ Options:
     --install           If set, run "reconf; configure; make install" after
                         generating the code.
 
+    --libName           Specify what the library name shall be, required with cpp and existing types
+    
+    --pkgConfig         Parse the provided package configure file to create the shared package instance
 
 """ % os.path.basename(sys.argv[0])
 
@@ -68,7 +77,7 @@ def _generatePackageName(libraryLocation):
     # remove blank entries
     subdirs = [x for x in subdirs if x != ""]
 
-    # last item in the list
+    # last item in the list`
     libraryName = subdirs[-1] + "Pkg"
 
     return libraryName
@@ -94,6 +103,38 @@ def _createDirectoryPackageDependency(
 
     return myDirectoryDependency
 
+def _createCppPackageDependency(
+        type,
+        name,
+        implementation,
+        outputDir,
+        variant = ""):
+
+    myCppDependency = CppPackageDependency(
+        type = type,
+        name = name,
+        implementation = implementation,
+        variant = variant,
+        )
+
+    return myCppDependency
+
+def _createExistingPackageDependency(
+        type,
+        name,
+        implementation,
+        outputDir,
+        pkgConfig,
+        variant = ""):
+    myExistingDependency = ExistingPackageDependency(
+        type = type,
+        name = name,
+        implementation = implementation,
+        variant = variant,
+        pkgConfig=pkgConfig
+        )
+
+    return myExistingDependency
 if __name__ == "__main__":
     """
     Parse command line arguments and use them to create the appropriate 
@@ -112,18 +153,22 @@ if __name__ == "__main__":
          'sharedLibraries=',
          'buildRpm',
          'install',
+         'libName=',
+         'pkgConfig=',
          'help'])
-
+    
     type = None
     implementation = None
-
+    libName = None
     outputDir = "."
     force = False
     sharedLibraries = []
     buildRpm = False
     install = False
+    
+    objects = ""
     variant = ""
-
+    pkgConfig = ""
     for key, value in opts:
         if key == '--outputDir':
             outputDir = value
@@ -139,19 +184,35 @@ if __name__ == "__main__":
             buildRpm = True
         elif key == '--install':
             install = True
+        elif key == '--libName':
+            libName = value
+#            print libName
+#        elif key == '--source':
+#                source = value.split(',')
+#                print source
+#        elif key == '--header':
+#            header = value.split(',')
+#            print header
+#        elif key == '--obj':
+#            objects = value
+        elif key == '--pkgConfig':
+            pkgConfig = value
         elif key == '--help':
             raise SystemExit(usage)
         elif key == '-f':
             force = True
-    try:
-        libraryLocation = args[0]
-    except:
+        
+    if type in ["directory"]:
+        try:
+            libraryLocation = args[0]
+        except:
+            raise SystemExit(usage)
+
+    if not type in ["directory", "cpp", "existing"]:
         raise SystemExit(usage)
 
-    if not type in ["directory"]:
-        raise SystemExit(usage)
     # done parsing command-line arguments
-
+   
     # create approrpate package class instance given the type
     if type == "directory":
         if not implementation:
@@ -164,11 +225,40 @@ if __name__ == "__main__":
             sharedLibraries = sharedLibraries,
             variant = variant)
 
-    # Begin operations that are applied to all package types
+    if type == "cpp":
+        name = libName
+        if not implementation:
+            implementation = implementation
+
+        package = _createCppPackageDependency(
+            type = type,
+            name = name,
+            implementation = implementation,
+            outputDir = outputDir,
+            variant = variant)
+    
+    if type == "existing":
+        if (not libName) and (not pkgConfig):
+            raise SystemExit(usage)
+        else:
+            name = libName
+        if not implementation:
+            implementation = "noarch"
+      
+        package = _createExistingPackageDependency(
+            type = type,
+            name = name,
+            implementation = implementation,
+            outputDir = outputDir,
+            pkgConfig = pkgConfig,
+            variant = variant)
     package.writeXML()
+
     package.callCodegen(
         force = force,
         variant = variant)
+
+    # Begin operations that are applied to all package types
     if buildRpm:
         package.runCompileRpm()
     if install:

@@ -21,7 +21,6 @@
 /*{% block defines %}*/
 ${super()}
 #define BOOL_VALUE_HERE 0
-#define DOUBLE_VALUE_HERE 0
 /*{% endblock %}*/
 
 /*{% block extendedPublic %}*/
