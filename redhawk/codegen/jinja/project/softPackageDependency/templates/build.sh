@@ -42,6 +42,7 @@ else
             if [ $# == 1 ]; then
                 if [ $1 == 'clean' ]; then
                     rm -f Makefile
+                    rm -f config.*
                     ./build.sh distclean
                 else
                     ./build.sh $*

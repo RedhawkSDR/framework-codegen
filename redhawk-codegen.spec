@@ -24,7 +24,7 @@ Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
 Version:        1.10.2
-Release:        1%{?dist}
+Release:        3%{?dist}
 Summary:        Redhawk Code Generators
 
 Group:          Applications/Engineering
@@ -33,6 +33,7 @@ URL:            http://redhawksdr.org/
 Source:         %{name}-%{version}.tar.gz
 Vendor:         REDHAWK
 
+BuildArch:      noarch
 # BuildRoot required for el5
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
