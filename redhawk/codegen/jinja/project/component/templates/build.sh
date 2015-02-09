@@ -20,7 +20,7 @@
 #% set name = component['name']
 #% set dirname = name + '-' + component['version']
 #% set tarfile = dirname + '.tar.gz'
-#!/bin/sh
+#!/bin/bash
 
 if [ "$1" = "rpm" ]; then
     # A very simplistic RPM build scenario
