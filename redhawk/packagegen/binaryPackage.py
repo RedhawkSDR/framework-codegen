@@ -68,26 +68,6 @@ class BinaryPackage(ResourcePackage):
 
         self._addDefaultProps(inputfile=inputFile,outputfile=outputFile,inputFmt=inputFmt,outputFmt=outputFmt)
 
-        # Add properties
-        if cmdArgs:
-            for propName in cmdArgs:
-                id_value=propName.split('=')
-                if len(id_value) == 1: # no default
-                    id_ = id_value[0]
-                    value = None
-                else:
-                    id_ = id_value[0]
-                    value = id_value[1]
-                if _isStringProp(value):
-                    # string
-                    value=_cleanQuotes(value)
-                    self.addSimpleProperty(
-                        id=id_,
-                        value=value,
-                        type="string",
-                        complex=False)
-                propArgs.append(propName)
-
         # Add input ports
         self.addProvidesPort('dataDouble_in', "IDL:BULKIO/dataDouble:1.0")
         self.addProvidesPort('dataFloat_in', "IDL:BULKIO/dataFloat:1.0")
