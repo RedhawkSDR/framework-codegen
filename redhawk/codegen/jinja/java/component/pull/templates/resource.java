@@ -40,9 +40,10 @@ import java.util.Properties;
  */
 public class ${classname} extends ${baseclass} {
     /**
-     * This is the ${artifactType} constructor. In this method, you may add additional
-     * functionality to properties, such as listening for changes and handling
-     * allocation, and set up internal state for your ${artifactType}.
+     * This is the ${artifactType} constructor. In this method, you may add
+     * additional functionality to properties such as listening for changes
+     * or handling allocation, register message handlers and set up internal
+     * state for your ${artifactType}.
      *
      * A ${artifactType} may listen for external changes to properties (i.e., by a
      * call to configure) using the PropertyListener interface. Listeners are
@@ -103,6 +104,62 @@ public class ${classname} extends ${baseclass} {
      * to contain only glue code to dispatch the call to private methods on the
      * device class.
 //% endif
+     *
+     * Messages:
+     *
+     *   To send or receive messages, you must have at least one message
+     *   prototype described as a struct property of kind "message."
+     *
+     *   Receiving:
+     *
+     *   To receive a message, you must have an input port of type MessageEvent
+     *   (marked as "bi-dir" in the Ports editor). For each message type the
+     *   component supports, you must register a message handler callback with
+     *   the message input port. Message handlers implement the MessageListener
+     *   interface.
+     *
+     *   A callback is registered by calling registerMessage() on the message
+     *   input port with the message ID, the message struct's Class object and
+     *   an object that implements the MessageListener interface for that
+     *   message struct (e.g., "MessageListener<my_message_struct>" for a
+     *   message named "my_message").
+     *
+     *     Example:
+     *       // Assume the component has a message type called "my_message" and
+     *       // an input MessageEvent port called "message_in".
+     *       // Add the following to the top of the file:
+     *       import org.ossie.events.MessageListener;
+     *
+     *       // Register the callback in the class constructor:
+     *       this.message_in.registerMessage("my_message", my_message_struct.class, new MessageListener<my_message_struct>() {
+     *           public void messageReceived(String messageId, my_message_struct messageData) {
+     *               my_message_received(messageData);
+     *           }
+     *       });
+     *
+     *       // Implement the message handler method:
+     *       private void my_message_received(my_message_struct messageData) {
+     *           // Respond to the message
+     *       }
+     *
+     *   The recommended practice is for the implementation of messageReceived()
+     *   to contain only glue code to dispatch the call to a private method on
+     *   the component class.
+     *
+     *   Sending:
+     *
+     *   To send a message, you must have an output port of type MessageEvent.
+     *   Create an instance of the message struct type and call sendMessage()
+     *   to send a single message.
+     *
+     *     Example:
+     *       // Assume the component has a message type called "my_message" and
+     *       // an output MessageEvent port called "message_out".
+     *       my_message_struct message = new my_message_struct();
+     *       this.message_out.sendMessage(message);
+     *
+     *    You may also send a batch of messages at once with the sendMessages()
+     *    method.
      */
 
     public ${classname}()

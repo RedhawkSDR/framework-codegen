@@ -17,10 +17,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
-#% set name = component['name']
-#% set dirname = name + generator.variant + '-' + component['version']
+#% set name = component['name'].split('.')[-1]
+#% set fullname = component['name']
+#% set dirname = fullname + generator.variant + '-' + component['version']
 #% set tarfile = dirname + '.tar.gz'
-#!/bin/sh
+#!/bin/bash
 
 if [ "$1" = "rpm" ]; then
     # A very simplistic RPM build scenario
@@ -42,6 +43,7 @@ else
             if [ $# == 1 ]; then
                 if [ $1 == 'clean' ]; then
                     rm -f Makefile
+                    rm -f config.*
                     ./build.sh distclean
                 else
                     ./build.sh $*

@@ -23,7 +23,7 @@
 Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
-Version:        1.11.0
+Version:        2.0.0
 Release:        1%{?dist}
 Summary:        Redhawk Code Generators
 
@@ -33,11 +33,12 @@ URL:            http://redhawksdr.org/
 Source:         %{name}-%{version}.tar.gz
 Vendor:         REDHAWK
 
+BuildArch:      noarch
 # BuildRoot required for el5
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 Requires:       python
-Requires:       redhawk >= 1.10
+Requires:       redhawk >= 2.0
 Requires:       python-jinja2-26
 
 BuildRequires:  python-devel >= 2.4

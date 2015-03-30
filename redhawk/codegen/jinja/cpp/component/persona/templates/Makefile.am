@@ -18,6 +18,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #% set outputdir = generator.getOutputDir()
+#% set componentdir = component.name.replace('.','/')
 #% set executable = component.impl.entrypoint|relpath(outputdir)
 #% set target = automake.canonicalName(executable)
 #{% block license %}
@@ -25,12 +26,12 @@
 #{% endblock %}
 #{% block binInfo %}
 ossieName = {{component.name}}
-bindir = $(prefix)/{{component.sdrpath}}/{{component.name}}/{{outputdir}}/
+bindir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/{{outputdir}}/
 #bin_PROGRAMS = {{executable}}
 #{% endblock %}
 
 #{% block xmlInfo %}
-xmldir = $(prefix)/{{component.sdrpath}}/{{component.name}}/
+xmldir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/
 dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
 #{% endblock %}
 ACLOCAL_AMFLAGS = -I$(OSSIEHOME)/share/aclocal/ossie
@@ -63,5 +64,5 @@ lib_LTLIBRARIES = lib{{component.name}}.la
 lib{{component.name}}_la_SOURCES = $(redhawk_SOURCES_auto)
 lib{{component.name}}_la_CXXFLAGS = -Wall $(PROJECTDEPS_CFLAGS) $(BOOST_CPPFLAGS) $(INTERFACEDEPS_CFLAGS) $(redhawk_INCLUDES_auto)
 lib{{component.name}}_la_LDFLAGS = -Wall $(redhawk_LDFLAGS_auto) $(PROJECTDEPS_LIBS) $(INTERFACEDEPS_LIBS)
-libdir = $(prefix)/dev/devices/{{component.name}}/cpp/.libs
+libdir = $(prefix)/dev/devices/{{componentdir}}/cpp/.libs
 #{% endblock %}

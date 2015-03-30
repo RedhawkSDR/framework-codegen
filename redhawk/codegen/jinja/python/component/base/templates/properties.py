@@ -55,7 +55,7 @@ ${prop.pyname} = simpleseq_property(id_="${prop.identifier}",
 #{%   endfor %}
                                              ],
 #%    else
-                                    defvalue=None,
+                                    defvalue=[],
 #%    endif
 #%    if prop.units
                                     units="${prop.units}",
@@ -129,19 +129,44 @@ ${field.pyname}=${field.pyvalue|default(python.defaultValue(field.type))}
 class ${struct.pyclass}(object):
 #{%   for field in struct.fields if not field.inherited %}
 #{%   filter codealign %}
-    ${field.pyname} = simple_property(id_="${field.identifier}",
+#%    if field is simplesequence
+    ${field.pyname} = simpleseq_property(
+#%    elif field is simple
+    ${field.pyname} = simple_property(
+#%    endif
+                                      id_="${field.identifier}",
+
 #%      if field.name
                                       name="${field.name}",
 #%      endif
                                       type_="${field.type}"
 #%-     if field.pyvalue is defined
 ,
+#%        if field is simple
                                       defvalue=${field.pyvalue}
+#%        elif field is simplesequence
+                                      defvalue=[
+#{%         filter codealign %}
+#{%         for val in field.pyvalue %}
+                                                ${val},
+#{%         endfor %}
+#{%         endfilter %}
+                                               ]
+#%        endif
+#%      else
+#%        if field is simplesequence
+,
+                                      defvalue=[]
+#%        endif
 #%-     endif
 #%-     if field.isComplex
 ,
                                       complex=True
 #%-     endif
+#%-	if field.isOptional
+,
+                                      optional=True
+#%-	endif
 )
 #{%   endfilter %}
 
@@ -150,7 +175,7 @@ class ${struct.pyclass}(object):
     def __init__(self, **kw):
         """Construct an initialized instance of this struct definition"""
         for attrname, classattr in type(self).__dict__.items():
-            if type(classattr) == simple_property:
+            if type(classattr) == simple_property or type(classattr) == simpleseq_property:
                 classattr.initialize(self)
         for k,v in kw.items():
             setattr(self,k,v)

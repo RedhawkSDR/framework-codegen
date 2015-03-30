@@ -47,6 +47,11 @@ class ProjectMapper(ComponentMapper):
         component = {}
         component['type'] = _projectTypes[softpkg.type()]
         component['interfaces'] = [libraries.getRPMDependency(name) for name in self.getInterfaceNamespaces(softpkg)]
+        namespaces = "/".join(softpkg.name().split('.')[:-1])
+        if len(namespaces) != 0:
+            namespaces += "/"
+            
+        component['namespaces'] = namespaces
         return component
 
     def mapProject(self, softpkg):

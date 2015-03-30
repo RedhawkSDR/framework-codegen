@@ -105,7 +105,7 @@ ${className}::${className}(const char *uuid, const char *label) :
 /*{% endfor %}*/
 /*{% if component.hasmultioutport %}*/
 
-    this->addPropertyChangeListener("connectionTable", this, &${className}::connectionTableChanged);
+    this->addPropertyListener(connectionTable, this, &${className}::connectionTableChanged);
 /*{% endif %}*/
 /*{% endblock %}*/
 }
@@ -181,7 +181,7 @@ void ${className}::connectionTableChanged(const std::vector<connection_descripto
 void ${className}::loadProperties()
 {
 /*{% for prop in component.properties %}*/
-//%    if prop.cppvalues
+//%    if prop.cppvalues and prop is not structsequence
     ${initsequence(prop)|indent(4)}
 //%    endif
 /*{%   if not prop.inherited %}*/

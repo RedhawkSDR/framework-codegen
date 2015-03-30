@@ -25,8 +25,12 @@ import commands, os
 class BaseComponentMapper(ComponentMapper):
     def _mapComponent(self, softpkg):
         cppcomp = {}
-        cppcomp['userclass'] = { 'name'  : softpkg.name()+'_i',
-                                 'header': softpkg.name()+'.h' }
+        softpkg_base_name = softpkg.name()
+        if softpkg.name().find('.') != -1:
+            softpkg_base_name = softpkg.name().split('.')[-1]
+        cppcomp['userclass'] = { 'base_name'  : softpkg_base_name,
+                                 'name'  : softpkg_base_name+'_i',
+                                 'header': softpkg_base_name+'.h' }
         cppcomp['interfacedeps'] = tuple(self.getInterfaceDependencies(softpkg))
         cppcomp['softpkgdeps'] = self.softPkgDeps(softpkg, format='deps')
         cppcomp['pkgconfigsoftpkgdeps'] = self.softPkgDeps(softpkg, format='pkgconfig')

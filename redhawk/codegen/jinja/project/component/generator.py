@@ -41,5 +41,5 @@ class ComponentProjectGenerator(TopLevelGenerator):
     def templates(self, project):
         return [
             ShellTemplate('build.sh'),
-            SpecfileTemplate('component.spec', project['name']+'.spec')
+            SpecfileTemplate('component.spec', project['name'].split('.')[-1]+'.spec')
             ]

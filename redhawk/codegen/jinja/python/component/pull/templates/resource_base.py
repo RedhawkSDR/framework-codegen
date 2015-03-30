@@ -34,10 +34,13 @@ from ossie.utils import uuid
 from ${parent.package} import ${parent.name}
 #{% endfor %}
 from ossie.threadedcomponent import *
+#{% set isSet = False %}
 #{% if component.properties|test('simple') is sometimes(true) or component.structdefs %}
 from ossie.properties import simple_property
+from ossie.properties import simpleseq_property
+#{% set isSet = True %}
 #{% endif %}
-#{% if component.properties|test('simplesequence') is sometimes(true) %}
+#{% if component.properties|test('simplesequence') is sometimes(true) and isSet == False %}
 from ossie.properties import simpleseq_property
 #{% endif %}
 #{% if component.structdefs %}

@@ -22,7 +22,7 @@
 /*{% endblock %}*/
 //% set className = component.reprogclass.name
 //% set baseClass = component.baseclass.name
-//% set includeGuard = component.name.upper() + '_IMPL_REPROG_H'
+//% set includeGuard = className.upper() + '_IMPL_REPROG_H'
 //% set executesHWComponents = component.executesHWComponents 
 //% set executesPersonaDevices = not executesHWComponents
 //% set executeType = "resource" if executesHWComponents else "persona"

@@ -37,13 +37,20 @@ class PullComponentMapper(BaseComponentMapper):
 
     @staticmethod
     def userClass(softpkg):
-        return {'name'  : softpkg.name()+'_i',
-                'header': softpkg.name()+'.h',
-                'file'  : softpkg.name()+'.cpp'}
+        softpkg_base_name = softpkg.name()
+        if softpkg.name().find('.') != -1:
+            softpkg_base_name = softpkg.name().split('.')[-1]
+        return {'base_name'  : softpkg_base_name,
+                'name'  : softpkg_base_name+'_i',
+                'header': softpkg_base_name+'.h',
+                'file'  : softpkg_base_name+'.cpp'}
 
     @staticmethod
     def baseClass(softpkg):
-        baseclass = softpkg.name() + '_base'
+        softpkg_base_name = softpkg.name()
+        if softpkg.name().find('.') != -1:
+            softpkg_base_name = softpkg.name().split('.')[-1]
+        baseclass = softpkg_base_name + '_base'
         return {'name'  : baseclass,
                 'header': baseclass+'.h',
                 'file'  : baseclass+'.cpp'}

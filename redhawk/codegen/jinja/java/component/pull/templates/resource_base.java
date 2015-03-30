@@ -26,9 +26,29 @@
 //% set artifactType = component.artifacttype
 package ${component.package};
 
+//% set listImported = false
 /*{% if component.hasmultioutport %}*/
 import java.util.List;
+//% set listImported = true
 /*{% endif %}*/
+
+/*{% for prop in component.properties %}*/
+/*{%   if prop is struct %}*/
+/*{%     for p in prop.fields %}*/
+/*{%       if p is simplesequence and not listImported %}*/
+import java.util.List;
+//%          set listImported = true
+/*{%       endif %}*/
+/*{%     endfor %}*/
+/*{%   elif prop is structsequence %}*/
+/*{%     for p in prop.structdef.fields %}*/
+/*{%       if p is simplesequence and not listImported %}*/
+import java.util.List;
+//%          set listImported = true
+/*{%       endif %}*/
+/*{%     endfor %}*/
+/*{%   endif %}*/
+/*{% endfor %}*/
 import java.util.Properties;
 
 import org.apache.log4j.Logger;

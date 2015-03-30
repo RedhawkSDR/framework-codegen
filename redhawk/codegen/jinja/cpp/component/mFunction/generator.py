@@ -110,5 +110,5 @@ class OctaveComponentGenerator(PullComponentGenerator):
         return component
 
     def componentMapper(self):
-        return MFunctionMapper()
+        return MFunctionMapper(self.outputdir)
 

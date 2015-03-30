@@ -22,4 +22,8 @@ from redhawk.codegen.jinja.project.component.mapping import ProjectMapper
 import os
 
 class DependencyProjectMapper(ProjectMapper):
-    pass
+    def _mapImplementation(self, impl):
+        impldict = {}
+        impldict['language'] = impl.programminglanguage()
+        impldict['outputdir'] = impl.localfile()
+        return impldict

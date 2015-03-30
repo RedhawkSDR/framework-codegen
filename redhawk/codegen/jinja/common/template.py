@@ -67,6 +67,7 @@ class SpecfileTemplate(TemplateFile):
             'block_end_string':      '$}',
             'comment_start_string':  '#{#'
         }
+
 class PkgconfigTemplate(TemplateFile):
     def options(self):
         return {

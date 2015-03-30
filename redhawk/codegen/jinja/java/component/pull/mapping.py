@@ -33,6 +33,8 @@ class PullComponentMapper(BaseComponentMapper):
         javacomp = {}
         javacomp['package'] = self.package
         userclass = softpkg.name()
+        if softpkg.name().find('.') != -1:
+            userclass = softpkg.name().split('.')[-1]
         baseclass = userclass + '_base'
         javacomp['baseclass'] = {'name': baseclass,
                                  'file': baseclass+'.java'}
@@ -40,7 +42,7 @@ class PullComponentMapper(BaseComponentMapper):
                                  'file': userclass+'.java'}
         javacomp['superclass'] = self.superclass(softpkg)
         javacomp['mainclass'] = java.qualifiedName(userclass, self.package)
-        javacomp['jarfile'] = softpkg.name() + '.jar'
+        javacomp['jarfile'] = userclass + '.jar'
         javacomp['interfacedeps'] = list(self.getInterfaceDependencies(softpkg))
         javacomp['interfacejars'] = self.getInterfaceJars(softpkg)
         javacomp['softpkgcp'] = self.softPkgDeps(softpkg, format='cp')

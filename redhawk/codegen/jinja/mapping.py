@@ -21,6 +21,7 @@
 from redhawk.codegen.model.properties import Kinds
 from redhawk.codegen.model.softwarecomponent import ComponentTypes
 from redhawk.codegen.lang.idl import IDLInterface
+import redhawk.codegen.model.properties
 
 class PropertyMapper(object):
     def _mapProperty(self, prop, propclass):
@@ -57,7 +58,8 @@ class PropertyMapper(object):
 
     def _mapStruct(self, prop):
         propdict = self._mapProperty(prop, 'struct')
-        fields = [self._mapSimple(s) for s in prop.fields()]
+        fields = [self._mapSimple(s) for s in prop.fields() if isinstance(s, redhawk.codegen.model.properties.SimpleProperty)]
+	fields += [self._mapSimpleSequence(s) for s in prop.fields() if isinstance(s, redhawk.codegen.model.properties.SimpleSequenceProperty)]
         propdict['fields'] = fields
         propdict.update(self.mapStructProperty(prop, fields))
         return propdict
@@ -138,6 +140,40 @@ class PortMapper(object):
                    generators.append(p['generator']) 
         return {'ports':          ports,
                 'portgenerators': generators}
+
+
+class SoftpkgMapper(object):
+    def __init__(self):
+        self._impl=None
+
+    def setImplementation(self, impl=None ):
+        self._impl=impl
+
+    def mapComponent(self, softpkg):
+        component = {}
+        component['name'] = softpkg.name()
+        component['version'] = softpkg.version()
+        component['type'] = softpkg.type()
+        component['sdrpath'] = softpkg.getSdrPath()
+
+        # XML profile
+        component['profile'] = { 'spd': softpkg.spdFile() }
+
+        component.update(self._mapComponent(softpkg))
+        return component
+
+    def _mapComponent(self, softpkg):
+        return {}
+
+    def mapImplementation(self, impl):
+        impldict = {}
+        impldict['id'] = impl.identifier()
+        impldict['entrypoint'] = impl.entrypoint()
+        impldict.update(self._mapImplementation(impl))
+        return impldict
+
+    def _mapImplementation(self, implementation):
+        return {}
 
 
 class ComponentMapper(object):

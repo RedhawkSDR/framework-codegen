@@ -18,6 +18,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #% set target = automake.canonicalName(component.jarfile)
+#% set componentdir = component.name.replace('.','/')
 #% set classpath = ['CFInterfaces.jar', 'log4j-'+versions.log4j+'.jar', 'ossie.jar'] + component.interfacejars
 {{target}}_CLASSPATH = $(CLASSPATH_SOFTPKG_DEP){{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}}
 
@@ -44,13 +45,13 @@ distclean-local:
 
 #{% set outputdir = generator.getOutputDir() %}
 ossieName = {{component.name}}
-bindir = $(prefix)/{{component.sdrpath}}/{{component.name}}/{{outputdir}}/
+bindir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/{{outputdir}}/
 bin_PROGRAMS = {{component.jarfile}}
 {{target}}_SOURCES := $(shell find ./src -name "*.java")
 
-xmldir = $(prefix)/{{component.sdrpath}}/{{component.name}}/
+xmldir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/
 dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
 
 #{% set sdrbranch = component.sdrpath.split('/')[0] %}
-{{sdrbranch}}dir = $(prefix)/{{component.sdrpath}}/{{component.name}}/{{outputdir}}/
+{{sdrbranch}}dir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/{{outputdir}}/
 dist_{{sdrbranch}}_SCRIPTS = {{component.impl.entrypoint|relpath(outputdir)}}

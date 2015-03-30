@@ -50,8 +50,8 @@ int main(int argc, char* argv[])
 
     Device_impl::start_device(&devicePtr, sa, argc, argv);
 /*{% else %}*/
-    ${component.userclass.name}* ${component.name}_servant;
-    Component::start_component(${component.name}_servant, argc, argv);
+    ${component.userclass.name}* ${component.userclass.base_name}_servant;
+    Component::start_component(${component.userclass.base_name}_servant, argc, argv);
 /*{% endif %}*/
     return 0;
 }

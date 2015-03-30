@@ -36,6 +36,7 @@ class CppPropertyMapper(PropertyMapper):
     def mapSimpleProperty(self, prop):
         cppprop = self.mapProperty(prop)
         cppprop['iscomplex'] = prop.isComplex()
+        cppprop['isOptional'] = prop.isOptional()
         cppprop['cpptype'] = cpp.cppType(prop.type(), prop.isComplex())
         if prop.hasValue():
             cppprop['cppvalue'] = cpp.literal(prop.value(), 
@@ -46,6 +47,7 @@ class CppPropertyMapper(PropertyMapper):
     def mapSimpleSequenceProperty(self, prop):
         cppprop = self.mapProperty(prop)
         cppprop['cpptype'] = cpp.sequenceType(prop.type(), prop.isComplex())
+        cppprop['isOptional'] = prop.isOptional()
         if prop.hasValue():
             cppprop['cppvalues'] = [cpp.literal(v, 
                                                 prop.type(), 

@@ -17,24 +17,12 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with this program.  If not, see http://www.gnu.org/licenses/.
  #*/
-//% set className = component.baseclass.name
-//% set superclass = component.superclass.name
-//% set includeGuard = className.upper() + '_IMPL_BASE_H'
+//% set includeGuard = component.name.upper().replace('.','') + '_H'
 #ifndef ${includeGuard}
 #define ${includeGuard}
 
-#include <boost/thread.hpp>
-#include ${component.superclass.header}
-#include ${component.poaclass.header}
+/*
+ * TODO: Declare library classes and functions here
+ */
 
-class ${className} : public ${superclass}, public virtual ${component.poaclass.name}
-{
-    public:
-        ${className}(char *devMgr_ior, char *name);
-
-        void registerServiceWithDevMgr ();
-        void terminateService ();
-        void construct ();
-
-};
 #endif // ${includeGuard}

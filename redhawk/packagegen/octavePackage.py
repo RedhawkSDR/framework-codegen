@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
-from redhawk.codegen.model import softpkg
+from redhawk.codegen.lang import mfile
 from redhawk.packagegen.resourcePackage import ResourcePackage
 
 def _getMFunctionParameters(function, mFiles):
@@ -32,7 +32,7 @@ def _getMFunctionParameters(function, mFiles):
     # find the master m file and parse its m function
     for mFile in mFiles:
         if mFile.find(function + '.m') != -1:
-            mFunctionParameters = softpkg.parseMFile(mFile)
+            mFunctionParameters = mfile.parse(mFile)
             break
     if mFunctionParameters is None:
         raise SystemExit('ERROR: No matching m file for specified function')

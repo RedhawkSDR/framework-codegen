@@ -18,13 +18,14 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #% set outputdir = generator.getOutputDir()
+#% set componentdir = component.name.replace('.','/')
 #% set executable = component.impl.entrypoint|relpath(outputdir)
 #% set target = automake.canonicalName(executable)
 ossieName = {{component.name}}
-bindir = $(prefix)/{{component.sdrpath}}/{{component.name}}/{{outputdir}}/
+bindir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/{{outputdir}}/
 bin_PROGRAMS = {{executable}}
 
-xmldir = $(prefix)/{{component.sdrpath}}/{{component.name}}/
+xmldir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/
 dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
 ACLOCAL_AMFLAGS = -I$(OSSIEHOME)/share/aclocal/ossie
 

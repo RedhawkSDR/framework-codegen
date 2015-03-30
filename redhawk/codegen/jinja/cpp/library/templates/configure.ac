@@ -1,4 +1,4 @@
-#
+#{#
 # This file is protected by Copyright. Please refer to the COPYRIGHT file
 # distributed with this source distribution.
 #
@@ -16,25 +16,32 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
-#
+#}
+AC_INIT({{component.name}}, {{component.version}})
+AM_INIT_AUTOMAKE(nostdinc)
 
-import sys
-from redhawk.codegen.model.softwarecomponent import ComponentTypes
-from redhawk.codegen.lang.idl import IDLInterface
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LIBTOOL
 
-from redhawk.codegen.jinja.python.component.pull.mapping import PullComponentMapper
+AC_CORBA_ORB
+OSSIE_CHECK_OSSIE
+# TODO: Make this an installed macro
+OSSIE_SDRROOT_AS_PREFIX
+prefix="${prefix}dom/deps/{{component.name}}"
+# Overrule "lib64" suffix
+libdir='${prefix}/lib'
 
-class PersonaComponentMapper(PullComponentMapper):
-    def _mapComponent(self, softpkg):
-        pycomp = PullComponentMapper._mapComponent(self, softpkg)
-        pycomp['personaclass'] = self.personaClass(softpkg)
-        return pycomp
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-    @staticmethod
-    def personaClass(softpkg):
-        softpkg_base_name = softpkg.name()
-        if softpkg.name().find('.') != -1:
-            softpkg_base_name = softpkg.name().split('.')[-1]
-        personaclass = softpkg_base_name + '_persona_base'
-        return {'name'  : personaclass,
-                'file'  : personaclass+'.py'}
+# Dependencies
+PKG_CHECK_MODULES([REDHAWK], [ossie >= {{versions.redhawk}}])
+OSSIE_ENABLE_LOG4CXX
+AX_BOOST_BASE([{{versions.boost}}])
+AX_BOOST_SYSTEM
+AX_BOOST_THREAD
+AX_BOOST_REGEX
+
+AC_CONFIG_FILES([Makefile {{component.pcfile}}])
+AC_OUTPUT

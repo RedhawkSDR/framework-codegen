@@ -31,7 +31,10 @@ class PersonaComponentMapper(PullComponentMapper):
     
     @staticmethod
     def reprogClass(softpkg):
-        reprogclass = softpkg.name() + '_persona_base'
+        softpkg_base_name = softpkg.name()
+        if softpkg.name().find('.') != -1:
+            softpkg_base_name = softpkg.name().split('.')[-1]
+        reprogclass = softpkg_base_name + '_persona_base'
         return {'name'  : reprogclass,
                 'header': reprogclass+'.h',
                 'file'  : reprogclass+'.cpp'}

@@ -39,6 +39,7 @@ class PythonPropertyMapper(PropertyMapper):
     def mapSimpleProperty(self, simple):
         pyprop = self.mapProperty(simple)
         pyprop['isComplex'] = simple.isComplex()
+	pyprop['isOptional'] = simple.isOptional()
         if simple.hasValue():
             pyprop['pyvalue'] = python.literal(simple.value(), 
                                                simple.type(), 
@@ -49,6 +50,7 @@ class PythonPropertyMapper(PropertyMapper):
     def mapSimpleSequenceProperty(self, simplesequence):
         pyprop = self.mapProperty(simplesequence)
         pyprop['isComplex'] = simplesequence.isComplex()
+	pyprop['isOptional'] = simplesequence.isOptional()
         if simplesequence.hasValue():
             pyprop['pyvalue'] = python.sequenceValue(simplesequence.value(), 
                                                      simplesequence.type(), 
@@ -81,7 +83,19 @@ class PythonPropertyMapper(PropertyMapper):
                 args.append(value[f['identifier']].capitalize())
             else:
                 args.append(value[f['identifier']])
-        return '%s(%s)' % (structdef['pyclass'], ','.join(args))
+        retval = ''
+        for arg in args:
+            if retval == '':
+                if isinstance(arg, list):
+                    retval += '['+','.join(arg)+']'
+                else:
+                    retval += arg
+            else:
+                if isinstance(arg, list):
+                    retval += ',['+','.join(arg)+']'
+                else:
+                    retval += ','+arg        
+        return '%s(%s)' % (structdef['pyclass'], retval)
 
     def _structName(self, name):
         if self.legacy_structs:

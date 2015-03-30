@@ -18,6 +18,8 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #$ set name = component.name
+#$ set dirname = component.name.replace('.','/')
+#$ set namespaces = component.namespaces
 # By default, the RPM will install to the standard REDHAWK SDR root location (/var/redhawk/sdr)
 # You can override this at install time using --prefix /new/sdr/root when invoking rpm (preferred method, if you must)
 %{!?_sdrroot: %define _sdrroot /var/redhawk/sdr}
@@ -59,8 +61,8 @@ BuildArch: noarch
 #{$ endif $}
 #{$ if 'Java' in component.languages and component.languages $}
 # Java requirements
-Requires: java >= 1.6
-BuildRequires: java-devel >= 1.6
+Requires: java >= {{versions.java}}
+BuildRequires: java-devel >= {{versions.java}}
 
 #{$ endif $}
 
@@ -82,7 +84,7 @@ BuildRequires: java-devel >= 1.6
 # Implementation {{impl.id}}
 pushd {{impl.outputdir}}
 ./reconf
-%define _bindir %{_prefix}/{{component.sdrpath}}/{{name}}/{{impl.outputdir}}
+%define _bindir %{_prefix}/{{component.sdrpath}}/{{dirname}}/{{impl.outputdir}}
 %configure
 make %{?_smp_mflags}
 popd
@@ -96,7 +98,7 @@ rm -rf $RPM_BUILD_ROOT
 #{$ for impl in component.implementations $}
 # Implementation {{impl.id}}
 pushd {{impl.outputdir}}
-%define _bindir %{_prefix}/{{component.sdrpath}}/{{name}}/{{impl.outputdir}}
+%define _bindir %{_prefix}/{{component.sdrpath}}/{{dirname}}/{{impl.outputdir}}
 make install DESTDIR=$RPM_BUILD_ROOT
 popd
 #{$ endfor $}
@@ -110,11 +112,11 @@ rm -rf $RPM_BUILD_ROOT
 %files
 #{$ block files $}
 %defattr(-,redhawk,redhawk,-)
-%dir %{_prefix}/{{component.sdrpath}}/%{name}
+%dir %{_prefix}/{{component.sdrpath}}/{{dirname}}
 #{$ for xmlfile in component.profile.values() $}
-%{_prefix}/{{component.sdrpath}}/%{name}/{{xmlfile}}
+%{_prefix}/{{component.sdrpath}}/{{dirname}}/{{xmlfile}}
 #{$ endfor $}
 #{$ for impl in component.implementations $}
-%{_prefix}/{{component.sdrpath}}/%{name}/{{impl.outputdir}}
+%{_prefix}/{{component.sdrpath}}/{{dirname}}/{{impl.outputdir}}
 #{$ endfor $}
 #{$ endblock $}

@@ -129,7 +129,8 @@ def literal(value, typename, complex=False):
             return FALSE
     elif typename in (CorbaTypes.LONGLONG, CorbaTypes.ULONGLONG):
         # Explicitly mark the literal as a 'long long' for 32-bit systems
-        return value + 'LL'
+        if not isinstance(value, list):
+            return value + 'LL'
     elif typename == CorbaTypes.CHAR:
         return charLiteral(value)
     else:

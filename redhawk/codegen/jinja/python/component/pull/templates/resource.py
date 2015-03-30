@@ -55,7 +55,7 @@ class ${className}(${baseClass}):
         ${baseClass}.initialize(self)
         # TODO add customization here.
         
-#% block updateUsageState 
+#{% block updateUsageState %}
 #{% if component is device %}
     def updateUsageState(self):
         """
@@ -68,8 +68,7 @@ class ${className}(${baseClass}):
         return NOOP
 
 #{% endif %}
-#% endblock
-
+#{% endblock %}
     def process(self):
         """
         Basic functionality:
@@ -91,14 +90,49 @@ class ${className}(${baseClass}):
             Each port instance is accessed through members of the following form: self.port_<PORT NAME>
             
             Data is obtained in the process function through the getPacket call (BULKIO only) on a
-            provides port member instance. The getPacket function call is non-blocking - if no data
-            is available, it will return immediately with all values == None.
+            provides port member instance. The optional argument is a timeout value, in seconds.
+            A zero value is non-blocking, while a negative value is blocking. Constants have been
+            defined for these values, bulkio.const.BLOCKING and bulkio.const.NON_BLOCKING. If no
+            timeout is given, it defaults to non-blocking.
             
+            The return value is a named tuple with the following fields:
+                - dataBuffer
+                - T
+                - EOS
+                - streamID
+                - SRI
+                - sriChanged
+                - inputQueueFlushed
+            If no data is available due to a timeout, all fields are None.
+
             To send data, call the appropriate function in the port directly. In the case of BULKIO,
             convenience functions have been added in the port classes that aid in output.
             
             Interactions with non-BULKIO ports are left up to the ${artifactType} developer's discretion.
             
+        Messages:
+    
+            To receive a message, you need (1) an input port of type MessageEvent, (2) a message prototype described
+            as a structure property of kind message, (3) a callback to service the message, and (4) to register the callback
+            with the input port.
+        
+            Assuming a property of type message is declared called "my_msg", an input port called "msg_input" is declared of
+            type MessageEvent, create the following code:
+        
+            def msg_callback(self, msg_id, msg_value):
+                print msg_id, msg_value
+        
+            Register the message callback onto the input port with the following form:
+            self.port_input.registerMessage("my_msg", ${className}.MyMsg, self.msg_callback)
+        
+            To send a message, you need to (1) create a message structure, and (2) send the message over the port.
+        
+            Assuming a property of type message is declared called "my_msg", an output port called "msg_output" is declared of
+            type MessageEvent, create the following code:
+        
+            msg_out = ${className}.MyMsg()
+            this.port_msg_output.sendMessage(msg_out)
+
         Properties:
         
             Properties are accessed directly as member variables. If the property name is baudRate,
@@ -117,14 +151,21 @@ class ${className}(${baseClass}):
 #{% if component is device %}
         Allocation:
             
-            Allocation callbacks are available to customize a Device's response to an allocation request. Callbacks
-            are found automatically by the base class through a naming convention. The naming convention used
-            is to prepend "allocate_" to the allocation property's name. For example, if the Device contains an
-            allocation property called "my_alloc", the allocation callback is defined as:
+            Allocation callbacks are available to customize a Device's response to an allocation request. 
+            Callback allocation/deallocation functions are registered using the setAllocationImpl function,
+            usually in the initialize() function
+            For example, allocation property "my_alloc" can be registered with allocation function 
+            my_alloc_fn and deallocation function my_dealloc_fn as follows:
             
-            def allocate_my_alloc(self, value):
+            self.setAllocationImpl("my_alloc", self.my_alloc_fn, self.my_dealloc_fn)
+            
+            def my_alloc_fn(self, value):
                 # perform logic
                 return True # successful allocation
+            
+            def my_dealloc_fn(self, value):
+                # perform logic
+                pass
 #{% endif %}
             
         Example:
@@ -138,23 +179,23 @@ class ${className}(${baseClass}):
             #   - A float value called amplitude
             #   - A boolean called increaseAmplitude
             
-            data, T, EOS, streamID, sri, sriChanged, inputQueueFlushed = self.port_dataShort_in.getPacket()
+            packet = self.port_dataShort_in.getPacket()
             
-            if data == None:
+            if packet.dataBuffer is None:
                 return NOOP
                 
-            outData = range(len(data))
-            for i in range(len(data)):
+            outData = range(len(packet.dataBuffer))
+            for i in range(len(packet.dataBuffer)):
                 if self.increaseAmplitude:
-                    outData[i] = float(data[i]) * self.amplitude
+                    outData[i] = float(packet.dataBuffer[i]) * self.amplitude
                 else:
-                    outData[i] = float(data[i])
+                    outData[i] = float(packet.dataBuffer[i])
                 
             # NOTE: You must make at least one valid pushSRI call
-            if sriChanged:
-                self.port_dataFloat_out.pushSRI(sri);
+            if packet.sriChanged:
+                self.port_dataFloat_out.pushSRI(packet.SRI);
 
-            self.port_dataFloat_out.pushPacket(outData, T, EOS, streamID)
+            self.port_dataFloat_out.pushPacket(outData, packet.T, packet.EOS, packet.streamID)
             return NORMAL
             
         """

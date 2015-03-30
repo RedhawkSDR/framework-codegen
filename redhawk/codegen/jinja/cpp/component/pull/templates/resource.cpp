@@ -171,6 +171,30 @@ void ${className}::updateUsageState()
             myOutput->pushPacket(*output, tmp->T, tmp->EOS, tmp->streamID);
 
         Interactions with non-BULKIO ports are left up to the ${artifactType} developer's discretion
+        
+    Messages:
+    
+        To receive a message, you need (1) an input port of type MessageEvent, (2) a message prototype described
+        as a structure property of kind message, (3) a callback to service the message, and (4) to register the callback
+        with the input port.
+        
+        Assuming a property of type message is declared called "my_msg", an input port called "msg_input" is declared of
+        type MessageEvent, create the following code:
+        
+        void ${className}::my_message_callback(const std::string& id, const my_msg_struct &msg){
+        }
+        
+        Register the message callback onto the input port with the following form:
+        this->msg_input->registerMessage("my_msg", this, &${className}::my_message_callback);
+        
+        To send a message, you need to (1) create a message structure, (2) a message prototype described
+        as a structure property of kind message, and (3) send the message over the port.
+        
+        Assuming a property of type message is declared called "my_msg", an output port called "msg_output" is declared of
+        type MessageEvent, create the following code:
+        
+        ::my_msg_struct msg_out;
+        this->msg_output->sendMessage(msg_out);
 
     Properties:
         
@@ -200,31 +224,40 @@ void ${className}::updateUsageState()
             
         Callback methods can be associated with a property so that the methods are
         called each time the property value changes.  This is done by calling 
-        addPropertyChangeListener(<property name>, this, &${className}::<callback method>)
+        addPropertyListener(<property>, this, &${className}::<callback method>)
         in the constructor.
 
-        Callback methods should take two arguments, both const pointers to the value
-        type (e.g., "const float *"), and return void.
+        The callback method receives two arguments, the old and new values, and
+        should return nothing (void). The arguments can be passed by value,
+        receiving a copy (preferred for primitive types), or by const reference
+        (preferred for strings, structs and vectors).
 
         Example:
             // This example makes use of the following Properties:
             //  - A float value called scaleValue
+            //  - A struct property called status
             
         //Add to ${component.userclass.file}
         ${className}::${className}(const char *uuid, const char *label) :
             ${baseClass}(uuid, label)
         {
-            addPropertyChangeListener("scaleValue", this, &${className}::scaleChanged);
+            addPropertyListener(scaleValue, this, &${className}::scaleChanged);
+            addPropertyListener(status, this, &${className}::statusChanged);
         }
 
-        void ${className}::scaleChanged(const float *oldValue, const float *newValue)
+        void ${className}::scaleChanged(float oldValue, float newValue)
         {
-            std::cout << "scaleValue changed from" << *oldValue << " to " << *newValue
-                      << std::endl;
+            LOG_DEBUG(${className}, "scaleValue changed from" << oldValue << " to " << newValue);
+        }
+            
+        void ${className}::statusChanged(const status_struct& oldValue, const status_struct& newValue)
+        {
+            LOG_DEBUG(${className}, "status changed");
         }
             
         //Add to ${component.userclass.header}
-        void scaleChanged(const float* oldValue, const float* newValue);
+        void scaleChanged(float oldValue, float newValue);
+        void statusChanged(const status_struct& oldValue, const status_struct& newValue);
         
 /*{% if component is device %}*/
     Allocation:
@@ -246,9 +279,10 @@ void ${className}::updateUsageState()
         }
         
         The allocation and deallocation functions are then registered with the Device
-        base class with the setAllocationImpl call:
+        base class with the setAllocationImpl call. Note that the variable for the property is used rather
+        than its id:
         
-        this->setAllocationImpl("my_alloc", this, &${className}::my_alloc_fn, &${className}::my_dealloc_fn);
+        this->setAllocationImpl(my_alloc, this, &${className}::my_alloc_fn, &${className}::my_dealloc_fn);
         
         
 /*{% endif %}*/

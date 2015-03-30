@@ -25,8 +25,7 @@ All Binary components have the following properties:
 
 E.g.,
 
-    {0}\\
-        --cmdArgs=foo,bar=5,def,abc=hello \\
+    {0} --compName=foo my_bin
 
 Arguments:
     <binary file>       Binary file to be packaged with the component.
@@ -52,11 +51,6 @@ Options:
                         comma-separated, with no spaces.
 
     --outputDir         Location of all output files.  Default is ".".
-
-    --cmdArgs           Comma-separated command-line arguments for executing the binary. All args are mapped to strings
-                        Use '=' to denote default value. Do not use quotes for the default value
-                        
-                            e.g., --cmdArgs=foo,bar=5,def,abc=hello
 
     -f                  Forward force flag to redhawk-codegen.
 
@@ -84,7 +78,6 @@ if __name__ == "__main__":
          'compName=',
          'help',
          'sharedLibraries=',
-         'cmdArgs=',
          'buildRpm',
          'install',
          'enableBuffering',
@@ -124,8 +117,6 @@ if __name__ == "__main__":
             compName = value
         elif key == '--sharedLibraries':
             sharedLibraries = value.split(',')
-        elif key == '--cmdArgs':
-            cmdArgs = value.split(',')
         elif key.lower() == '--buildrpm':
             buildRpm = True
         elif key == '--install':

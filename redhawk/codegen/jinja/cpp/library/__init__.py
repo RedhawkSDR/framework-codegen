@@ -18,23 +18,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
-import sys
-from redhawk.codegen.model.softwarecomponent import ComponentTypes
-from redhawk.codegen.lang.idl import IDLInterface
+from generator import LibraryGenerator, loader
 
-from redhawk.codegen.jinja.python.component.pull.mapping import PullComponentMapper
-
-class PersonaComponentMapper(PullComponentMapper):
-    def _mapComponent(self, softpkg):
-        pycomp = PullComponentMapper._mapComponent(self, softpkg)
-        pycomp['personaclass'] = self.personaClass(softpkg)
-        return pycomp
-
-    @staticmethod
-    def personaClass(softpkg):
-        softpkg_base_name = softpkg.name()
-        if softpkg.name().find('.') != -1:
-            softpkg_base_name = softpkg.name().split('.')[-1]
-        personaclass = softpkg_base_name + '_persona_base'
-        return {'name'  : personaclass,
-                'file'  : personaclass+'.py'}
+def factory(**opts):
+    return LibraryGenerator(**opts)

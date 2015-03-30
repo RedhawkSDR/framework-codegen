@@ -50,11 +50,20 @@ addProperty(${prop.cppname},
 /*{%- endmacro %}*/
 
 /*{% macro structdef(struct) %}*/
+/*{% from "properties/properties.cpp" import initsequence %}*/
 struct ${struct.cpptype}${' : public '+struct.baseclass if struct.baseclass} {
     ${struct.cpptype} ()${' : '+struct.baseclass+'()' if struct.baseclass}
     {
-/*{% for field in struct.fields if not field.inherited and field.cppvalue %}*/
+/*{% for field in struct.fields %}*/
+/*{%   if not field.inherited %}*/
+/*{%     if field is simple and field.cppvalue %}*/
         ${field.cppname} = ${field.cppvalue};
+/*{%     elif field is simplesequence and field.cppvalues %}*/
+/*{%       for value in field.cppvalues %}*/
+        ${field.cppname}.push_back(${value});
+/*{%       endfor %}*/
+/*{%     endif %}*/
+/*{%   endif %}*/
 /*{% endfor %}*/
     };
 
@@ -65,45 +74,81 @@ struct ${struct.cpptype}${' : public '+struct.baseclass if struct.baseclass} {
 /*{%   if loop.first %}*/
 
 /*{%   endif %}*/
+/*{%   if field.isOptional %}*/
+/*{%     if field is simplesequence %}*/
+    optional_property<${field.cpptype} > ${field.cppname};
+/*{%     else %}*/
+    optional_property<${field.cpptype}> ${field.cppname};
+/*{%     endif %}*/
+/*{%   else %}*/
     ${field.cpptype} ${field.cppname};
+/*{%   endif %}*/
 /*{% endfor %}*/
 };
 
 inline bool operator>>= (const CORBA::Any& a, ${struct.cpptype}& s) {
     CF::Properties* temp;
     if (!(a >>= temp)) return false;
-    CF::Properties& props = *temp;
-    for (unsigned int idx = 0; idx < props.length(); idx++) {
-/*{% set ifelse = joiner('else ') %}*/
+    redhawk::PropertyMap props(*temp);
 /*{% for field in struct.fields %}*/
-        ${ifelse()}if (!strcmp("${field.identifier}", props[idx].id)) {
-/*{% if field.type == 'char' %}*/
-/*{%   set extractName = 'temp_char' %}*/
-            CORBA::Char temp_char;
-/*{% else %}*/
-/*{%   set extractName = 's.'+field.cppname %}*/
-/*{% endif %}*/
-            if (!(props[idx].value >>= ${cpp.extract(extractName, field.type, field.iscomplex)})) {
-                CORBA::TypeCode_var typecode = props[idx].value.type();
-                if (typecode->kind() != CORBA::tk_null) {
-                    return false;
-                }
-            }
-/*{% if field.type == 'char' %}*/
-            s.${field.cppname} = temp_char;
-/*{% endif %}*/
+    if (props.contains("${field.identifier}")) {
+/*{% if field.isOptional %}*/
+        if (!(ossie::any::isNull(props["${field.identifier}"]))) {
+/*{%   if field is simple %}*/
+/*{%     if field.type == 'char' %}*/
+            CORBA::Char tmp;
+/*{%     else %}*/
+            ${field.cpptype} tmp;
+/*{%     endif %}*/
+/*{%     set extractName = 'tmp' %}*/
+            if (!(props["${field.identifier}"] >>= ${cpp.extract(extractName, field.type, field.iscomplex)})) return false;
+/*{%   elif field is simplesequence %}*/
+            ${field.cpptype} tmp;
+            if (!(props["${field.identifier}"] >>= tmp)) return false;
+/*{%   endif %}*/
+            s.${field.cppname} = tmp;
+        } else {
+            s.${field.cppname}.reset();
         }
-/*{% endfor %}*/
+/*{% else %}*/
+/*{%   if field is simple %}*/
+/*{%     if field.type == 'char' %}*/
+/*{%       set extractName = 'temp_char' %}*/
+        CORBA::Char temp_char;
+/*{%     else %}*/
+/*{%       set extractName = 's.'+field.cppname %}*/
+/*{%     endif %}*/
+        if (!(props["${field.identifier}"] >>= ${cpp.extract(extractName, field.type, field.iscomplex)})) return false;
+/*{%     if field.type == 'char' %}*/
+        s.${field.cppname} = temp_char;
+/*{%     endif %}*/
+/*{%   elif field is simplesequence %}*/
+        if (!(props["${field.identifier}"] >>= s.${field.cppname})) return false;
+/*{%   endif %}*/
+/*{% endif %}*/
     }
+/*{% endfor %}*/
     return true;
 };
 
 inline void operator<<= (CORBA::Any& a, const ${struct.cpptype}& s) {
-    CF::Properties props;
-    props.length(${struct.fields|length});
+    redhawk::PropertyMap props;
 /*{% for field in struct.fields %}*/
-    props[${loop.index0}].id = CORBA::string_dup("${field.identifier}");
-    props[${loop.index0}].value <<= ${cpp.insert('s.'+field.cppname, field.type, field.iscomplex)};
+/*{%   if field.isOptional %}*/
+    if (s.${field.cppname}.isSet()) {
+/*{%     if field is simple %}*/
+        props["${field.identifier}"] = ${cpp.insert('*(s.'+field.cppname+')', field.type, field.iscomplex)};
+/*{%     elif field is simplesequence %}*/
+        props["${field.identifier}"] = *(s.${field.cppname});
+/*{%     endif %}*/
+    }
+/*{%   else %}*/ 
+/*{%     if field is simple %}*/
+    props["${field.identifier}"] = ${cpp.insert('s.'+field.cppname, field.type, field.iscomplex)};
+/*{%     elif field is simplesequence %}*/
+    props["${field.identifier}"] = s.${field.cppname};
+/*{%     endif %}*/
+/*{%   endif %}*/
 /*{% endfor %}*/
     a <<= props;
 };
