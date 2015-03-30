@@ -55,7 +55,7 @@ ${prop.pyname} = simpleseq_property(id_="${prop.identifier}",
 #{%   endfor %}
                                              ],
 #%    else
-                                    defvalue=None,
+                                    defvalue=[],
 #%    endif
 #%    if prop.units
                                     units="${prop.units}",
