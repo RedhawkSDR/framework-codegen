@@ -33,6 +33,7 @@ URL:            http://redhawksdr.org/
 Source:         %{name}-%{version}.tar.gz
 Vendor:         REDHAWK
 
+BuildArch:      noarch
 # BuildRoot required for el5
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
