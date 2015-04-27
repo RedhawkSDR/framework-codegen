@@ -167,6 +167,10 @@ public class ${classname} extends ${baseclass} {
         super();
     }
 
+    public void constructor()
+    {
+    }
+
 /*{% if component is device %}*/
 /*{%   block updateUsageState %}*/
     /**************************************************************************

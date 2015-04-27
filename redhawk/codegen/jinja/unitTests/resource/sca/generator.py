@@ -40,5 +40,5 @@ class TestGenerator(TopLevelGenerator):
 
     def templates(self, project):
         return [
-            PythonTemplate('test.py', 'test_' + project['name'] + '.py')
+            PythonTemplate('test.py', 'test_' + project['basename'] + '.py')
             ]

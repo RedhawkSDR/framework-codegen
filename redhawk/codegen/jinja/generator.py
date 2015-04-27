@@ -144,9 +144,6 @@ class Generator(object):
         return files
 
     def generate(self, softpkg, *filenames):
-        if not os.path.exists(self.outputdir):
-            os.mkdir(self.outputdir)
-
         loader = self.loader(softpkg)
 
         # Map the component model into a language-specific version
@@ -182,10 +179,10 @@ class Generator(object):
             else:
                 action = '(added)'
 
-            # Attempt to ensure that the full required path exists for files
-            # that are more deeply nested.
-            if not os.path.isdir(os.path.dirname(filename)):
-                os.makedirs(os.path.dirname(filename))
+            # Attempt to ensure that the full required path exists
+            parentdir = os.path.dirname(filename)
+            if parentdir and not os.path.isdir(parentdir):
+                os.makedirs(parentdir)
 
             env = CodegenEnvironment(loader=loader, **template.options())
             env.filters.update(template.filters())
@@ -253,11 +250,18 @@ class Generator(object):
         return os.path.relpath('.', self.getOutputDir()) + '/'
 
 class TopLevelGenerator(Generator):
+    def __init__(self, **opts):
+        super(TopLevelGenerator,self).__init__(**opts)
+        self.generators = {}
+
     def projectMapper(self):
         raise NotImplementedError, 'TopLevelGenerator.projectMapper'
 
     def map(self, softpkg):
-        return self.projectMapper().mapProject(softpkg)
+        return self.projectMapper().mapProject(softpkg, self.generators)
+
+    def addImplGenerator(self, generator):
+        self.generators[generator.implId] = generator
 
 class CodeGenerator(Generator):
     def __init__(self, implId, **opts):
@@ -280,7 +284,6 @@ class CodeGenerator(Generator):
         # Apply template-specific mapping for component.
         impl = softpkg.getImplementation(self.implId)
         compmapper = self.componentMapper()
-        compmapper.setImplementation(impl)
         component = compmapper.mapComponent(softpkg)
         component['impl'] = compmapper.mapImplementation(impl)
 
@@ -298,3 +301,9 @@ class CodeGenerator(Generator):
             component.update(ports)
 
         return component
+
+    def rpmRequires(self):
+        return []
+
+    def rpmBuildRequires(self):
+        return []

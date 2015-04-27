@@ -174,8 +174,8 @@ class ${struct.pyclass}(object):
 #{%   if initialize: %}
     def __init__(self, **kw):
         """Construct an initialized instance of this struct definition"""
-        for attrname, classattr in type(self).__dict__.items():
-            if type(classattr) == simple_property or type(classattr) == simpleseq_property:
+        for classattr in type(self).__dict__.itervalues():
+            if isinstance(classattr, (simple_property, simpleseq_property)):
                 classattr.initialize(self)
         for k,v in kw.items():
             setattr(self,k,v)
@@ -194,10 +194,12 @@ class ${struct.pyclass}(object):
 #{%   endfor %}
         return str(d)
 
-    def getId(self):
+    @classmethod
+    def getId(cls):
         return "${struct.identifier}"
 
-    def isStruct(self):
+    @classmethod
+    def isStruct(cls):
         return True
 
     def getMembers(self):

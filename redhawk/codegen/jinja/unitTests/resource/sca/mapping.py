@@ -48,7 +48,7 @@ class ProjectMapper(ComponentMapper):
         component['interfaces'] = [name.lower()+'Interfaces' for name in self.getInterfaceNamespaces(softpkg)]
         return component
 
-    def mapProject(self, softpkg):
+    def mapProject(self, softpkg, generators):
         project = self.mapComponent(softpkg)        
         impls = [self.mapImplementation(impl) for impl in softpkg.implementations()]
         project['implementations'] = impls

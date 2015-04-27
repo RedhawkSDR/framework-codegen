@@ -44,9 +44,9 @@ def do_codealign(value):
     for line in value.split('\n'):
         if indent and line:
             # Only apply indent on non-empty lines
-            lines.append(indent[-1] + line.strip())
-        else:
-            lines.append(line)
+            line = indent[-1] + line.strip()
+
+        lines.append(line)
 
         # Adjust indentation based on scopes opened or closed on line.
         # NB: Scopes are not checked to ensure they match; likewise, scope

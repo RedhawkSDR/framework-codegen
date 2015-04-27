@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
-#% set name = component['name'].split('.')[-1]
 #% set fullname = component['name']
 #% set dirname = fullname + '-' + component['version']
 #% set tarfile = dirname + '.tar.gz'
@@ -25,7 +24,7 @@
 
 if [ "$1" = "rpm" ]; then
     # A very simplistic RPM build scenario
-    if [ -e {{name}}.spec ]; then
+    if [ -e {{component.specfile}} ]; then
         mydir=`dirname $0`
         tmpdir=`mktemp -d`
         cp -r ${mydir} ${tmpdir}/{{dirname}}

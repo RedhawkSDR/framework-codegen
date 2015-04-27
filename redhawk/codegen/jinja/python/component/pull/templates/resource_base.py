@@ -34,17 +34,16 @@ from ossie.utils import uuid
 from ${parent.package} import ${parent.name}
 #{% endfor %}
 from ossie.threadedcomponent import *
-#{% set isSet = False %}
-#{% if component.properties|test('simple') is sometimes(true) or component.structdefs %}
+#{% if component.properties|test('simple') is sometimes(true) %}
 from ossie.properties import simple_property
-from ossie.properties import simpleseq_property
-#{% set isSet = True %}
-#{% endif %}
-#{% if component.properties|test('simplesequence') is sometimes(true) and isSet == False %}
-from ossie.properties import simpleseq_property
 #{% endif %}
 #{% if component.structdefs %}
+from ossie.properties import simple_property
+from ossie.properties import simpleseq_property
 from ossie.properties import struct_property
+#{% endif %}
+#{% if component.properties|test('simplesequence') is sometimes(true) %}
+from ossie.properties import simpleseq_property
 #{% endif %}
 #{% if component.properties|test('structsequence') is sometimes(true) %}
 from ossie.properties import structseq_property
@@ -141,7 +140,12 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{%   filter codealign %}
         ${port.pyname} = ${port.generator.direction}port(name="${port.name}",
                                                          repid="${port.repid}",
-                                                         type_="${port.types[0]}")
+                                                         type_="${port.types[0]}"
+#%-   if port.hasDescription
+,
+                                                         description="""${port.description}"""
+#%   endif
+)
 #{%   endfilter %}
 
 #{% endfor %}

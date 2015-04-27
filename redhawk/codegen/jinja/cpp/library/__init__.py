@@ -18,7 +18,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
-from generator import LibraryGenerator, loader
+from generator import CppLibraryGenerator, loader
 
 def factory(**opts):
-    return LibraryGenerator(**opts)
+    return CppLibraryGenerator(**opts)

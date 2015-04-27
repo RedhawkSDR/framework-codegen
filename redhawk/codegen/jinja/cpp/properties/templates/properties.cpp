@@ -89,7 +89,7 @@ struct ${struct.cpptype}${' : public '+struct.baseclass if struct.baseclass} {
 inline bool operator>>= (const CORBA::Any& a, ${struct.cpptype}& s) {
     CF::Properties* temp;
     if (!(a >>= temp)) return false;
-    redhawk::PropertyMap props(*temp);
+    const redhawk::PropertyMap& props = redhawk::PropertyMap::cast(*temp);
 /*{% for field in struct.fields %}*/
     if (props.contains("${field.identifier}")) {
 /*{% if field.isOptional %}*/
@@ -129,7 +129,7 @@ inline bool operator>>= (const CORBA::Any& a, ${struct.cpptype}& s) {
     }
 /*{% endfor %}*/
     return true;
-};
+}
 
 inline void operator<<= (CORBA::Any& a, const ${struct.cpptype}& s) {
     redhawk::PropertyMap props;
@@ -151,7 +151,7 @@ inline void operator<<= (CORBA::Any& a, const ${struct.cpptype}& s) {
 /*{%   endif %}*/
 /*{% endfor %}*/
     a <<= props;
-};
+}
 
 inline bool operator== (const ${struct.cpptype}& s1, const ${struct.cpptype}& s2) {
 /*{% for field in struct.fields %}*/
@@ -159,9 +159,9 @@ inline bool operator== (const ${struct.cpptype}& s1, const ${struct.cpptype}& s2
         return false;
 /*{% endfor %}*/
     return true;
-};
+}
 
 inline bool operator!= (const ${struct.cpptype}& s1, const ${struct.cpptype}& s2) {
     return !(s1==s2);
-};
+}
 /*{%- endmacro %}*/

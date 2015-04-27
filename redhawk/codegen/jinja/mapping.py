@@ -18,6 +18,8 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
+import os
+
 from redhawk.codegen.model.properties import Kinds
 from redhawk.codegen.model.softwarecomponent import ComponentTypes
 from redhawk.codegen.lang.idl import IDLInterface
@@ -117,6 +119,8 @@ class PortMapper(object):
         portdict['name'] = port.name()
         portdict['repid'] = port.repid()
         portdict['types'] = port.types()
+        portdict['hasDescription'] = port.hasDescription()
+        portdict['description'] = port.description()
         if port.isProvides():
             direction = "provides"
         else:
@@ -143,22 +147,28 @@ class PortMapper(object):
 
 
 class SoftpkgMapper(object):
-    def __init__(self):
-        self._impl=None
+    def setImplementation(self, impl=None):
+        pass
 
-    def setImplementation(self, impl=None ):
-        self._impl=impl
-
-    def mapComponent(self, softpkg):
+    def mapSoftpkg(self, softpkg):
         component = {}
         component['name'] = softpkg.name()
+        component['basename'] = softpkg.basename()
         component['version'] = softpkg.version()
         component['type'] = softpkg.type()
         component['sdrpath'] = softpkg.getSdrPath()
 
         # XML profile
         component['profile'] = { 'spd': softpkg.spdFile() }
+        if softpkg.scdFile():
+            component['profile']['scd'] = softpkg.scdFile()
+        if softpkg.prfFile():
+            component['profile']['prf'] = softpkg.prfFile()
 
+        return component
+
+    def mapComponent(self, softpkg):
+        component = self.mapSoftpkg(softpkg)
         component.update(self._mapComponent(softpkg))
         return component
 
@@ -169,51 +179,78 @@ class SoftpkgMapper(object):
         impldict = {}
         impldict['id'] = impl.identifier()
         impldict['entrypoint'] = impl.entrypoint()
+        impldict['softpkgdeps'] = [self._mapSoftpkgDependency(dep) for dep in impl.softpkgdeps()]
         impldict.update(self._mapImplementation(impl))
         return impldict
 
     def _mapImplementation(self, implementation):
         return {}
 
+    def _mapSoftpkgDependency(self, dependency):
+        depdict = {}
+        depdict['spd'] = dependency.spdfile
+        depdict['name'] = os.path.basename(dependency.spdfile).replace('.spd.xml','')
+        if dependency.impl:
+            depdict['impl'] = dependency.impl
+        return depdict
 
-class ComponentMapper(object):
-    def __init__(self):
-        self._impl=None
+    def getInterfaceNamespaces(self, softpkg):
+        if not softpkg.descriptor():
+            return
+        # The CF interfaces are already assumed as part of REDHAWK
+        seen = set(['CF', 'ExtendedCF', 'ExtendedEvent'])
+        for interface in softpkg.descriptor().interfaces():
+            namespace = IDLInterface(interface.repid).namespace()
+            # Assume that omg.org interfaces are available as part of the ORB.
+            if namespace in seen or namespace.startswith('omg.org/Cos'):
+                continue
+            seen.add(namespace)
+            yield namespace
+            if namespace == 'FRONTEND':
+                if 'BULKIO' not in seen:
+                    seen.add('BULKIO')
+                    yield 'BULKIO'
 
-    def setImplementation(self, impl=None ):
-        self._impl=impl
 
-    def mapImplementation(self, impl):
+class ProjectMapper(SoftpkgMapper):
+    def mapImplementation(self, impl, generator):
         impldict = {}
         impldict['id'] = impl.identifier()
         impldict['entrypoint'] = impl.entrypoint()
-        if impl.prfFile():
-            impldict['prf'] = impl.prfFile()
-        impldict.update(self._mapImplementation(impl))
+        impldict['localfile'] = impl.localfile()
+        impldict['language'] = impl.programminglanguage()
+        impldict['generator'] = generator
+        if generator is not None:
+            outputdir = generator.getOutputDir()
+        else:
+            # NB: Fall back to inferring the output directory from the entry
+            #     point
+            outputdir = os.path.dirname(impl.entrypoint())
+        impldict['outputdir'] = outputdir
+        impldict.update(self._mapImplementation(impl, generator))
         return impldict
 
-    def _mapImplementation(self, implementation):
+    def _mapImplementation(self, impl, generator):
         return {}
 
+    def mapProject(self, softpkg, generators):
+        project = self.mapComponent(softpkg)
+        impls = [self.mapImplementation(impl, generators.get(impl.identifier(), None)) for impl in softpkg.implementations()]
+        project['implementations'] = impls
+        project['languages'] = set(impl['language'] for impl in impls)
+        project['subdirs'] = [impl['outputdir'] for impl in impls]
+        return project
+
+
+class ComponentMapper(SoftpkgMapper):
     def mapComponent(self, softpkg):
-        component = {}
+        component = self.mapSoftpkg(softpkg)
         component['license'] = None
         component['mFunction'] = None
         component['artifacttype'] = self.artifactType(softpkg)
-        component['name'] = softpkg.name()
-        component['version'] = softpkg.version()
-        component['type'] = softpkg.type()
         if softpkg.descriptor():
             if softpkg.descriptor().supports('IDL:CF/AggregateDevice:1.0'):
                 component['aggregate'] = True
-        component['sdrpath'] = softpkg.getSdrPath()
-
-        # XML profile
-        component['profile'] = { 'spd': softpkg.spdFile() }
-        if softpkg.scdFile():
-            component['profile']['scd'] = softpkg.scdFile()
-        if softpkg.prfFile():
-            component['profile']['prf'] = softpkg.prfFile()
 
         component.update(self._mapComponent(softpkg))
         return component
@@ -232,23 +269,6 @@ class ComponentMapper(object):
             return 'sharedpackage'
         else:
             raise ValueError, 'Unsupported software component type', softpkg.type()
-
-    def getInterfaceNamespaces(self, softpkg):
-        if not softpkg.descriptor():
-            return
-        # The CF interfaces are already assumed as part of REDHAWK
-        seen = set(['CF', 'ExtendedCF', 'ExtendedEvent'])
-        for interface in softpkg.descriptor().interfaces():
-            namespace = IDLInterface(interface.repid).namespace()
-            # Assume that omg.org interfaces are available as part of the ORB.
-            if namespace in seen or namespace.startswith('omg.org/Cos'):
-                continue
-            seen.add(namespace)
-            yield namespace
-            if namespace == 'FRONTEND':
-                if 'BULKIO' not in seen:
-                    seen.add('BULKIO')
-                    yield 'BULKIO'
 
     def hasMultioutPort(self, softpkg):
         for prop in softpkg.getStructSequenceProperties():

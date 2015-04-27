@@ -18,7 +18,6 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #!/usr/bin/env python
-#% set resourceName = component.name
 
 import unittest
 import ossie.utils.testing
@@ -26,7 +25,7 @@ import os
 from omniORB import any
 
 class ResourceTests(ossie.utils.testing.ScaComponentTestCase):
-    """Test for all resource implementations in ${resourceName}"""
+    """Test for all resource implementations in ${component.name}"""
 
     def testScaBasicBehavior(self):
         #######################################################################
@@ -88,4 +87,5 @@ class ResourceTests(ossie.utils.testing.ScaComponentTestCase):
     # for modules that will assist with testing resource with BULKIO ports
 
 if __name__ == "__main__":
-    ossie.utils.testing.main("../${resourceName}.spd.xml") # By default tests all implementations
+#% set spdfile = component.profile.spd|relpath(generator.getOutputDir())
+    ossie.utils.testing.main("${spdfile}") # By default tests all implementations

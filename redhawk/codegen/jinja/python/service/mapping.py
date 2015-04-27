@@ -39,9 +39,6 @@ class ServiceMapper(ComponentMapper):
 
     @staticmethod
     def userClass(softpkg):
-        softpkg_base_name = softpkg.name()
-        if softpkg.name().find('.') != -1:
-            softpkg_base_name = softpkg.name().split('.')[-1]
-        return {'name'  : softpkg_base_name,
-                'file'  : softpkg_base_name+'.py'}
+        return {'name'  : softpkg.basename(),
+                'file'  : softpkg.basename()+'.py'}
         

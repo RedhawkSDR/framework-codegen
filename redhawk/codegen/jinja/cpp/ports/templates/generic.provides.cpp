@@ -32,21 +32,25 @@ ${classname}::~${classname}()
 ${operation.returns} ${classname}::${operation.name}(${operation.arglist})
 {
     boost::mutex::scoped_lock lock(portAccess);
-/*{% if operation.returns != 'void' %}*/
-/*{%   if operation.returns == 'CORBA::Object_ptr' %}*/
-    ${operation.returns} tmpVal = CORBA::Object::_nil();
-/*{%   else %}*/
-    ${operation.returns} tmpVal;
-/*{%   endif %}*/
+//% set hasreturn = operation.returns != 'void'
+/*{% if hasreturn %}*/
+    ${operation.temporary} retval${' = %s' % operation.initializer if operation.initializer};
 /*{% endif %}*/
     // TODO: Fill in this function
-/*{% if operation.returns != 'void' %}*/
-
-/*{%   if operation.returns == 'char*' %}*/
-    return CORBA::string_dup(tmpVal);
+/*{% if hasreturn %}*/
+/*{%   if operation.temporary.endswith('_var') %}*/
+    return retval._retn();
 /*{%   else %}*/
-    return tmpVal;
+    return retval;
 /*{%   endif %}*/
 /*{% endif %}*/
 }
 /*{% endfor %}*/
+
+/*{% if 'FRONTEND' in portgen.interfaceClass() %}*/
+//% set repid = portgen.interfaceClass().split('::')[1]
+std::string ${classname}::getRepid() const
+{
+    return "IDL:FRONTEND/${repid}:1.0";
+}
+/*{% endif %}*/

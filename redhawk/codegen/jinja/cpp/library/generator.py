@@ -27,6 +27,8 @@ from redhawk.codegen.jinja.common import ShellTemplate, AutomakeTemplate, Autoco
 from redhawk.codegen.jinja.cpp import CppCodeGenerator, CppTemplate
 from redhawk.codegen.jinja.mapping import SoftpkgMapper
 
+from redhawk.codegen.lang.automake import libtoolName
+
 if not '__package__' in locals():
     # Python 2.4 compatibility
     __package__ = __name__.rsplit('.', 1)[0]
@@ -35,16 +37,18 @@ loader = CodegenLoader(__package__,
                        {'common': 'redhawk.codegen.jinja.common',
                         'base':   'redhawk.codegen.jinja.cpp.component.base'})
 
-class LibraryMapper(SoftpkgMapper):
+class CppLibraryMapper(SoftpkgMapper):
     def _mapComponent(self, softpkg):
         cpplib = {}
-        cpplib['libname'] = 'lib'+softpkg.name()+'.la'
-        cpplib['incfile'] = softpkg.name() + '.h'
-        cpplib['srcfile'] = softpkg.name() + '.cpp'
-        cpplib['pcfile'] = softpkg.name() + '.pc'
+        libname = softpkg.basename()
+        cpplib['libname'] = libname
+        cpplib['ltlibname'] = libtoolName(libname)
+        cpplib['incfile'] = libname + '.h'
+        cpplib['srcfile'] = libname + '.cpp'
+        cpplib['pcfile'] = libname + '.pc'
         return cpplib
 
-class LibraryGenerator(CppCodeGenerator):
+class CppLibraryGenerator(CppCodeGenerator):
     def parseopts(self, includedir='include', sourcedir='src'):
         self.includedir = includedir
         self.sourcedir = sourcedir
@@ -53,7 +57,7 @@ class LibraryGenerator(CppCodeGenerator):
         return loader
 
     def componentMapper(self):
-        return LibraryMapper()
+        return CppLibraryMapper()
 
     def propertyMapper(self):
         return None

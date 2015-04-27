@@ -32,9 +32,6 @@ class ProgrammableComponentMapper(PullComponentMapper):
 
     @staticmethod
     def progClass(softpkg):
-        softpkg_base_name = softpkg.name()
-        if softpkg.name().find('.') != -1:
-            softpkg_base_name = softpkg.name().split('.')[-1]
-        progclass = softpkg_base_name + '_prog_base'
+        progclass = softpkg.basename() + '_prog_base'
         return {'name'  : progclass,
                 'file'  : progclass+'.py'}

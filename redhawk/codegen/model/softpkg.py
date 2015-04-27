@@ -26,9 +26,24 @@ from redhawk.codegen.utils import strenum
 import properties
 from softwarecomponent import SoftwareComponent, ComponentTypes
 
+
+class SoftpkgRef(object):
+    def __init__(self, ref):
+        self.spdfile = ref.localfile.name
+        if ref.implref:
+            self.impl = ref.implref.refid
+        else:
+            self.impl = None
+
+
 class Implementation(object):
     def __init__(self, impl):
         self.__impl = impl
+        self.__softpkgdeps = []
+        for dep in self.__impl.dependency:
+            if not dep.softpkgref:
+                continue
+            self.__softpkgdeps.append(SoftpkgRef(dep.softpkgref))
 
     def prfFile(self):
         if self.__impl.propertyfile:
@@ -49,6 +64,10 @@ class Implementation(object):
 
     def programminglanguage(self):
         return self.__impl.programminglanguage.name
+
+    def softpkgdeps(self):
+        return self.__softpkgdeps
+
 
 def softPkgRef(root_impl, name, localfile, implref):
     try:
@@ -132,6 +151,12 @@ class SoftPkg(object):
 
     def name(self):
         return self.__spd.name
+
+    def namespace(self):
+        return self.__spd.name.split('.')[:-1]
+
+    def basename(self):
+        return self.__spd.name.split('.')[-1]
 
     def version(self):
         if not self.__spd.version:

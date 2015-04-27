@@ -17,6 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
+
+import os
+import shutil
+
 from redhawk.codegen.lang import mfile
 from redhawk.packagegen.resourcePackage import ResourcePackage
 
@@ -87,20 +91,19 @@ class OctavePackage(ResourcePackage):
             diaryOnOrOff
 
         '''
-
-        mFunctionParameters = _getMFunctionParameters(function, mFiles)
-
-        self.diaryEnabled = diaryEnabled
-        self.bufferingEnabled = bufferingEnabled
-
         ResourcePackage.__init__(
             self,
             name = function,
             implementation = "cpp",
             outputDir = outputDir,
             generator = "cpp.component.octave",
-            mFiles = mFiles,
             loggingConfigUri = loggingConfigUri)
+
+        self.mFiles = mFiles
+        mFunctionParameters = _getMFunctionParameters(function, mFiles)
+
+        self.diaryEnabled = diaryEnabled
+        self.bufferingEnabled = bufferingEnabled
 
         self._addDefaultProps()
 
@@ -154,6 +157,19 @@ class OctavePackage(ResourcePackage):
 
         for sharedLibrary in sharedLibraries:
             self.addSoftPackageDependency(sharedLibrary)
+
+    def _preCodegen(self):
+        impldir = os.path.join(self.outputDir, self.name, self.implementation)
+        if not os.path.isdir(impldir):
+            os.makedirs(impldir)
+        else:
+            # Update the modification time, so that the device will see an
+            # updated timestamp when loading.
+            os.utime(impldir, None)
+
+        for mFile in self.mFiles:
+            outfile = os.path.join(impldir, os.path.basename(mFile))
+            shutil.copyfile(mFile, outfile)
 
     def _addDefaultProps(self):
         '''

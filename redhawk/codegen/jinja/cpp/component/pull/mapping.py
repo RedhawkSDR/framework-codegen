@@ -30,27 +30,18 @@ class PullComponentMapper(BaseComponentMapper):
         cppcomp['userclass'] = self.userClass(softpkg)
         cppcomp['superclasses'] = self.superClasses(softpkg)
         cppcomp['interfacedeps'] = tuple(self.getInterfaceDependencies(softpkg))
-        cppcomp['softpkgdeps'] = self.softPkgDeps(softpkg, format='deps')
-        cppcomp['pkgconfigsoftpkgdeps'] = self.softPkgDeps(softpkg, format='pkgconfig')
         cppcomp['hasmultioutport'] = self.hasMultioutPort(softpkg)
         return cppcomp
 
     @staticmethod
     def userClass(softpkg):
-        softpkg_base_name = softpkg.name()
-        if softpkg.name().find('.') != -1:
-            softpkg_base_name = softpkg.name().split('.')[-1]
-        return {'base_name'  : softpkg_base_name,
-                'name'  : softpkg_base_name+'_i',
-                'header': softpkg_base_name+'.h',
-                'file'  : softpkg_base_name+'.cpp'}
+        return {'name'  : softpkg.basename()+'_i',
+                'header': softpkg.basename()+'.h',
+                'file'  : softpkg.basename()+'.cpp'}
 
     @staticmethod
     def baseClass(softpkg):
-        softpkg_base_name = softpkg.name()
-        if softpkg.name().find('.') != -1:
-            softpkg_base_name = softpkg.name().split('.')[-1]
-        baseclass = softpkg_base_name + '_base'
+        baseclass = softpkg.basename() + '_base'
         return {'name'  : baseclass,
                 'header': baseclass+'.h',
                 'file'  : baseclass+'.cpp'}

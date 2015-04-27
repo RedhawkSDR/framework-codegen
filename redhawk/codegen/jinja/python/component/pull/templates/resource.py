@@ -43,16 +43,15 @@ class ${className}(${baseClass}):
 #{% else %}
     """<DESCRIPTION GOES HERE>"""
 #{% endif %}
-    def initialize(self):
+    def constructor(self):
         """
-        This is called by the framework immediately after your ${artifactType} registers with the NameService.
+        This is called by the framework immediately after your ${artifactType} registers with the system.
         
         In general, you should add customization here and not in the __init__ constructor.  If you have 
         a custom port implementation you can override the specific implementation here with a statement
         similar to the following:
           self.some_port = MyPortImplementation()
         """
-        ${baseClass}.initialize(self)
         # TODO add customization here.
         
 #{% block updateUsageState %}

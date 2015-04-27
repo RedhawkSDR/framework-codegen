@@ -75,6 +75,11 @@ ${className}::~${className}()
 /*{% endblock %}*/
 }
 
+void ${className}::constructor()
+{
+
+}
+
 /*{% if component is device %}*/
 /*{%   block updateUsageState %}*/
 /**************************************************************************

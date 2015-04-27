@@ -126,6 +126,8 @@ public abstract class ${classname} extends ${superClass} {
     // Provides/inputs
 /*{%   endif %}*/
     /**
+     * ${port.description|default("If the meaning of this port isn't clear, a description should be added.", true)}
+     *
      * @generated
      */
     public ${port.javatype} ${port.javaname};
@@ -136,6 +138,8 @@ public abstract class ${classname} extends ${superClass} {
     // Uses/outputs
 /*{%   endif %}*/
     /**
+     * ${port.description|default("If the meaning of this port isn't clear, a description should be added.", true)}
+     *
      * @generated
      */
     public ${port.javatype} ${port.javaname};
@@ -165,7 +169,11 @@ public abstract class ${classname} extends ${superClass} {
         // Provides/inputs
 /*{%   endif %}*/
         this.${port.javaname} = new ${port.constructor};
+/*{%   if port.hasDescription %}*/
+        this.addPort("${port.name}", "${port.description}", this.${port.javaname}); 
+/*{%   else %}*/
         this.addPort("${port.name}", this.${port.javaname});
+/*{%   endif %}*/
 /*{% endfor %}*/
 /*{% for port in component.ports if port is uses %}*/
 /*{%   if loop.first %}*/
@@ -173,7 +181,11 @@ public abstract class ${classname} extends ${superClass} {
         // Uses/outputs
 /*{%   endif %}*/
         this.${port.javaname} = new ${port.constructor};
+/*{%   if port.hasDescription %}*/
+        this.addPort("${port.name}", "${port.description}", this.${port.javaname}); 
+/*{%   else %}*/
         this.addPort("${port.name}", this.${port.javaname});
+/*{%   endif %}*/
 /*{% endfor %}*/
 /*{% if component.hasmultioutport %}*/
 

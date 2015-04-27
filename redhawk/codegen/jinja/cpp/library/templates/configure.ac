@@ -23,20 +23,19 @@ AM_INIT_AUTOMAKE(nostdinc)
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
+LT_INIT([disable-static])
 
 AC_CORBA_ORB
 OSSIE_CHECK_OSSIE
-# TODO: Make this an installed macro
-OSSIE_SDRROOT_AS_PREFIX
-prefix="${prefix}dom/deps/{{component.name}}"
-# Overrule "lib64" suffix
-libdir='${prefix}/lib'
+RH_SOFTPKG_PREFIX([{{component.name}}],[{{component.impl.id}}])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Dependencies
 PKG_CHECK_MODULES([REDHAWK], [ossie >= {{versions.redhawk}}])
+#{% for dep in component.impl.softpkgdeps %}
+RH_SOFTPKG_CXX([{{dep.spd}}]{{',[%s]' % dep.impl if dep.impl}})
+#{% endfor %}
 OSSIE_ENABLE_LOG4CXX
 AX_BOOST_BASE([{{versions.boost}}])
 AX_BOOST_SYSTEM

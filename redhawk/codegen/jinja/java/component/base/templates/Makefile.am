@@ -19,8 +19,8 @@
 #}
 #% set target = automake.canonicalName(component.jarfile)
 #% set componentdir = component.name.replace('.','/')
-#% set classpath = ['CFInterfaces.jar', 'log4j-'+versions.log4j+'.jar', 'ossie.jar'] + component.interfacejars
-{{target}}_CLASSPATH = $(CLASSPATH_SOFTPKG_DEP){{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}}
+#% set classpath = component.interfacejars
+{{target}}_CLASSPATH = $(SOFTPKG_CLASSPATH):$(REDHAWK_CLASSPATH):{{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}}
 
 {{component.jarfile}}: $({{target}}_SOURCES)
 	mkdir -p bin

@@ -20,12 +20,11 @@
 #
 
 import os
-import shutil
 import sys
-import subprocess
 from getopt import getopt
 
 from redhawk.codegen.model.softpkg import SoftPkg
+from redhawk.codegen.model.softwarecomponent import ComponentTypes
 from redhawk.codegen.utils import strenum
 from redhawk.codegen.settings import ImplementationSettings, importWavedevSettings
 from redhawk.codegen.generate import importTemplate
@@ -61,7 +60,6 @@ Options:
     -f                  Overwrite existing files even if modified
     -C <dir>            Put output files in directory <dir>
     --impl <id>         Generate implementation <id> [default: all]
-    -m <mfile>          Provide .m file to be copied into the component cpp directory
     --variant           Variant tag to be appended to the directory name
     --version           Display codegen version
     --check-template <id> Check whether template <id> is supported; exit status
@@ -78,45 +76,13 @@ Select from one of the following resource types when generating output:
 %s
 """ % (os.path.basename(sys.argv[0]), "\n".join( [ "    --" + x[0]+"\t\t"+x[1][1] for x in TemplateSetup.items() ] ) )
 
-def determineProjectType(implList):
-    projectType = "component"
-
-    for implId in implList:
-        implSettings = settings.get(implId, ImplementationSettings())
-        implTemplate = implSettings.template
-        if not implTemplate:
-            continue
-        elif implTemplate.find("softPackageDependency") != -1:
-            projectType = "softPackageDependency"
-        elif 'library' in implTemplate:
-            projectType = "softPackageDependency"
-        elif implTemplate.find("octave") != -1:
-            projectType = "octaveComponent"
-
-    return projectType
-
-def copyMFiles(mFiles, outputdir):
-    ''' 
-    Copy over m files
-    code generators will need to parse the m file that is in the cpp dir
-
-    '''
-    for mFile in mFiles:
-        if not os.path.isdir(outputdir+"/cpp"):
-            os.makedirs(outputdir+"/cpp")
-        else:
-            # touch the localfile directory (cpp), so that the device will see an
-            # updated timestamp when loading.
-            subprocess.call(['touch', outputdir+"/cpp"])
-
-        mFileName = mFile.split("/")
-        mFileName = mFileName[-1]
-        shutil.copyfile(mFile, outputdir + "/cpp/" + mFileName)
-
-
 Function = strenum('list', 'generate')
 
 if __name__ == '__main__':
+
+    shortopts = 'filC:B:'
+    # Deprecated options
+    shortopts += 'm:'
   
     longopts = ['help', 'template=', 'impl=', 'impldir=', 'lang=', 'variant=', 'check-template=', 'version']
     # add predefined template settings a full word options
@@ -124,7 +90,7 @@ if __name__ == '__main__':
     # Deprecated options
     longopts += ['checkSupport']
 
-    opts, args = getopt(sys.argv[1:], 'filC:B:m:', longopts)
+    opts, args = getopt(sys.argv[1:], shortopts, longopts)
     outputdir = None
     action = Function.GENERATE
     overwrite = False
@@ -134,7 +100,6 @@ if __name__ == '__main__':
     resource_type=None
     language=None
     variant=""
-    mFiles = []
     checkSupport = False
     for key, value in opts:
         if key == '--help':
@@ -142,7 +107,7 @@ if __name__ == '__main__':
         elif key == '-C':
             outputdir = value
         elif key == '-m':
-            mFiles.append(value)
+            pass
         elif key == '-i':
             ignoreWavedev=True
         elif key == '--impl':
@@ -202,6 +167,8 @@ if __name__ == '__main__':
     except:
         raise SystemExit(usage)
 
+    if not os.path.isfile(spdFile):
+        raise SystemExit('Invalid SPD file '+spdFile)
 
     if resource_type and overrides.template:
         raise SystemExit, '--template cannot be selected with a predefined resource type.'
@@ -223,13 +190,9 @@ if __name__ == '__main__':
             filelist[dirname] = []
         filelist[dirname].append(filename)
 
-
     if not outputdir:
         # Default to the same location as the SPD unless told otherwise.
         outputdir = os.path.dirname(spdFile)
-
-
-    copyMFiles(mFiles, outputdir)
 
     # Parse the component profile
     softpkg = SoftPkg(spdFile)
@@ -247,7 +210,12 @@ if __name__ == '__main__':
 
     # Determine the list of implementations to generate.
     if implId:
-        # An implementation was specified, only generate that.
+        # An implementation was specified; verify that it exists and only
+        # generate that.
+        try:
+            softpkg.getImplementation(implId)
+        except KeyError:
+            raise SystemExit("No implementation '%s'" % implId)
         implList = [implId]
     elif settings:
         # Settings are available, generate all implementations with settings.
@@ -291,39 +259,33 @@ if __name__ == '__main__':
     generators = []
 
     # Top-level code generation
-    # TODO: Allow disabling, explicit file list, template selection
-    projectType = determineProjectType(implList)
-    if projectType == "octaveComponent":
-        from redhawk.codegen.jinja.project import octaveComponent as component
-    elif projectType == "softPackageDependency":
-        from redhawk.codegen.jinja.project import softPackageDependency as component
-    elif projectType == "component":
-        from redhawk.codegen.jinja.project import component
+    # NB: There is currently no way to disable or specify alternate generators
+    if softpkg.type() == ComponentTypes.SHAREDPACKAGE:
+        projectTemplate = 'redhawk.codegen.jinja.project.softPackageDependency'
     else:
-        SystemExit("Fatal Error: Unsupported project type.  This should never happen")
+        projectTemplate = 'redhawk.codegen.jinja.project.component'
 
-    generator = component.factory(
-        outputdir='.',
+    try:
+        package = importTemplate(projectTemplate)
+    except:
+        raise SystemExit("Fatal Error: Unsupported project type.  This should never happen")
+    projectGenerator = package.factory(
+        outputdir='',
         overwrite=overwrite,
         crcs=toplevelCRCs,
         variant=variant)
-    generators.append(('Component '+softpkg.name(), '', generator))
+    generators.append(('Component '+softpkg.name(), projectGenerator))
     
-    if projectType != "softPackageDependency":
+    if softpkg.type() != ComponentTypes.SHAREDPACKAGE:
         # Generate unit tests
         from redhawk.codegen.jinja.unitTests.resource import sca
         generator = sca.factory(outputdir='tests', overwrite=overwrite)
-        generators.append(('Tests '+softpkg.name(), 'tests', generator))
+        generators.append(('Tests '+softpkg.name(), generator))
 
     # Set up generation for each requested implementation.
     
-    for implId in implList:
-        # Make sure the implementation actually exists.
-       
-        try:
-            impl = softpkg.getImplementation(implId)
-        except KeyError:
-            raise SystemExit, "No implementation '%s'" % implId
+    for implementation in softpkg.implementations():
+        implId = implementation.identifier()
 
         # look up template if resource type was given
         if resource_type and overrides.template==None:
@@ -364,16 +326,27 @@ if __name__ == '__main__':
                               "Use --template option with one of the following:\n\t" + \
                               "\n\t".join(availableTemplates)
 
-        # If no implementation directory was given at all, infer it from the entry point.
-        implOutputDir = implSettings.outputDir
-        if implOutputDir is None:
-            implOutputDir = os.path.dirname(impl.entrypoint())
-
         # Find the code generator module from the template argument.
         try:
             package = importTemplate(implTemplate)
         except:
             raise SystemExit('Invalid template ' + implTemplate)
+
+        # Give the implementation a meaningful name; pre-1.8 projects use UUIDs
+        # for the identifier and have a separate symbolic name in the project
+        # settings.
+        implName = implSettings.name
+        if not implName:
+            implName = implId
+
+        # If no implementation directory was given at all, infer it from the
+        # implementation name
+        # NB: Prior versions used the entry point, but this did not work for
+        #     libraries, where the localfile cannot include anything that is
+        #     dependent on the implementation
+        implOutputDir = implSettings.outputDir
+        if implOutputDir is None:
+            implOutputDir = implName
 
         generator = package.factory(
             implId = implId,
@@ -383,16 +356,17 @@ if __name__ == '__main__':
             variant = variant,
             **implSettings.properties)
 
-        # Display the implementation; pre-1.8 projects use UUIDs for the identifier
-        # and have a separate symbolic name in the project settings.
-        implName = implSettings.name
-        if not implName:
-            implName = implId
+        # Add this generator to the top-level project generator, so that it can
+        # get information about the generated code and its requirements
+        projectGenerator.addImplGenerator(generator)
 
-        generators.append(('Implementation: '+implName, implOutputDir, generator))
+        # If this implementation was selected, queue it to run
+        if implId in implList:
+            generators.append(('Implementation: '+implName, generator))
 
     # Run all generators.
-    for header, path, generator in generators:
+    for header, generator in generators:
+        path = generator.getOutputDir()
         if action == Function.GENERATE:
             if filelist:
                 if not path in filelist:
@@ -400,7 +374,8 @@ if __name__ == '__main__':
                 implFiles = filelist[path]
             else:
                 implFiles = []
-
+            
+            print header
             generated, skipped = generator.generate(softpkg, *implFiles)
             for filename, verb in skipped:
                 print >>sys.stderr, 'WARNING:', os.path.join(path, filename), 'has been modified, use -f to', verb

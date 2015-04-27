@@ -41,6 +41,9 @@ class ${className} : public ${baseClass}
         ${className}(char *devMgr_ior, char *id, char *lbl, char *sftwrPrfl, CF::Properties capacities, char *compDev);
 //% endif
         ~${className}();
+
+        void constructor();
+
         int serviceFunction();
 /*{% if component is device %}*/
 /*{% block updateUsageState %}*/

@@ -18,11 +18,10 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #% set outputdir = generator.getOutputDir()
-#% set library = automake.libtoolName(component['name'])
-#% set target = automake.canonicalName(library)
+#% set target = automake.canonicalName(component.ltlibname)
 ACLOCAL_AMFLAGS = -I$(OSSIEHOME)/share/aclocal/ossie
 
-lib_LTLIBRARIES = {{library}}
+lib_LTLIBRARIES = {{component.ltlibname}}
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = {{component.pcfile}}
@@ -35,6 +34,10 @@ dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
 # you wish to manually control these options.
 include $(srcdir)/Makefile.am.ide
 {{target}}_SOURCES = $(redhawk_SOURCES_auto)
-{{target}}_LIBADD = $(REDHAWK_LIBS)
-{{target}}_CPPFLAGS = -I $(srcdir)/{{generator.includedir}} $(REDHAWK_CFLAGS) $(BOOST_CPPFLAGS)
+{{target}}_LIBADD = $(SOFTPKG_LIBS) $(REDHAWK_LIBS)
+{{target}}_CPPFLAGS = -I $(srcdir)/{{generator.includedir}} $(SOFTPKG_CFLAGS) $(REDHAWK_CFLAGS) $(BOOST_CPPFLAGS)
 {{target}}_CXXFLAGS = -Wall
+
+# NB: Temporary workaround: filter out headers manually
+redhawk_HEADERS_auto ?= $(filter {{generator.includedir}}/%,$(redhawk_SOURCES_auto))
+include_HEADERS = $(redhawk_HEADERS_auto)

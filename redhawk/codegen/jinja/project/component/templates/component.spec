@@ -19,7 +19,6 @@
 #}
 #$ set name = component.name
 #$ set dirname = component.name.replace('.','/')
-#$ set namespaces = component.namespaces
 # By default, the RPM will install to the standard REDHAWK SDR root location (/var/redhawk/sdr)
 # You can override this at install time using --prefix /new/sdr/root when invoking rpm (preferred method, if you must)
 %{!?_sdrroot: %define _sdrroot /var/redhawk/sdr}
@@ -59,12 +58,15 @@ Requires:       {{component.interfaces|join(' ')}}
 BuildArch: noarch
 
 #{$ endif $}
-#{$ if 'Java' in component.languages and component.languages $}
-# Java requirements
-Requires: java >= {{versions.java}}
-BuildRequires: java-devel >= {{versions.java}}
-
-#{$ endif $}
+#{$ for impl in component.implementations if impl.requires or impl.buildrequires $}
+# Implementation {{impl.id}}
+#{$   if impl.requires $}
+Requires: {{impl.requires|join(' ')}}
+#{$   endif $}
+#{$   if impl.buildrequires $}
+Requires: {{impl.buildrequires|join(' ')}}
+#{$   endif $}
+#{$ endfor $}
 
 %description
 #{$ if component.description $}
