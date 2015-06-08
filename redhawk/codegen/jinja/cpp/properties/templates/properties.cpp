@@ -49,6 +49,48 @@ addProperty(${prop.cppname},
             "${prop.kinds|join(',')}");
 /*{%- endmacro %}*/
 
+/*{% macro initializestructseq(prop) %}*/
+//% if prop.cppvalues
+    {
+    ${prop.structdef.cpptype} __tmp;
+/*{% for value in prop.cppvalues %}*/
+/*{%   for key in value %}*/
+/*{%     for field in prop.structdef.fields %}*/
+/*{%       if field.cppname == key %}*/
+/*{%         if field is simple %}*/
+    __tmp.${field.cppname} = ${value[key]};
+/*{%         elif field is simplesequence%}*/
+/*{%           for fieldvalue in value[key] %}*/
+    __tmp.${field.cppname}.push_back(${fieldvalue});
+/*{%           endfor %}*/
+/*{%         endif %}*/
+/*{%       endif %}*/
+/*{%     endfor %}*/
+/*{%   endfor %}*/
+/*{% endfor %}*/
+    ${prop.cppname}.push_back(__tmp);
+    }
+//% endif
+/*{%- endmacro %}*/
+/*{% macro fooinitializestructseq(prop) %}*/
+//% if prop.cppvalues
+    ${prop.cpptype} __tmp;
+/*{% for value in prop.cppvalues %}*/
+/*{%   for field in prop.structdef.fields %}*/
+/*{%     if not field.inherited %}*/
+/*{%       if field is simple and field.cppvalue %}*/
+        __tmp.${field.cppname} = ${field.cppvalue};
+/*{%       elif field is simplesequence and field.cppvalues %}*/
+/*{%         for value in field.cppvalues %}*/
+        __tmp.${field.cppname}.push_back(${value});
+/*{%         endfor %}*/
+/*{%       endif %}*/
+/*{%     endif %}*/
+/*{%   endfor %}*/
+/*{% endfor %}*/
+//% endif
+/*{%- endmacro %}*/
+
 /*{% macro structdef(struct) %}*/
 /*{% from "properties/properties.cpp" import initsequence %}*/
 struct ${struct.cpptype}${' : public '+struct.baseclass if struct.baseclass} {

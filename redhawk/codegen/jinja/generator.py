@@ -97,7 +97,9 @@ class Generator(object):
         """
         return self.md5sums.keys() + self.crcs.keys()
 
-    def fileChanged(self, filename):
+    def fileChanged(self, filename, userfile=False):
+        if userfile:
+            return True
         pathname = os.path.join(self.outputdir, filename)
         if not os.path.exists(pathname):
             return False
@@ -126,7 +128,7 @@ class Generator(object):
                 stale.remove(template.filename)
             info = { 'filename': template.filename,
                      'user':     template.userfile,
-                     'modified': self.fileChanged(template.filename),
+                     'modified': self.fileChanged(template.filename, template.userfile),
                      'new':      not self.fileExists(template.filename),
                      'remove':   False }
             files.append(info)
@@ -172,7 +174,7 @@ class Generator(object):
 
             if os.path.exists(filename):
                 # Check if the file has been modified since last generation.
-                if self.fileChanged(template.filename) and not self.overwrite:
+                if self.fileChanged(template.filename, template.userfile) and not self.overwrite:
                     skipped.append((template.filename, 'overwrite'))
                     continue
                 action = ''

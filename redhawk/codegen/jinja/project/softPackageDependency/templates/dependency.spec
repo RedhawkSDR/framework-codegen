@@ -42,13 +42,18 @@ License:        None
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:  redhawk
+BuildRequires:  redhawk-devel >= 2.0
 BuildRequires:  autoconf automake libtool
-
-Requires:       redhawk >= 1.10
 
 #{$ block requireExtensions $}
 #{$ endblock $}
+
+#{$ for impl in component.implementations $}
+#{$ for softpkgdep in impl.softpkgdeps $}
+BuildRequires:  {{softpkgdep.name}}
+Requires:       {{softpkgdep.name}}
+#{$ endfor $}
+#{$ endfor $}
 
 #{$ if component.interfaces $}
 # Interface requirements

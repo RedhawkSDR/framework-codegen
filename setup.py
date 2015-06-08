@@ -48,7 +48,7 @@ if not homeSys and ossiehome != None and not buildArg:
 
 setup(name='redhawk-codegen',
       version=versions.codegen,
-      scripts=['redhawk-codegen','codegen_version','update_project','createPackageDependency','createOctaveComponent','createBinaryComponent'],
+      scripts=['redhawk-codegen','codegen_version','update_project','createOctaveComponent','createBinaryComponent','moveComponentNamespace'],
       cmdclass={'install_lib':filtered_install_lib},
       packages=['redhawk',
                 'redhawk.codegen',

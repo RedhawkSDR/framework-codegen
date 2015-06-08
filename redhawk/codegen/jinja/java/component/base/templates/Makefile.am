@@ -24,8 +24,9 @@
 
 {{component.jarfile}}: $({{target}}_SOURCES)
 	mkdir -p bin
-	$(JAVAC) -cp $({{target}}_CLASSPATH) -d bin $({{target}}_SOURCES)
+	$(JAVAC) -cp $({{target}}_CLASSPATH) -g -d bin $({{target}}_SOURCES)
 	$(JAR) cf ./{{component.jarfile}} -C bin .
+	$(JAR) uf ./{{component.jarfile}} -C src .
 
 clean-local:
 	rm -rf bin

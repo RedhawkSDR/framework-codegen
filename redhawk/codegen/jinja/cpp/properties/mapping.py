@@ -76,5 +76,10 @@ class CppPropertyMapper(PropertyMapper):
         for field in structdef['fields']:
             identifier = field['identifier']
             if identifier in value:
-                newval[identifier] = cpp.literal(value[identifier], field['type'])
+                if type(value[identifier]) == list:
+                    newval[identifier] = []
+                    for val in value[identifier]:
+                        newval[identifier].append(cpp.literal(val, field['type']))
+                else:
+                    newval[identifier] = cpp.literal(value[identifier], field['type'])
         return newval

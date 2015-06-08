@@ -75,26 +75,30 @@ class PythonPropertyMapper(PropertyMapper):
         return pyprop
 
     def _mapStructValue(self, value, structdef):
-        args= []
+        retval = ''
         for f in structdef['fields']:
+            args= []
             if f['type'] == 'string' or f['type'] == 'char':
-                args.append('\''+value[f['identifier']]+'\'')
+                if type(value[f['identifier']]) == list:
+                    for val in value[f['identifier']]:
+                        args.append('\''+val+'\'')
+                else:
+                    args.append('\''+value[f['identifier']]+'\'')
             elif f['type'] == 'boolean':
                 args.append(value[f['identifier']].capitalize())
             else:
                 args.append(value[f['identifier']])
-        retval = ''
-        for arg in args:
-            if retval == '':
-                if isinstance(arg, list):
-                    retval += '['+','.join(arg)+']'
-                else:
-                    retval += arg
-            else:
-                if isinstance(arg, list):
-                    retval += ',['+','.join(arg)+']'
-                else:
-                    retval += ','+arg        
+            if retval != '':
+                retval += ','
+            retval+=f['pyname']+'='
+            if type(value[f['identifier']]) == list:
+                retval += '['
+            for arg in args:
+                retval += arg
+                if arg != args[-1]:
+                    retval += ','
+            if type(value[f['identifier']]) == list:
+                retval += ']'
         return '%s(%s)' % (structdef['pyclass'], retval)
 
     def _structName(self, name):

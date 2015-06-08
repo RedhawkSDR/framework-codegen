@@ -120,7 +120,10 @@ class PortMapper(object):
         portdict['repid'] = port.repid()
         portdict['types'] = port.types()
         portdict['hasDescription'] = port.hasDescription()
-        portdict['description'] = port.description()
+        port_description = port.description()
+        if port_description != None:
+            port_description = port_description.replace('\n','\\n')
+        portdict['description'] = port_description
         if port.isProvides():
             direction = "provides"
         else:
@@ -220,6 +223,7 @@ class ProjectMapper(SoftpkgMapper):
         impldict['localfile'] = impl.localfile()
         impldict['language'] = impl.programminglanguage()
         impldict['generator'] = generator
+        impldict['softpkgdeps'] = [self._mapSoftpkgDependency(dep) for dep in impl.softpkgdeps()]
         if generator is not None:
             outputdir = generator.getOutputDir()
         else:

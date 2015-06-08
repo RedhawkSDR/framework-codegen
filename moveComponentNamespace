@@ -1,0 +1,146 @@
+#!/usr/bin/env python
+#
+# This file is protected by Copyright. Please refer to the COPYRIGHT file 
+# distributed with this source distribution.
+# 
+# This file is part of REDHAWK core.
+# 
+# REDHAWK core is free software: you can redistribute it and/or modify it under 
+# the terms of the GNU Lesser General Public License as published by the Free 
+# Software Foundation, either version 3 of the License, or (at your option) any 
+# later version.
+# 
+# REDHAWK core is distributed in the hope that it will be useful, but WITHOUT 
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+# 
+# You should have received a copy of the GNU Lesser General Public License 
+# along with this program.  If not, see http://www.gnu.org/licenses/.
+#
+
+from ossie import parsers
+import os, sys, commands
+
+
+class ModifyProject:
+    def __init__(self, options, args):
+        self.options = options
+        self.spd_filename_input = args[0]
+        self.namespace = args[1]
+    def modifySpd(self):
+        if not os.path.exists(self.spd_filename_input):
+            print 'File '+self.spd_filename_input+' does not exist'
+            sys.exit(1)
+        fp=open(self.spd_filename_input,'r')
+        self.spd=parsers.SPDParser.parseString(fp.read())
+        fp.close()
+        self.spd.name = self.namespace + '.' + str(self.spd.name)
+        fp=open(self.spd_filename_input,'w')
+        self.spd.export(fp,0)
+        fp.close()
+        header_txt='<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE softpkg PUBLIC "-//JTRS//DTD SCA V2.2.2 SPD//EN" "softpkg.dtd">\n'
+        replace_aep='aepcompliance="aep_compliant"'
+        out_str=''
+        fp=open(self.spd_filename_input,'r')
+        current_str=fp.read()
+        fp.close()
+        out_str=header_txt
+        out_str+=current_str
+        out_str=out_str.replace(replace_aep,"")
+        fp=open(self.spd_filename_input,'w')
+        fp.write(out_str)
+        fp.close()
+    def countSpecFiles(self, search_loc):
+        number_spec_files = 0
+        specFiles = []
+        dir_files = os.listdir(search_loc)
+        for item in dir_files:
+            if item[-5:] == '.spec':
+                specFiles.append(item)
+                number_spec_files += 1
+        return number_spec_files
+    def verifyModifications(self):
+        files_to_modify=['configure.ac','Makefile.am','build.sh']
+        status, output = commands.getstatusoutput('redhawk-codegen -l '+self.spd_filename_input)
+        if status != 0:
+            print "Unable to verify the project:"
+            print output
+            sys.exit(-1)
+        output_lines = output.split('\n')
+        foundCollision = False
+        for line in output_lines:
+            if line[1] =='M':
+                filename = line.split(' ')[-1]
+                for _file in files_to_modify:
+                    if os.path.basename(filename) == _file:
+                        print 'Unable to update '+filename+'. The original file was hand-modified. Run moveComponentNamespace with the -f option'
+                        foundCollision = True
+        if foundCollision:
+            sys.exit(-1)
+    def baseModification(self):
+        search_loc = '.'
+        if len(self.spd_filename_input) != len(os.path.basename(self.spd_filename_input)):
+            search_loc = self.spd_filename_input[:len(self.spd_filename_input)-len(os.path.basename(self.spd_filename_input))]
+        number_spec_files = self.countSpecFiles(search_loc)
+        # this should handle the changing of the spec file name
+        status, output = commands.getstatusoutput('redhawk-codegen '+self.spd_filename_input)
+        if status != 0:
+            print "Unable to update the project:"
+            print output
+            sys.exit(-1)
+        if number_spec_files != 0:
+            if number_spec_files < self.countSpecFiles(search_loc):
+                print 'Could not update modified spec file. New spec file created with namespace'
+        
+    def forceModificationSpecificFiles(self):
+        files_to_modify=['configure.ac','Makefile.am','build.sh']
+        status, output = commands.getstatusoutput('redhawk-codegen -l '+self.spd_filename_input)
+        if status != 0:
+            print "Unable to verify the project:"
+            print output
+            sys.exit(-1)
+        output_lines = output.split('\n')
+        found_files = []
+        for line in output_lines:
+            filename = line.split(' ')[-1]
+            for _file in files_to_modify:
+                if os.path.basename(filename) == _file:
+                    found_files.append(filename)
+        command_line = 'redhawk-codegen -f '+self.spd_filename_input
+        for found_file in found_files:
+            command_line += ' '+found_file
+        status, output = commands.getstatusoutput(command_line)
+
+
+###########################
+# Run from command line
+###########################
+if __name__ == "__main__":
+
+    ##################
+    # setup arg parser
+    ##################
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.usage = "%s [options] <SPD file> <dot.separated.namespace>"
+    parser.add_option("--force", dest="force", default=False, action="store_true",
+                      help="force the overwriting of files that have been modified")
+
+    (options, args) = parser.parse_args()
+
+    if len(args) != 2:
+        parser.print_help()
+        sys.exit(1)
+        
+    # create instance of ModifyProject
+    try:
+        dn = ModifyProject(options, args)
+        if not options.force:
+            dn.verifyModifications()
+        dn.modifySpd()
+        dn.baseModification()
+        dn.forceModificationSpecificFiles()
+    except Exception, e:
+        print 'The following error occurred:',e
+        sys.exit(1)

@@ -36,7 +36,7 @@ class ComponentProjectMapper(ProjectMapper):
         component = {}
         component['type'] = _projectTypes[softpkg.type()]
         component['interfaces'] = [libraries.getRPMDependency(name) for name in self.getInterfaceNamespaces(softpkg)]
-        component['specfile'] = softpkg.basename()+'.spec'
+        component['specfile'] = softpkg.name()+'.spec'
         return component
 
     def _mapImplementation(self, impl, generator):

@@ -181,7 +181,7 @@ void ${className}::connectionTableChanged(const std::vector<connection_descripto
 
 /*{% endif %}*/
 /*{% block loadProperties %}*/
-/*{% from "properties/properties.cpp" import addproperty, initsequence %}*/
+/*{% from "properties/properties.cpp" import addproperty, initsequence, initializestructseq %}*/
 void ${className}::loadProperties()
 {
 /*{% for prop in component.properties %}*/
@@ -193,6 +193,9 @@ void ${className}::loadProperties()
 
 /*{%   elif prop.cppvalue %}*/
     ${prop.cppname} = ${prop.cppvalue};
+/*{%   endif %}*/
+//%    if prop.cppvalues and prop is structsequence
+${initializestructseq(prop)}
 /*{%   endif %}*/
 /*{% endfor %}*/
 }

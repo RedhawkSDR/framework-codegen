@@ -21,6 +21,7 @@
 
 import os
 import sys
+import copy
 from getopt import getopt
 
 from redhawk.codegen.model.softpkg import SoftPkg
@@ -77,6 +78,11 @@ Select from one of the following resource types when generating output:
 """ % (os.path.basename(sys.argv[0]), "\n".join( [ "    --" + x[0]+"\t\t"+x[1][1] for x in TemplateSetup.items() ] ) )
 
 Function = strenum('list', 'generate')
+
+def recoverLanguage(template):
+    if template==None:
+        return None
+    return template[len('redhawk.codegen.jinja.'):].split('.')[0]
 
 if __name__ == '__main__':
 
@@ -315,7 +321,15 @@ if __name__ == '__main__':
         # Get generation settings, from a combination of the command line and (optionally)
         # the .wavedev configuration file; the former has higher precedence.
         implSettings = settings.get(implId, ImplementationSettings())
+        # only apply the template override if the template language matches
+        orig_language = recoverLanguage(implSettings.template)
+        orig_template = implSettings.template
+        orig_properties = copy.deepcopy(implSettings.properties)
+        override_language = recoverLanguage(overrides.template)
         implSettings.override(overrides)
+        if orig_language != override_language:
+            implSettings.template = orig_template
+            implSettings.properties = orig_properties
 
         # Check that a template was given, either from the configuration file or the
         # command line.
@@ -378,7 +392,7 @@ if __name__ == '__main__':
             print header
             generated, skipped = generator.generate(softpkg, *implFiles)
             for filename, verb in skipped:
-                print >>sys.stderr, 'WARNING:', os.path.join(path, filename), 'has been modified, use -f to', verb
+                print >>sys.stderr, 'WARNING:', os.path.join(path, filename), 'has been modified or is a user file that must be explicitly updated, use -f to', verb
             for filename, verb in generated:
                 print ' ', os.path.join(path, filename), verb
         elif action == Function.LIST:

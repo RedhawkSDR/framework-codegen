@@ -48,6 +48,13 @@ Requires:       redhawk >= {{versions.redhawk}}
 #{$ block requireExtensions $}
 #{$ endblock $}
 
+#{$ for impl in component.implementations $}
+#{$ for softpkgdep in impl.softpkgdeps $}
+BuildRequires:  {{softpkgdep.name}}
+Requires:       {{softpkgdep.name}}
+#{$ endfor $}
+#{$ endfor $}
+
 #{$ if component.interfaces $}
 # Interface requirements
 BuildRequires:  {{component.interfaces|join(' ')}}

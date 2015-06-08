@@ -137,13 +137,13 @@ class JavaPropertyMapper(PropertyMapper):
             else:
                 itemvalue = field.get('value', None)
             if itemvalue is not None:
-		if isinstance(itemvalue, list):
-		    vals = []
-		    for val in itemvalue:
-			vals.append(java.literal(val, field['javatype']))
-		    addval = field['javaclass']+'SequenceProperty.asList('+','.join(vals)+')'
-		    newval.append(addval)
-		else:
+                if isinstance(itemvalue, list):
+                    vals = []
+                    for val in itemvalue:
+                        vals.append(java.literal(val, field['javatype']))
+                    addval = field['javaclass']+'SequenceProperty.asList('+','.join(vals)+')'
+                    newval.append(addval)
+                else:
                     newval.append(java.literal(itemvalue, field['javatype']))
             else:
                 newval.append(java.NULL)

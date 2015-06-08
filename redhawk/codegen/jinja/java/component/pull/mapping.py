@@ -28,7 +28,10 @@ from redhawk.codegen.jinja.java.component.base import BaseComponentMapper
 class PullComponentMapper(BaseComponentMapper):
     def _mapComponent(self, softpkg):
         javacomp = {}
-        javacomp['package'] = self.package
+        if self.package == '':
+            javacomp['package'] = softpkg.basename()+'.java'
+        else:
+            javacomp['package'] = self.package
         userclass = softpkg.basename()
         baseclass = userclass + '_base'
         javacomp['baseclass'] = {'name': baseclass,
@@ -36,7 +39,7 @@ class PullComponentMapper(BaseComponentMapper):
         javacomp['userclass'] = {'name': userclass,
                                  'file': userclass+'.java'}
         javacomp['superclass'] = self.superclass(softpkg)
-        javacomp['mainclass'] = java.qualifiedName(userclass, self.package)
+        javacomp['mainclass'] = java.qualifiedName(userclass, javacomp['package'])
         javacomp['jarfile'] = softpkg.basename() + '.jar'
         javacomp['interfacedeps'] = list(self.getInterfaceDependencies(softpkg))
         javacomp['interfacejars'] = self.getInterfaceJars(softpkg)
