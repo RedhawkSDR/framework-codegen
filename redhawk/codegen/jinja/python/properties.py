@@ -75,31 +75,14 @@ class PythonPropertyMapper(PropertyMapper):
         return pyprop
 
     def _mapStructValue(self, value, structdef):
-        retval = ''
-        for f in structdef['fields']:
-            args= []
-            if f['type'] == 'string' or f['type'] == 'char':
-                if type(value[f['identifier']]) == list:
-                    for val in value[f['identifier']]:
-                        args.append('\''+val+'\'')
-                else:
-                    args.append('\''+value[f['identifier']]+'\'')
-            elif f['type'] == 'boolean':
-                args.append(value[f['identifier']].capitalize())
-            else:
-                args.append(value[f['identifier']])
-            if retval != '':
-                retval += ','
-            retval+=f['pyname']+'='
-            if type(value[f['identifier']]) == list:
-                retval += '['
-            for arg in args:
-                retval += arg
-                if arg != args[-1]:
-                    retval += ','
-            if type(value[f['identifier']]) == list:
-                retval += ']'
-        return '%s(%s)' % (structdef['pyclass'], retval)
+        arguments = []
+        for field in structdef['fields']:
+            field_id = field['identifier']
+            if not field_id in value:
+                continue
+            field_value = python.literal(value[field_id], field['type'], field['isComplex'])
+            arguments.append((field['pyname'], field_value))
+        return '%s(%s)' % (structdef['pyclass'], ','.join('%s=%s' % arg for arg in arguments))
 
     def _structName(self, name):
         if self.legacy_structs:

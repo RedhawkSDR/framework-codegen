@@ -192,7 +192,13 @@ class SoftpkgMapper(object):
     def _mapSoftpkgDependency(self, dependency):
         depdict = {}
         depdict['spd'] = dependency.spdfile
-        depdict['name'] = os.path.basename(dependency.spdfile).replace('.spd.xml','')
+        basename = os.path.basename(dependency.spdfile)
+        dirname = dependency.spdfile[:dependency.spdfile.find(basename)]
+        depdict['name'] = basename.replace('.spd.xml','')
+        if dirname[:6]=='/deps/':
+            ns_name=dirname[6:]
+            if ns_name != '/':
+                depdict['name'] = ns_name.replace('/','.')[:-1]
         if dependency.impl:
             depdict['impl'] = dependency.impl
         return depdict

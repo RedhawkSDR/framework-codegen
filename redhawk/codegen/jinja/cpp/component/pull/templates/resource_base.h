@@ -73,6 +73,10 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{% endblock %}*/
         ~${className}();
 
+#ifdef BEGIN_AUTOCOMPLETE_IGNORE
+    /**
+     * \cond INTERNAL
+     */
 /*{% block cfResource %}*/
         void start() throw (CF::Resource::StartError, CORBA::SystemException);
 
@@ -84,6 +88,10 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{% block basePublicFunctions %}*/
         void loadProperties();
 /*{% endblock %}*/
+    /**
+     * \endcond
+     */
+#endif
 /*{% block extendedPublic %}*/
 /*{% endblock extendedPublic %}*/
 
@@ -99,6 +107,12 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{%   if loop.first %}*/
         // Member variables exposed as properties
 /*{%   endif %}*/
+/*{% if prop.kinds|join('') == "message" %}*/
+        /// Message structure definition for ${prop.cppname}
+/*{% endif %}*/
+/*{% if prop.kinds|join('') != "message" %}*/
+        /// Property: ${prop.cppname}
+/*{% endif %}*/
         ${prop.cpptype} ${prop.cppname};
 /*{% endfor %}*/
 /*{% for port in component.ports %}*/
@@ -106,6 +120,7 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 
         // Ports
 /*{%   endif %}*/
+        /// Port: ${port.cppname}
         ${port.cpptype} *${port.cppname};
 /*{% endfor %}*/
 /*{% endblock %}*/

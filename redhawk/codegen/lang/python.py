@@ -20,7 +20,6 @@
 
 from idl import CorbaTypes
 from ossie.utils.prop_helpers import parseComplexString
-from ossie import properties
 
 _reservedKeywords = set(("and", "as", "assert", "break", "class", "continue", "def",
                          "del", "elif", "else", "except", "exec", "finally", "for",
@@ -34,6 +33,22 @@ def stringLiteral(value):
 def charLiteral(value):
     return "'"+value+"'"
 
+def boolLiteral(value):
+    if isinstance(value, basestring):
+        value = stringToBoolean(value)
+    else:
+        value = bool(value)
+    return str(value)
+
+def floatLiteral(value):
+    return repr(float(value))
+
+def intLiteral(value):
+    return repr(int(value))
+
+def longLiteral(value):
+    return repr(long(value))
+
 def stringToBoolean(value):
     if value.lower() == 'true':
         return True
@@ -43,17 +58,17 @@ def stringToBoolean(value):
         raise ValueError, 'Invalid boolean literal: "%s"' % value
 
 _typeMap = {
-    CorbaTypes.BOOLEAN:   stringToBoolean,
+    CorbaTypes.BOOLEAN:   boolLiteral,
     CorbaTypes.CHAR:      charLiteral,
-    CorbaTypes.OCTET:     int,
-    CorbaTypes.SHORT:     int,
-    CorbaTypes.USHORT:    int,
-    CorbaTypes.LONG:      int,
-    CorbaTypes.ULONG:     int,
-    CorbaTypes.LONGLONG:  long,
-    CorbaTypes.ULONGLONG: long,
-    CorbaTypes.FLOAT:     float,
-    CorbaTypes.DOUBLE:    float,
+    CorbaTypes.OCTET:     intLiteral,
+    CorbaTypes.SHORT:     intLiteral,
+    CorbaTypes.USHORT:    intLiteral,
+    CorbaTypes.LONG:      intLiteral,
+    CorbaTypes.ULONG:     intLiteral,
+    CorbaTypes.LONGLONG:  longLiteral,
+    CorbaTypes.ULONGLONG: longLiteral,
+    CorbaTypes.FLOAT:     floatLiteral,
+    CorbaTypes.DOUBLE:    floatLiteral,
     CorbaTypes.STRING:    stringLiteral,
     CorbaTypes.OBJREF:    stringLiteral,
 }
@@ -91,6 +106,8 @@ def defaultValue(typename):
         return 0
 
 def literal(value, typename, complex=False):
+    if isinstance(value, (list,tuple)):
+        return '[%s]' % ','.join(literal(v, typename, complex) for v in value)
     if typename in _typeMap:
         if complex:
             real, imag = parseComplexString(value, typename)

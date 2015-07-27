@@ -38,6 +38,5 @@ include $(srcdir)/Makefile.am.ide
 {{target}}_CPPFLAGS = -I $(srcdir)/{{generator.includedir}} $(SOFTPKG_CFLAGS) $(REDHAWK_CFLAGS) $(BOOST_CPPFLAGS)
 {{target}}_CXXFLAGS = -Wall
 
-# NB: Temporary workaround: filter out headers manually
 redhawk_HEADERS_auto ?= $(filter {{generator.includedir}}/%,$(redhawk_SOURCES_auto))
 include_HEADERS = $(redhawk_HEADERS_auto)

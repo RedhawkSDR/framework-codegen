@@ -30,19 +30,11 @@ def import_fail(msg=''):
 
 # Try to use setuptools to locate Jinja2 and configure the path
 try:
+    __requires__=['Jinja2>=2.6']
     import pkg_resources
 except ImportError:
     # setuptools is not installed; we'll import without a check
     pass
-else:
-    try:
-        for dist in pkg_resources.require('Jinja2 >= '+versions.jinja2):
-            # Ensure requirements are on the path
-            dist.activate()
-    except pkg_resources.DistributionNotFound:
-        import_fail()
-    except pkg_resources.VersionConflict, e:
-        import_fail(', but found ' + str(e.args[0]))
 
 try:
     import jinja2

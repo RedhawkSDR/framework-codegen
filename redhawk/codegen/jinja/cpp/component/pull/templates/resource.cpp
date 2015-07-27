@@ -65,6 +65,7 @@ ${ self.ctorBody() -}
 ${className}::${className}(const char *uuid, const char *label) :
     ${baseClass}(uuid, label)
 {
+    // Avoid placing constructor code here. Instead, use the "constructor" function.
 ${ self.ctorBody() }
 }
 /*{% endif %}*/
@@ -77,7 +78,7 @@ ${className}::~${className}()
 
 void ${className}::constructor()
 {
-
+    // This is the RH constructor. All properties are properly initialized before this function is called 
 }
 
 /*{% if component is device %}*/

@@ -50,9 +50,11 @@ ${prop.pyname} = simpleseq_property(id_="${prop.identifier}",
                                     type_="${prop.type}",
 #%    if prop.pyvalue
                                     defvalue=[
+#{%-  filter trim|lines|join(', ') %}
 #{%   for val in prop.pyvalue %}
-                                              ${val},
+${val}
 #{%   endfor %}
+#{%   endfilter %}
                                              ],
 #%    else
                                     defvalue=[],
@@ -110,11 +112,25 @@ ${prop.pyname} = structseq_property(id_="${prop.identifier}",
 #{% endmacro %}
 
 #{% macro initializer(fields) %}
-#{%   filter trim|lines|join(', ') %}
+#{%  filter trim|lines|join(', ') %}
 #{%   for field in fields %}
+#{%    if field is simplesequence %}
+#{%     if field.pyvalue %}
+${field.pyname}=[
+#{%-     filter trim|lines|join(', ') %}
+#{%       for val in field.pyvalue %}
+${val}
+#{%       endfor %}
+#{%      endfilter %}
+]
+#{%     else %}
+${field.pyname}=[]
+#{%     endif %}
+#{%    elif field is simple %}
 ${field.pyname}=${field.pyvalue|default(python.defaultValue(field.type))}
+#{%    endif %}
 #{%   endfor %}
-#{%   endfilter %}
+#{%  endfilter %}
 #{% endmacro %}
 
 #{% macro members(fields) %}
@@ -146,12 +162,12 @@ class ${struct.pyclass}(object):
                                       defvalue=${field.pyvalue}
 #%        elif field is simplesequence
                                       defvalue=[
-#{%         filter codealign %}
-#{%         for val in field.pyvalue %}
-                                                ${val},
-#{%         endfor %}
+#{%-        filter trim|lines|join(', ') %}
+#{%          for val in field.pyvalue %}
+${val}
+#{%          endfor %}
 #{%         endfilter %}
-                                               ]
+]
 #%        endif
 #%      else
 #%        if field is simplesequence

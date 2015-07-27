@@ -50,7 +50,7 @@ Requires:       redhawk >= {{versions.redhawk}}
 
 #{$ for impl in component.implementations $}
 #{$ for softpkgdep in impl.softpkgdeps $}
-BuildRequires:  {{softpkgdep.name}}
+BuildRequires:  {{softpkgdep.name}}-devel
 Requires:       {{softpkgdep.name}}
 #{$ endfor $}
 #{$ endfor $}
@@ -71,7 +71,7 @@ BuildArch: noarch
 Requires: {{impl.requires|join(' ')}}
 #{$   endif $}
 #{$   if impl.buildrequires $}
-Requires: {{impl.buildrequires|join(' ')}}
+BuildRequires: {{impl.buildrequires|join(' ')}}
 #{$   endif $}
 #{$ endfor $}
 
@@ -80,6 +80,8 @@ Requires: {{impl.buildrequires|join(' ')}}
 {{component.description}}
 #{$ else $}
 {{component.type}} %{name}
+ * Commit: __REVISION__
+ * Source Date/Time: __DATETIME__
 #{$ endif $}
 
 

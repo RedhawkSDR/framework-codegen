@@ -283,11 +283,6 @@ class ${className} : public ${baseClass}
             _${executeType}Map[${executeType}Id] = ${executeType};
             _processMap[++_processIdIncrement] = ${executeType}Id;
 
-/*{% if executesPersonaDevices %}*/
-            // Update the device manager with the new device
-            _deviceManager->registerDevice(${executeType}->_this());
-/*{% endif %}*/
-
             LOG_DEBUG(${className}, __FUNCTION__ <<
                     ": ${executeType.capitalize()} '" << ${executeType}Id << "' has been successfully instantiated");
 

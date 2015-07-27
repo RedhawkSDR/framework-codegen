@@ -33,7 +33,12 @@ ${super()}
 void ${className}::construct()
 {
     /***********************************************************************************
-     this function is invoked in the constructor
+     this function is invoked in the constructor. This location is meant to consolidate
+     where hardware initialization is performed.
+
+     Note that properties are not initialized before this function is called.
+     To perform hardware initialization/configure after properties are initialized,
+     use the function "constructor"
     ***********************************************************************************/
 }
 /*{% if 'FrontendTuner' in component.implements %}*/

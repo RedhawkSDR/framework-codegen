@@ -45,7 +45,7 @@ class CppLibraryMapper(SoftpkgMapper):
         cpplib['ltlibname'] = libtoolName(libname)
         cpplib['incfile'] = libname + '.h'
         cpplib['srcfile'] = libname + '.cpp'
-        cpplib['pcfile'] = libname + '.pc'
+        cpplib['pcfile'] = softpkg.name() + '.pc'
         return cpplib
 
 class CppLibraryGenerator(CppCodeGenerator):

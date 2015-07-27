@@ -151,6 +151,9 @@ public abstract class ${classname} extends ${superClass} {
     public ${classname}()
     {
         super();
+
+        setLogger( logger, ${classname}.class.getName() );
+
 /*{% for prop in component.properties %}*/
 /*{%   if loop.first %}*/
 

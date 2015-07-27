@@ -326,6 +326,23 @@ if __name__ == '__main__':
         orig_template = implSettings.template
         orig_properties = copy.deepcopy(implSettings.properties)
         override_language = recoverLanguage(overrides.template)
+
+        # Give the implementation a meaningful name; pre-1.8 projects use UUIDs
+        # for the identifier and have a separate symbolic name in the project
+        # settings.
+        implName = implSettings.name
+        if not implName:
+            implName = implId
+
+        # If no implementation directory was given at all, infer it from the
+        # implementation name
+        # NB: Prior versions used the entry point, but this did not work for
+        #     libraries, where the localfile cannot include anything that is
+        #     dependent on the implementation
+        implOutputDir = implSettings.outputDir
+        if implOutputDir is None:
+            implOutputDir = implName
+            
         implSettings.override(overrides)
         if orig_language != override_language:
             implSettings.template = orig_template
@@ -352,15 +369,6 @@ if __name__ == '__main__':
         implName = implSettings.name
         if not implName:
             implName = implId
-
-        # If no implementation directory was given at all, infer it from the
-        # implementation name
-        # NB: Prior versions used the entry point, but this did not work for
-        #     libraries, where the localfile cannot include anything that is
-        #     dependent on the implementation
-        implOutputDir = implSettings.outputDir
-        if implOutputDir is None:
-            implOutputDir = implName
 
         generator = package.factory(
             implId = implId,
