@@ -22,7 +22,8 @@
 #{% endblock %}
 #{% block acInit %}
 AC_INIT({{component.name}}, {{component.version}})
-AM_INIT_AUTOMAKE(nostdinc)
+AM_INIT_AUTOMAKE([nostdinc foreign])
+AC_CONFIG_MACRO_DIR([m4])
 #{% endblock %}
 
 #{% block acChecks %}

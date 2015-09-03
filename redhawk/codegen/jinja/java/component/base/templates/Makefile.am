@@ -20,6 +20,9 @@
 #% set target = automake.canonicalName(component.jarfile)
 #% set componentdir = component.name.replace('.','/')
 #% set classpath = component.interfacejars
+ACLOCAL_AMFLAGS = -I m4 -I${OSSIEHOME}/share/aclocal/ossie
+AUTOMAKE_OPTIONS = subdir-objects
+
 {{target}}_CLASSPATH = $(SOFTPKG_CLASSPATH):$(REDHAWK_CLASSPATH):{{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}}
 
 {{component.jarfile}}: $({{target}}_SOURCES)
@@ -32,6 +35,7 @@ clean-local:
 	rm -rf bin
 
 distclean-local:
+	rm -rf m4
 	rm -f config.*
 	rm -rf autom4te.cache
 	rm -f acinclude.m4

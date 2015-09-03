@@ -21,12 +21,15 @@
 #% set componentdir = component.name.replace('.','/')
 #% set sdrbranch = component.sdrpath.split('/')[0]
 # vim: noet: softtabstop=0
+ACLOCAL_AMFLAGS = -I m4 -I${OSSIEHOME}/share/aclocal/ossie
+AUTOMAKE_OPTIONS = subdir-objects
 
 xmldir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/
 dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
 {{sdrbranch}}dir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/python/
 
 distclean-local:
+	rm -rf m4
 	rm -f config.*
 	rm -rf autom4te.cache
 	rm -f acinclude.m4

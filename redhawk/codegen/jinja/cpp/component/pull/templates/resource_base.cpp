@@ -89,7 +89,6 @@ ${className}::${className}(const char *uuid, const char *label) :
     ThreadedComponent()
 {
 /*{% block constructorBody %}*/
-#ifdef BEGIN_AUTOCOMPLETE_IGNORE
     loadProperties();
 /*{% for port in component.ports %}*/
 /*{%   if loop.first %}*/
@@ -112,7 +111,6 @@ ${className}::${className}(const char *uuid, const char *label) :
 
     this->addPropertyListener(connectionTable, this, &${className}::connectionTableChanged);
 /*{% endif %}*/
-#endif
 /*{% endblock %}*/
 }
 /*{% endblock %}*/
@@ -137,7 +135,6 @@ ${self.constructorBody()}
 }
 
 /*{% endif %}*/
-#ifdef BEGIN_AUTOCOMPLETE_IGNORE
 /*******************************************************************************************
     Framework-level functions
     These functions are generally called by the framework to perform housekeeping.
@@ -203,7 +200,6 @@ ${initializestructseq(prop)}
 /*{% endfor %}*/
 }
 /*{% endblock %}*/
-#endif
 
 /*{% block extensions %}*/
 /*# Allow for child class extensions #*/

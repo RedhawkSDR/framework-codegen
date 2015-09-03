@@ -73,10 +73,6 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{% endblock %}*/
         ~${className}();
 
-#ifdef BEGIN_AUTOCOMPLETE_IGNORE
-    /**
-     * \cond INTERNAL
-     */
 /*{% block cfResource %}*/
         void start() throw (CF::Resource::StartError, CORBA::SystemException);
 
@@ -88,10 +84,6 @@ class ${className} : public ${component.superclasses|join(', public ', attribute
 /*{% block basePublicFunctions %}*/
         void loadProperties();
 /*{% endblock %}*/
-    /**
-     * \endcond
-     */
-#endif
 /*{% block extendedPublic %}*/
 /*{% endblock extendedPublic %}*/
 

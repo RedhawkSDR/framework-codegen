@@ -18,8 +18,6 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
-import jinja2
-
 from redhawk.codegen.lang.idl import IDLInterface
 from redhawk.codegen.lang import java
 from redhawk.codegen.jinja.ports import PortFactory

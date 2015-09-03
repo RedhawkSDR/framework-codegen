@@ -34,10 +34,12 @@ bindir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/{{outputdir}}/
 xmldir = $(prefix)/{{component.sdrpath}}/{{componentdir}}/
 dist_xml_DATA = {{component.profile.values()|relpath(outputdir)|join(' ')}}
 #{% endblock %}
-ACLOCAL_AMFLAGS = -I$(OSSIEHOME)/share/aclocal/ossie
+ACLOCAL_AMFLAGS = -I m4 -I${OSSIEHOME}/share/aclocal/ossie
+AUTOMAKE_OPTIONS = subdir-objects
 
 #{% block distClean %}
 distclean-local:
+	rm -rf m4
 	rm -f config.*
 	rm -rf autom4te.cache
 	rm -f acinclude.m4

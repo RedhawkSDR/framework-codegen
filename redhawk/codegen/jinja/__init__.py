@@ -24,17 +24,43 @@
 # add the expected Python egg path to sys.path and try again.
 
 from redhawk.codegen import versions
+import sys
 
 def import_fail(msg=''):
     raise ImportError('requires Jinja2 '+versions.jinja2+' or later'+msg)
 
+def getdist(env):
+    v_tuple = tuple(int(x) for x in versions.jinja2.split('.'))
+    jinja_dists = env.__getitem__('Jinja2')
+    version_found = None
+    for dist in jinja_dists:
+        if dist.has_version():
+            chk_tuple = tuple(int(x) for x in dist.version.split('.'))
+            if v_tuple <= chk_tuple:
+                return dist,None
+            else:
+                version_found = dist.version
+    return None, version_found
+    
+
 # Try to use setuptools to locate Jinja2 and configure the path
 try:
-    __requires__=['Jinja2>=2.6']
     import pkg_resources
 except ImportError:
     # setuptools is not installed; we'll import without a check
     pass
+else:
+    try:
+        environment = pkg_resources.Environment()
+        dist,msg = getdist(pkg_resources.Environment())
+        if dist == None:
+            import_fail(msg)
+        pkg_resources.working_set.by_key['jinja2'] = dist
+        sys.path.insert(0,dist.location)
+    except pkg_resources.DistributionNotFound:
+        import_fail()
+    except pkg_resources.VersionConflict, e:
+        import_fail(', but found ' + str(e.args[0]))
 
 try:
     import jinja2

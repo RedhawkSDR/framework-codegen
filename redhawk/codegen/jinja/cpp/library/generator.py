@@ -20,8 +20,6 @@
 
 import os
 
-import jinja2
-
 from redhawk.codegen.jinja.loader import CodegenLoader
 from redhawk.codegen.jinja.common import ShellTemplate, AutomakeTemplate, AutoconfTemplate, PkgconfigTemplate
 from redhawk.codegen.jinja.cpp import CppCodeGenerator, CppTemplate

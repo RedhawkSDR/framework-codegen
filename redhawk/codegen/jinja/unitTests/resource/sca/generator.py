@@ -18,11 +18,11 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #
 
-import jinja2
 
 from redhawk.codegen.jinja.generator import TopLevelGenerator
 from redhawk.codegen.jinja.python import PythonTemplate
 
+import jinja2
 from mapping import ProjectMapper
 
 if not '__package__' in locals():
