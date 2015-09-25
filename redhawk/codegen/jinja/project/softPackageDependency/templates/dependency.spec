@@ -21,7 +21,7 @@
 #$ set basename = component.basename
 #$ set dirname = component.name.replace('.','/')
 # By default, the RPM will install to the standard REDHAWK SDR root location (/var/redhawk/sdr)
-%{!?_sdrroot: %define _sdrroot /var/redhawk/sdr}
+%{!?_sdrroot: %global _sdrroot /var/redhawk/sdr}
 %define _prefix %{_sdrroot}/{{component.sdrpath}}/{{dirname}}
 
 # Point install paths to locations within our target SDR root

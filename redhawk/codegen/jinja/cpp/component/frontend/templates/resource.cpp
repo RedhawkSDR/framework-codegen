@@ -39,6 +39,24 @@ void ${className}::construct()
      Note that properties are not initialized before this function is called.
      To perform hardware initialization/configure after properties are initialized,
      use the function "constructor"
+/*{% if 'FrontendTuner' in component.implements %}*/
+
+     For a tuner device, the structure frontend_tuner_status needs to match the number
+     of tuners that this device controls and what kind of device it is.
+     The options for devices are: TX, RX, RX_DIGITIZER, CHANNELIZER, DDC, RC_DIGITIZER_CHANNELIZER
+     
+     For example, if this device has 5 physical
+     tuners, each an RX_DIGITIZER, then the code in the construct function should look like this:
+
+     this->frontend_tuner_status.resize(5);
+     for (unsigned int i=0; i<this->frontend_tuner_status.size(); i++) {
+        this->frontend_tuner_status[i].tuner_type = "RX_DIGITIZER";
+     }
+     
+     The incoming request for tuning contains a string describing the requested tuner
+     type. The string for the request must match the string in the tuner status.
+
+/*{% endif %}*/
     ***********************************************************************************/
 }
 /*{% if 'FrontendTuner' in component.implements %}*/
@@ -65,10 +83,16 @@ void ${className}::deviceDisable(frontend_tuner_status_struct_struct &fts, size_
 bool ${className}::deviceSetTuning(const frontend::frontend_tuner_allocation_struct &request, frontend_tuner_status_struct_struct &fts, size_t tuner_id){
     /************************************************************
     modify fts, which corresponds to this->frontend_tuner_status[tuner_id]
+      At a minimum, bandwidth, center frequency, and sample_rate have to be set
+      If the device is tuned to exactly what the request was, the code should be:
+        fts.bandwidth = request.bandwidth;
+        fts.center_frequency = request.center_frequency;
+        fts.sample_rate = request.sample_rate;
+
     return true if the tuning succeeded, and false if it failed
     ************************************************************/
     #warning deviceSetTuning(): Evaluate whether or not a tuner is added  *********
-    return BOOL_VALUE_HERE;
+    return true;
 }
 bool ${className}::deviceDeleteTuning(frontend_tuner_status_struct_struct &fts, size_t tuner_id) {
     /************************************************************
@@ -76,7 +100,7 @@ bool ${className}::deviceDeleteTuning(frontend_tuner_status_struct_struct &fts, 
     return true if the tune deletion succeeded, and false if it failed
     ************************************************************/
     #warning deviceDeleteTuning(): Deallocate an allocated tuner  *********
-    return BOOL_VALUE_HERE;
+    return true;
 }
 
 /*************************************************************
