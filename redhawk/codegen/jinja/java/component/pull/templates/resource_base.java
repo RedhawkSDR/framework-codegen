@@ -191,6 +191,9 @@ public abstract class ${classname} extends ${superClass} {
 /*{%   endif %}*/
 /*{% endfor %}*/
 /*{% if component.hasmultioutport %}*/
+/*{% if 'FrontendTuner' in component.implements %}*/
+        this.listeners = new HashMap<String, String>();
+/*{% endif %}*/
 
         this.connectionTable.addChangeListener(new PropertyListener<List<connection_descriptor_struct>>() {
             public void valueChanged (List<connection_descriptor_struct> oldValue, List<connection_descriptor_struct> newValue)

@@ -24,6 +24,7 @@ import frontend.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.HashMap;
 import org.omg.CORBA.Any;
 /*{% if 'FrontendTuner' in component.implements %}*/
 /*{%     if not component.hasmultioutport %}*/
@@ -78,20 +79,30 @@ public abstract class ${classname} extends ${superClass}
 /*{% endblock %}*/
 
 /*{% block extensions %}*/
+/*{% if 'FrontendTuner' in component.implements %}*/
     /* This sets the number of entries in the frontend_tuner_status struct sequence property
      * as well as the tuner_allocation_ids vector. Call this function during initialization
      */
     public void setNumChannels(int num)
     {
-        frontend_tuner_status.getValue().clear();
-        frontend_tuner_status.setValue(new ArrayList<frontend_tuner_status_struct_struct>(num));
-        tuner_allocation_ids.clear();
-        tuner_allocation_ids = new ArrayList<frontend.FrontendTunerDevice<frontend_tuner_status_struct_struct>.tunerAllocationIdsStruct>(num);
-        for (frontend_tuner_status_struct_struct tuner: frontend_tuner_status.getValue()){
+        this.setNumChannels(num, "RX_DIGITIZER");
+    }
+    
+    /* This sets the number of entries in the frontend_tuner_status struct sequence property
+     * as well as the tuner_allocation_ids vector. Call this function during initialization
+     */
+    public void setNumChannels(int num, String tuner_type)
+    {
+        frontend_tuner_status.setValue(new ArrayList<frontend_tuner_status_struct_struct>());
+        tuner_allocation_ids = new ArrayList<frontend.FrontendTunerDevice<frontend_tuner_status_struct_struct>.tunerAllocationIdsStruct>();
+        for (int idx=0;idx<num;idx++){
+            frontend_tuner_status_struct_struct tuner = new frontend_tuner_status_struct_struct();
             tuner.enabled.setValue(false);
+            tuner.tuner_type.setValue(tuner_type);
+            frontend_tuner_status.getValue().add(tuner);
+            tuner_allocation_ids.add(new tunerAllocationIdsStruct());
         }
     }
-/*{% if 'FrontendTuner' in component.implements %}*/
 
     public final static boolean BOOLEAN_VALUE_HERE=false;
 

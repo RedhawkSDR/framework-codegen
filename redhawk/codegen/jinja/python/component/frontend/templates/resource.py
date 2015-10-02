@@ -38,6 +38,7 @@
         Make sure to set the 'enabled' member of fts to indicate that tuner as enabled
         ************************************************************'''
         print "deviceEnable(): Enable the given tuner  *********"
+        fts.enabled = True
         return
 
     def deviceDisable(self,fts, tuner_id):
@@ -47,25 +48,35 @@
         Make sure to reset the 'enabled' member of fts to indicate that tuner as disabled
         ************************************************************'''
         print "deviceDisable(): Disable the given tuner  *********"
+        fts.enabled = False
         return
 
     def deviceSetTuning(self,request, fts, tuner_id):
         '''
         ************************************************************
         modify fts, which corresponds to self.frontend_tuner_status[tuner_id]
-        return true if the tuning succeeded, and false if it failed
+        
+        The bandwidth, center frequency, and sampling rate that the hardware was actually tuned
+        to needs to populate fts (to make sure that it meets the tolerance requirement. For example,
+        if the tuned values match the requested values, the code would look like this:
+        
+        fts.bandwidth = request.bandwidth
+        fts.center_frequency = request.center_frequency
+        fts.sample_rate = request.sample_rate
+        
+        return True if the tuning succeeded, and False if it failed
         ************************************************************'''
         print "deviceSetTuning(): Evaluate whether or not a tuner is added  *********"
-        return BOOLEAN_VALUE_HERE
+        return True
 
     def deviceDeleteTuning(self, fts, tuner_id):
         '''
         ************************************************************
         modify fts, which corresponds to self.frontend_tuner_status[tuner_id]
-        return true if the tune deletion succeeded, and false if it failed
+        return True if the tune deletion succeeded, and False if it failed
         ************************************************************'''
         print "deviceDeleteTuning(): Deallocate an allocated tuner  *********"
-        return BOOLEAN_VALUE_HERE
+        return True
 
     '''
     *************************************************************

@@ -82,7 +82,13 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
             Component.__init__(self, identifier, execparams, loggerName=loggerName)
 #{% endif %}
             ThreadedComponent.__init__(self)
+#{% if 'FrontendTuner' in component.implements %}
+            self.__redirect_frontend_tuner_status_struct_definition()
+#{% endif %}
 
+#{% if 'FrontendTuner' in component.implements %}
+            self.listeners={}
+#{% endif %}
             # self.auto_start is deprecated and is only kept for API compatibility
             # with 1.7.X and 1.8.0 ${artifactType}s.  This variable may be removed
             # in future releases

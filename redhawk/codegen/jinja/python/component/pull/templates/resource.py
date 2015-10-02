@@ -51,8 +51,25 @@ class ${className}(${baseClass}):
         a custom port implementation you can override the specific implementation here with a statement
         similar to the following:
           self.some_port = MyPortImplementation()
+
+#{% if 'FrontendTuner' in component.implements %}
+        For a tuner device, the structure frontend_tuner_status needs to match the number
+        of tuners that this device controls and what kind of device it is.
+        The options for devices are: TX, RX, RX_DIGITIZER, CHANNELIZER, DDC, RC_DIGITIZER_CHANNELIZER
+     
+        For example, if this device has 5 physical
+        tuners, each an RX_DIGITIZER, then the code in the construct function should look like this:
+
+        self.setNumChannels(5, "RX_DIGITIZER");
+     
+        The incoming request for tuning contains a string describing the requested tuner
+        type. The string for the request must match the string in the tuner status.
+#{% endif %}
         """
         # TODO add customization here.
+#{% if 'FrontendTuner' in component.implements %}
+        self.setNumChannels(1, "RX_DIGITIZER");
+#{% endif %}
         
 #{% block updateUsageState %}
 #{% if component is device %}

@@ -37,16 +37,10 @@ ${frontendstructdef(prop.structdef)}
 #{% endif %}
 #{% endfor %}
 
-        # This sets the number of entries in the frontend_tuner_status struct sequence property
-        # as well as the tuner_allocation_ids vector. Call this function during initialization
-        def setNumChannels(self,num):
-            self.frontend_tuner_status = []
-            for ii in range(num):
-                tuner_status = self.frontend_tuner_status_struct_struct()
-                tuner_status.enabled = False
-                self.frontend_tuner_status.append(tuner_status)
-            self.tuner_allocation_ids = []
-            self.listeners={}
+#{% if 'FrontendTuner' in component.implements %}
+        def __redirect_frontend_tuner_status_struct_definition(self):
+            self._props._PropertyStorage__properties['FRONTEND::tuner_status'].structdef = self.frontend_tuner_status_struct_struct
+#{% endif %}
 
 #{% if 'FrontendTuner' in component.implements %}
         def frontendTunerStatusChanged(self,oldValue, newValue):
@@ -89,6 +83,13 @@ ${frontendstructdef(prop.structdef)}
                     self.connectionTable.append(new_entry)
 
             self.connectionTableChanged(old_table, self.connectionTable)
+#{% endif %}
+
+#{% if component.hasmultioutport %}
+        def connectionTableChanged(self, oldValue, newValue):
+#{%   for port in component.ports if port.multiout %}
+            self.${port.pyname}.updateConnectionFilter(newValue)
+#{%   endfor %}
 #{% endif %}
 
         def removeListener(self,listen_alloc_id):

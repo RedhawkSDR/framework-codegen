@@ -48,16 +48,16 @@ void ${className}::construct()
      For example, if this device has 5 physical
      tuners, each an RX_DIGITIZER, then the code in the construct function should look like this:
 
-     this->frontend_tuner_status.resize(5);
-     for (unsigned int i=0; i<this->frontend_tuner_status.size(); i++) {
-        this->frontend_tuner_status[i].tuner_type = "RX_DIGITIZER";
-     }
+     this->setNumChannels(5, "RX_DIGITIZER");
      
      The incoming request for tuning contains a string describing the requested tuner
      type. The string for the request must match the string in the tuner status.
 
 /*{% endif %}*/
     ***********************************************************************************/
+/*{% if 'FrontendTuner' in component.implements %}*/
+    this->setNumChannels(1, "RX_DIGITIZER");
+/*{% endif %}*/
 }
 /*{% if 'FrontendTuner' in component.implements %}*/
 
@@ -70,6 +70,7 @@ void ${className}::deviceEnable(frontend_tuner_status_struct_struct &fts, size_t
     Make sure to set the 'enabled' member of fts to indicate that tuner as enabled
     ************************************************************/
     #warning deviceEnable(): Enable the given tuner  *********
+    fts.enabled = true;
     return;
 }
 void ${className}::deviceDisable(frontend_tuner_status_struct_struct &fts, size_t tuner_id){
@@ -78,6 +79,7 @@ void ${className}::deviceDisable(frontend_tuner_status_struct_struct &fts, size_
     Make sure to reset the 'enabled' member of fts to indicate that tuner as disabled
     ************************************************************/
     #warning deviceDisable(): Disable the given tuner  *********
+    fts.enabled = false;
     return;
 }
 bool ${className}::deviceSetTuning(const frontend::frontend_tuner_allocation_struct &request, frontend_tuner_status_struct_struct &fts, size_t tuner_id){

@@ -25,7 +25,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 {{target}}_CLASSPATH = $(SOFTPKG_CLASSPATH):$(REDHAWK_CLASSPATH):{{classpath|prepend('$(OSSIE_HOME)/lib/')|join(':')}}
 
-{{component.jarfile}}: $({{target}}_SOURCES)
+{{component.jarfile}}$(EXEEXT): $({{target}}_SOURCES)
 	mkdir -p bin
 	$(JAVAC) -cp $({{target}}_CLASSPATH) -g -d bin $({{target}}_SOURCES)
 	$(JAR) cf ./{{component.jarfile}} -C bin .
