@@ -174,9 +174,9 @@ class StructProperty(Property, _Struct, _Single):
         return 'struct'
 
     def fields(self):
-        f = [SimpleProperty(s) for s in self.xml.props if isinstance(s, ossie.parsers.prf.simple)]
-	f += [SimpleSequenceProperty(s) for s in self.xml.props if isinstance(s, ossie.parsers.prf.simpleSequence)]
-	return f
+        f = [SimpleProperty(s) for s in self.xml.simple]
+        f += [SimpleSequenceProperty(s) for s in self.xml.simplesequence]
+        return f
 
     def hasValue(self):
         for field in self.fields():
@@ -205,8 +205,8 @@ class StructSequenceProperty(Property, _Struct, _Sequence):
 
     def mapvalue_(self, base, mapping, structval):
         value = base.copy()
-        value.update((v.refid, v.value) for v in structval.propsref if isinstance(v, ossie.parsers.prf.simpleRef))
-        value.update((v.refid, v.values.value) for v in structval.propsref if isinstance(v, ossie.parsers.prf.simpleSequenceRef))
+        value.update((v.refid, v.value) for v in structval.simpleref)
+        value.update((v.refid, v.values.value) for v in structval.simplesequenceref)
         return value
 
 def parse(prfFile):
