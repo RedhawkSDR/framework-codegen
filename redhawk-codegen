@@ -344,7 +344,7 @@ if __name__ == '__main__':
             implOutputDir = implName
             
         implSettings.override(overrides)
-        if orig_language != override_language:
+        if orig_language != override_language and orig_language != None:
             implSettings.template = orig_template
             implSettings.properties = orig_properties
 

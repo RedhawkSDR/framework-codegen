@@ -19,10 +19,6 @@
  #*/
 //% extends "pull/resource.cpp"
 
-/*{% block ctorBody %}*/
-    construct();
-/*{% endblock %}*/
-
 /*{% block updateUsageState %}*/
 /*{%   for sc in component.superclasses if sc.name == "Device_impl" %}*/
 ${super()}
@@ -30,35 +26,6 @@ ${super()}
 /*{% endblock %}*/
 
 /*{% block extensions %}*/
-void ${className}::construct()
-{
-    /***********************************************************************************
-     this function is invoked in the constructor. This location is meant to consolidate
-     where hardware initialization is performed.
-
-     Note that properties are not initialized before this function is called.
-     To perform hardware initialization/configure after properties are initialized,
-     use the function "constructor"
-/*{% if 'FrontendTuner' in component.implements %}*/
-
-     For a tuner device, the structure frontend_tuner_status needs to match the number
-     of tuners that this device controls and what kind of device it is.
-     The options for devices are: TX, RX, RX_DIGITIZER, CHANNELIZER, DDC, RC_DIGITIZER_CHANNELIZER
-     
-     For example, if this device has 5 physical
-     tuners, each an RX_DIGITIZER, then the code in the construct function should look like this:
-
-     this->setNumChannels(5, "RX_DIGITIZER");
-     
-     The incoming request for tuning contains a string describing the requested tuner
-     type. The string for the request must match the string in the tuner status.
-
-/*{% endif %}*/
-    ***********************************************************************************/
-/*{% if 'FrontendTuner' in component.implements %}*/
-    this->setNumChannels(1, "RX_DIGITIZER");
-/*{% endif %}*/
-}
 /*{% if 'FrontendTuner' in component.implements %}*/
 
 /*************************************************************
