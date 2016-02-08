@@ -133,16 +133,27 @@ ${field.pyname}=${field.pyvalue|default(python.defaultValue(field.type))}
 #{%  endfilter %}
 #{% endmacro %}
 
+#{#
+# Creates the argument list for calling a base class __init__ method
+#}
+#{% macro baseinit(fields) %}
+#{%   filter trim|lines|join %}
+#{%   for field in fields if field.inherited %}
+, ${field.pyname}=${field.pyname}
+#{%   endfor %}
+#{%   endfilter %}
+#{% endmacro %}
+
 #{% macro members(fields) %}
 #{%   filter trim|lines|join(',') %}
-#{%   for field in fields %}
+#{%   for field in fields if not field.inherited %}
 ("${field.pyname}",self.${field.pyname})
 #{%   endfor %}
 #{%   endfilter %}
 #{% endmacro %}
 
 #{% macro structdef(struct, initialize=true) %}
-class ${struct.pyclass}(object):
+class ${struct.pyclass}(${struct.baseclass|default('object')}):
 #{%   for field in struct.fields if not field.inherited %}
 #{%   filter codealign %}
 #%    if field is simplesequence
@@ -197,6 +208,9 @@ ${val}
             setattr(self,k,v)
 #{%   else %}
     def __init__(self, ${initializer(struct.fields)}):
+#{%     if struct.baseclass %}
+        ${struct.baseclass}.__init__(self${baseinit(struct.fields)})
+#{%     endif %}
 #{%     for field in struct.fields if not field.inherited %}
         self.${field.pyname} = ${field.pyname}
 #{%     endfor %}
@@ -219,7 +233,11 @@ ${val}
         return True
 
     def getMembers(self):
+#{%   if struct.baseclass %}
+        return ${struct.baseclass}.getMembers(self) + [${members(struct.fields)}]
+#{%   else %}
         return [${members(struct.fields)}]
+#{%   endif %}
 #{% endmacro %}
 
 #{% macro create(prop) %}
@@ -228,14 +246,8 @@ ${simple(prop)}
 #{% elif prop is simplesequence %}
 ${simplesequence(prop)}
 #{% elif prop is struct %}
-#{%   if not prop.builtin %}
-${structdef(prop)}
-#{%   endif %}
 ${struct(prop)}
 #{% elif prop is structsequence %}
-#{%   if not prop.structdef.builtin %}
-${structdef(prop.structdef,False)}
-#{%   endif %}
 ${structsequence(prop)}
 #{% endif %}
 #{% endmacro %}

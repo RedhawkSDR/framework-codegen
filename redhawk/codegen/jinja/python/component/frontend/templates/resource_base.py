@@ -26,21 +26,11 @@ BOOLEAN_VALUE_HERE=False
 #{% endif %}
 #{% endblock %}
 #{% block extensions %}
-#{% from "frontend_properties.py" import frontendstructdef with context %}
-#{% from "base/properties.py" import structsequence with context %}
-#{% for prop in component.properties %}
-#{% if prop.name == "frontend_tuner_status" %}
-#{%   filter codealign %}
-${frontendstructdef(prop.structdef)}
-        ${structsequence(prop)}
-#{% endfilter %}
-#{% endif %}
+#{% for prop in component.properties if prop.name == "frontend_tuner_status" %}
+        # Rebind tuner status property with custom struct definition
+        frontend_tuner_status = FrontendTunerDevice.frontend_tuner_status.rebind()
+        frontend_tuner_status.structdef = frontend_tuner_status_struct_struct
 #{% endfor %}
-
-#{% if 'FrontendTuner' in component.implements %}
-        def __redirect_frontend_tuner_status_struct_definition(self):
-            self._props._PropertyStorage__properties['FRONTEND::tuner_status'].structdef = self.frontend_tuner_status_struct_struct
-#{% endif %}
 
 #{% if 'FrontendTuner' in component.implements %}
         def frontendTunerStatusChanged(self,oldValue, newValue):

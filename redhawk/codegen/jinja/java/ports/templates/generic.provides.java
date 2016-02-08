@@ -67,26 +67,14 @@ public class ${classname} extends ${portgenerator.poaClass()} implements PortBas
     }
 /*{% endfor %}*/
 
-/*{% if 'FRONTEND' in poa %}*/
-//% set repid = poa.split('.')[1][:-3]
     /**
      * @generated
      */
     public String getRepid()
     {
-        return "IDL:FRONTEND/${repid}:1.0";
+        return ${portgenerator.helperClass()}.id();
     }
 
-/*{% else %}*/
-    /**
-     * @generated
-     */
-    public String getRepid()
-    {
-        return "IDL:CORBA/Object:1.0";
-    }
-
-/*{% endif %}*/
     /**
      * @generated
      */

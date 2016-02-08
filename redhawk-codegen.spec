@@ -23,8 +23,8 @@
 Prefix:         %{_prefix}
 
 Name:           redhawk-codegen
-Version:        2.0.0
-Release:        3%{?dist}
+Version:        2.0.1
+Release:        1%{?dist}
 Summary:        Redhawk Code Generators
 
 Group:          Applications/Engineering
@@ -41,10 +41,13 @@ Requires:       python
 Requires:       redhawk >= 2.0
 %if 0%{?rhel} >= 7
 Requires:       python-jinja2
+BuildRequires:  python-jinja2
 %else
 Requires:       python-jinja2-26
+BuildRequires:  python-jinja2-26
 %endif
 
+BuildRequires:  python-setuptools
 BuildRequires:  python-devel >= 2.4
 
 # Turn off the brp-python-bytecompile script; our setup.py does byte compilation

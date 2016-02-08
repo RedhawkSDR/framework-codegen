@@ -19,7 +19,7 @@
 #
 
 import os
-from distutils.core import setup
+from setuptools import setup
 from distutils.command.install_lib import install_lib
 
 from redhawk.codegen import versions
@@ -43,11 +43,15 @@ if 'build' in sys.argv:
 for arg in sys.argv:
     if '--home' in arg:
         homeSys = True
+        
 if not homeSys and ossiehome != None and not buildArg:
     sys.argv.append('--home='+ossiehome)
+if not ('--old-and-unmanageable' in sys.argv) and not buildArg:
+    sys.argv.append('--old-and-unmanageable')
 
 setup(name='redhawk-codegen',
       version=versions.codegen,
+      install_requires = ['jinja2'],
       scripts=['redhawk-codegen','codegen_version','update_project','createOctaveComponent','createBinaryComponent','moveComponentNamespace'],
       cmdclass={'install_lib':filtered_install_lib},
       packages=['redhawk',

@@ -104,6 +104,27 @@ public class ${classname} extends ${baseclass} {
      * to contain only glue code to dispatch the call to private methods on the
      * device class.
 //% endif
+//% if component is device
+     * Accessing the Device Manager and Domain Manager:
+     * 
+     *  Both the Device Manager hosting this Device and the Domain Manager hosting
+     *  the Device Manager are available to the Device.
+     *  
+     *  To access the Domain Manager:
+     *      CF.DomainManager dommgr = this.getDomainManager().getRef();
+     *  To access the Device Manager:
+     *      CF.DeviceManager devmgr = this.getDeviceManager().getRef();
+//% else
+     * Accessing the Application and Domain Manager:
+     * 
+     *  Both the Application hosting this Component and the Domain Manager hosting
+     *  the Application are available to the Component.
+     *  
+     *  To access the Domain Manager:
+     *      CF.DomainManager dommgr = this.getDomainManager().getRef();
+     *  To access the Application:
+     *      CF.Application app = this.getApplication().getRef();
+//% endif
      *
      * Messages:
      *

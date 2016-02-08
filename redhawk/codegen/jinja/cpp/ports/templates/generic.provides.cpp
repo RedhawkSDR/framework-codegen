@@ -47,10 +47,7 @@ ${operation.returns} ${classname}::${operation.name}(${operation.arglist})
 }
 /*{% endfor %}*/
 
-/*{% if 'FRONTEND' in portgen.interfaceClass() %}*/
-//% set repid = portgen.interfaceClass().split('::')[1]
 std::string ${classname}::getRepid() const
 {
-    return "IDL:FRONTEND/${repid}:1.0";
+    return ${portgen.interfaceClass()}::_PD_repoId;
 }
-/*{% endif %}*/

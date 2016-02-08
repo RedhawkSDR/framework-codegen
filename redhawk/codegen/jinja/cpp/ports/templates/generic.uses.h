@@ -72,6 +72,8 @@ class ${classname} : public Port_Uses_base_impl, public POA_ExtendedCF::Queryabl
         }
 
 /*{% endif %}*/
+        std::string getRepid () const;
+
         std::vector< std::pair<${vartype}, std::string> > _getConnections()
         {
             return outConnections;

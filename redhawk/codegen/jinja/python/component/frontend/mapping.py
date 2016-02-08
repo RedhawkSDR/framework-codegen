@@ -106,9 +106,9 @@ class FrontendPropertyMapper(PythonPropertyMapper):
         'rf_flow_id'
     )
 
-    FRONTEND_BUILTINS = ( '',
-    #    'FRONTEND::tuner_allocation',
-    #    'FRONTEND::listener_allocation'
+    FRONTEND_BUILTINS = (
+        'FRONTEND::tuner_allocation',
+        'FRONTEND::listener_allocation'
     )
 
     def mapStructProperty(self, prop, fields):

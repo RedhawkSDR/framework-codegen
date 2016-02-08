@@ -50,9 +50,11 @@ PKG_CHECK_MODULES([PROJECTDEPS], [ossie >= {{versions.redhawk}} omniORB4 >= {{ve
 PKG_CHECK_MODULES([INTERFACEDEPS], [{{component.interfacedeps|join(', ')}}])
 #{% endif %}
 #{% endblock %}
+#{% block softpkgDeps %}
 #{% for dep in component.impl.softpkgdeps %}
 RH_SOFTPKG_CXX([{{dep.spd}}]{{',[%s]' % dep.impl if dep.impl}})
 #{% endfor %}
+#{% endblock %}
 #{% block coreDeps %}
 OSSIE_ENABLE_LOG4CXX
 AX_BOOST_BASE([{{versions.boost}}])

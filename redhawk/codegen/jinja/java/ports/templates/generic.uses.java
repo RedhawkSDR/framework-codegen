@@ -89,26 +89,14 @@ public class ${classname} extends QueryableUsesPort<${interface}> implements ${i
     }
  /*{% endfor %}*/
 
-/*{% if 'FRONTEND' in poa %}*/
-//% set repid = poa.split('.')[1][:-3]
     /**
      * @generated
      */
     public String getRepid()
     {
-        return "IDL:FRONTEND/${repid}:1.0";
+        return ${helper}.id();
     }
 
-/*{% else %}*/
-    /**
-     * @generated
-     */
-    public String getRepid()
-    {
-        return "IDL:CORBA/Object:1.0";
-    }
-
-/*{% endif %}*/
     /**
      * @generated
      */

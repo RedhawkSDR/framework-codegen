@@ -62,3 +62,8 @@ ${operation.returns} ${classname}::${operation.name}(${operation.arglist})
 /*{% endif %}*/
 }
 /*{% endfor %}*/
+
+std::string ${classname}::getRepid() const
+{
+    return ${portgen.interfaceClass()}::_PD_repoId;
+}

@@ -82,9 +82,6 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
             Component.__init__(self, identifier, execparams, loggerName=loggerName)
 #{% endif %}
             ThreadedComponent.__init__(self)
-#{% if 'FrontendTuner' in component.implements %}
-            self.__redirect_frontend_tuner_status_struct_definition()
-#{% endif %}
 
 #{% if 'FrontendTuner' in component.implements %}
             self.listeners={}
@@ -100,6 +97,9 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 #{% if component.hasmultioutport %}
             self.addPropertyChangeListener('connectionTable',self.updated_connectionTable)
 #{% endif %}
+#{% for prop in component.properties if prop.inherited and prop.pyvalue %}
+            self.${prop.pyname} = ${prop.pyvalue}
+#{% endfor %}
 
         def start(self):
             ${superclass}.start(self)
@@ -162,11 +162,16 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
         # or by using the IDE.
 #{% import "base/properties.py" as properties with context %}
 #{% for prop in component.properties %}
-#{%     if not prop.inherited  %}
+#{%   if prop is struct and not prop.builtin %}
+        ${properties.structdef(prop)|indent(8)}
+
+#{%   elif prop is structsequence and not prop.structdef.builtin %}
+        ${properties.structdef(prop.structdef,False)|indent(8)}
+
+#{%   endif %}
+#{%   if not prop.inherited %}
         ${properties.create(prop)|indent(8)}
-#{%     elif prop.pyvalue %}
-        ${prop.pyname} = ${prop.pyvalue}
-#{%     endif %}
+#{%   endif %}
 #{% endfor %}
 #{% for portgen in component.portgenerators if portgen is provides and portgen.hasImplementation() %}
 

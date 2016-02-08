@@ -149,6 +149,27 @@ class ${className}(${baseClass}):
             msg_out = ${className}.MyMsg()
             this.port_msg_output.sendMessage(msg_out)
 
+#{% if component is device %}
+    Accessing the Application and Domain Manager:
+    
+        Both the Application hosting this Component and the Domain Manager hosting
+        the Application are available to the Component.
+        
+        To access the Domain Manager:
+            dommgr = self.getDomainManager().getRef();
+        To access the Application:
+            app = self.getApplication().getRef();
+#{% else %}
+    Accessing the Device Manager and Domain Manager:
+    
+        Both the Device Manager hosting this Device and the Domain Manager hosting
+        the Device Manager are available to the Device.
+        
+        To access the Domain Manager:
+            dommgr = self.getDomainManager().getRef();
+        To access the Device Manager:
+            devmgr = self.getDeviceManager().getRef();
+#{% endif %}
         Properties:
         
             Properties are accessed directly as member variables. If the property name is baudRate,
