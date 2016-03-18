@@ -160,6 +160,7 @@ class SoftpkgMapper(object):
         component['version'] = softpkg.version()
         component['type'] = softpkg.type()
         component['sdrpath'] = softpkg.getSdrPath()
+        component['artifacttype'] = self.artifactType(softpkg)
 
         # XML profile
         component['profile'] = { 'spd': softpkg.spdFile() }
@@ -220,6 +221,20 @@ class SoftpkgMapper(object):
                     seen.add('BULKIO')
                     yield 'BULKIO'
 
+    def artifactType(self, softpkg):
+        if softpkg.type() == ComponentTypes.RESOURCE:
+            return 'component'
+        elif softpkg.type() in (ComponentTypes.DEVICE,
+                                ComponentTypes.LOADABLEDEVICE,
+                                ComponentTypes.EXECUTABLEDEVICE):
+            return 'device'
+        elif softpkg.type() == ComponentTypes.SERVICE:
+            return 'service'
+        elif softpkg.type() == ComponentTypes.SHAREDPACKAGE:
+            return 'sharedpackage'
+        else:
+            raise ValueError, 'Unsupported software component type', softpkg.type()
+
 
 class ProjectMapper(SoftpkgMapper):
     def mapImplementation(self, impl, generator):
@@ -257,7 +272,6 @@ class ComponentMapper(SoftpkgMapper):
         component = self.mapSoftpkg(softpkg)
         component['license'] = None
         component['mFunction'] = None
-        component['artifacttype'] = self.artifactType(softpkg)
         if softpkg.descriptor():
             if softpkg.descriptor().supports('IDL:CF/AggregateDevice:1.0'):
                 component['aggregate'] = True
@@ -267,18 +281,6 @@ class ComponentMapper(SoftpkgMapper):
 
     def _mapComponent(self, softpkg):
         return {}
-
-    def artifactType(self, softpkg):
-        if softpkg.type() == ComponentTypes.RESOURCE:
-            return 'component'
-        elif softpkg.type() in (ComponentTypes.DEVICE, ComponentTypes.LOADABLEDEVICE, ComponentTypes.EXECUTABLEDEVICE):
-            return 'device'
-        elif softpkg.type() == ComponentTypes.SERVICE:
-            return 'service'
-        elif softpkg.type() == ComponentTypes.SHAREDPACKAGE:
-            return 'sharedpackage'
-        else:
-            raise ValueError, 'Unsupported software component type', softpkg.type()
 
     def hasMultioutPort(self, softpkg):
         for prop in softpkg.getStructSequenceProperties():

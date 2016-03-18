@@ -21,9 +21,9 @@
 
 from redhawk.codegen.jinja.generator import TopLevelGenerator
 from redhawk.codegen.jinja.python import PythonTemplate
+from redhawk.codegen.jinja.mapping import ProjectMapper
 
 import jinja2
-from mapping import ProjectMapper
 
 if not '__package__' in locals():
     # Python 2.4 compatibility

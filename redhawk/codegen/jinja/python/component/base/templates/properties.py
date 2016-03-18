@@ -18,7 +18,6 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/.
 #}
 #{% macro simple(prop) %}
-#{%   filter codealign %}
 ${prop.pyname} = simple_property(id_="${prop.identifier}",
 #%    if prop.name
                                  name="${prop.name}",
@@ -38,11 +37,9 @@ ${prop.pyname} = simple_property(id_="${prop.identifier}",
                                  description="""${prop.description}"""
 #%-   endif
 )
-#{%   endfilter %}
 #{% endmacro %}
 
 #{% macro simplesequence(prop) %}
-#{%   filter codealign %}
 ${prop.pyname} = simpleseq_property(id_="${prop.identifier}",
 #%    if prop.name
                                     name="${prop.name}",
@@ -73,11 +70,9 @@ ${val}
                                     description="""${prop.description}"""
 #%-   endif
 )
-#{%   endfilter %}
 #{% endmacro %}
 
 #{% macro struct(prop) %}
-#{%   filter codealign %}
 ${prop.pyname} = struct_property(id_="${prop.identifier}",
 #%    if prop.name
                                  name="${prop.name}",
@@ -90,11 +85,9 @@ ${prop.pyname} = struct_property(id_="${prop.identifier}",
                                  description="""${prop.description}"""
 #%-   endif
 )
-#{%   endfilter %}
 #{% endmacro %}
 
 #{% macro structsequence(prop) %}
-#{%   filter codealign %}
 ${prop.pyname} = structseq_property(id_="${prop.identifier}",
 #%    if prop.name
                                     name="${prop.name}",
@@ -108,7 +101,6 @@ ${prop.pyname} = structseq_property(id_="${prop.identifier}",
                                     description="""${prop.description}"""
 #%-   endif
 )
-#{%   endfilter %}
 #{% endmacro %}
 
 #{% macro initializer(fields) %}

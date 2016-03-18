@@ -121,8 +121,17 @@ def sequenceValue(values, typename, complex=False):
 
 def idlModule(namespace):
     if namespace.startswith('omg.org/'):
-        package = 'omniORB.COS'
+        # Remove the 'org.omg/'
         namespace = namespace[8:]
+        if namespace in ('CORBA', 'PortableServer'):
+            # Certain core modules must be explicitly imported from omniORB to
+            # avoid collisions with ORBit.
+            package = 'omniORB'
+        else:
+            # Importing omniORB adds "omniORB/COS" to sys.path; furthermore,
+            # the COS modules are not designed to be imported via "omniORB.COS"
+            # due to the way omniORB handles IDL module loading.
+            return namespace
     else:
         if namespace in ('CF', 'ExtendedCF'):
             package = 'ossie.cf'

@@ -161,6 +161,7 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
         # DO NOT ADD NEW PROPERTIES HERE.  You can add properties in your derived class, in the PRF xml file
         # or by using the IDE.
 #{% import "base/properties.py" as properties with context %}
+#{% filter codealign %}
 #{% for prop in component.properties %}
 #{%   if prop is struct and not prop.builtin %}
         ${properties.structdef(prop)|indent(8)}
@@ -170,9 +171,10 @@ class ${className}(${component.poaclass}, ${component.superclasses|join(', ', at
 
 #{%   endif %}
 #{%   if not prop.inherited %}
-        ${properties.create(prop)|indent(8)}
+        ${properties.create(prop)}
 #{%   endif %}
 #{% endfor %}
+#{% endfilter %}
 #{% for portgen in component.portgenerators if portgen is provides and portgen.hasImplementation() %}
 
 #{%   if loop.first %}

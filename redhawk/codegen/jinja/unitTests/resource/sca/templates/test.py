@@ -19,18 +19,18 @@
 #}
 #!/usr/bin/env python
 
-#% set spdfile = component.profile.spd|relpath(generator.getOutputDir())
-import unittest
 import ossie.utils.testing
-import os
-from omniORB import any
 from ossie.utils import sb
 
-class ResourceTests(ossie.utils.testing.RHComponentTestCase):
+class ${component.artifacttype|capitalize}Tests(ossie.utils.testing.RHTestCase):
+    # Path to the SPD file, relative to this file. This must be set in order to
+    # launch the ${component.artifacttype}.
+    SPD_FILE = '${component.profile.spd|relpath(generator.getOutputDir())}'
+
     # setUp is run before every function preceded by "test" is executed
     # tearDown is run after every function preceded by "test" is executed
     
-    # self.comp is a component using the sandbox API
+    # self.comp is a ${component.artifacttype} using the sandbox API
     # to create a data source, the package sb contains data sources like DataSource or FileSource
     # to create a data sink, there are sinks like DataSink and FileSink
     # to connect the component to get data from a file, process it, and write the output to a file, use the following syntax:
@@ -48,16 +48,24 @@ class ResourceTests(ossie.utils.testing.RHComponentTestCase):
     #  sb.start()
 
     def setUp(self):
-        self.comp = sb.launch("${spdfile}")
+        # Launch the ${component.artifacttype}, using the selected implementation
+        self.comp = sb.launch(self.spd_file, impl=self.impl)
     
     def tearDown(self):
-        self.comp.releaseObject()
+        # Clean up all sandbox artifacts created during test
+        sb.release()
 
-    def testRHBasicBehavior(self):
+    def testBasicBehavior(self):
+#{% if component is service %}
+        #######################################################################
+        # Check that service launched as expected
+        self.assertNotEqual(self.comp, None)
+#{% else %}
         #######################################################################
         # Make sure start and stop can be called without throwing exceptions
         self.comp.start()
         self.comp.stop()
+#{% endif %}
 
 if __name__ == "__main__":
-    ossie.utils.testing.main("${spdfile}") # By default tests all implementations
+    ossie.utils.testing.main() # By default tests all implementations
